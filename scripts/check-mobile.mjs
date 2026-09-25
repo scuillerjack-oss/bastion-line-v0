@@ -258,6 +258,14 @@ async function main() {
       // exactement pourquoi ce test était vert alors que l'invite
       // d'installation n'apparaissait jamais sur téléphone réel.
       let installableIconOk = false;
+      // Non-régression V1 (cahier, section 3) : start_url et scope doivent
+      // rester résolubles et cohérents quel que soit le sous-chemin réel de
+      // déploiement (GitHub Pages sert ce projet sous /bastion-line-v0/) --
+      // vérifié ici en résolvant les URL relatives EXACTEMENT comme le
+      // ferait un navigateur, jamais supposé correct parce que "ça marche
+      // en local à la racine".
+      let scopeChainOk = false;
+      let idPresent = false;
       if (manifestHref) {
         const res = await page.evaluate(async (href) => {
           const r = await fetch(href);
@@ -265,6 +273,12 @@ async function main() {
           return r.json();
         }, manifestHref);
         manifestOk = !!(res && res.icons && res.icons.length > 0 && res.name);
+        if (res) {
+          const startUrlAbs = new URL(res.start_url, manifestHref).href;
+          const scopeAbs = new URL(res.scope, manifestHref).href;
+          scopeChainOk = startUrlAbs.startsWith(scopeAbs) && new URL(startUrlAbs).origin === new URL(BASE_URL).origin;
+          idPresent = typeof res.id === "string" && res.id.length > 0;
+        }
         if (res && res.icons) {
           const iconChecks = await page.evaluate(async (icons) => {
             const results = [];
@@ -295,11 +309,11 @@ async function main() {
         const regs = await navigator.serviceWorker.getRegistrations();
         return regs.length > 0;
       });
-      if (!manifestOk || !iconsOk || !swRegistered || !installableIconOk) {
+      if (!manifestOk || !iconsOk || !swRegistered || !installableIconOk || !scopeChainOk || !idPresent) {
         failures += 1;
-        log("ÉCHEC PWA", { manifestHref, manifestOk, iconsOk, swRegistered, installableIconOk });
+        log("ÉCHEC PWA", { manifestHref, manifestOk, iconsOk, swRegistered, installableIconOk, scopeChainOk, idPresent });
       } else {
-        log("OK : PWA (manifest valide, icônes accessibles dont une raster >=192x192, service worker enregistré)");
+        log("OK : PWA (manifest valide, icônes accessibles dont une raster >=192x192, id/scope/start_url cohérents, service worker enregistré)");
       }
       await page.close();
     }
@@ -449,6 +463,65 @@ async function main() {
         }
       } finally {
         writeFileSync(swPath, originalSw);
+      }
+      await page.close();
+    }
+
+    // --- Test 11 : navigateur intégré Android (WebView) -- non-régression
+    // V1 (cahier, section 3 et 7) : un manifest/SW techniquement valide ne
+    // suffit pas si le contexte réel (WebView d'une app tierce) rend
+    // l'installation structurellement impossible. Le jeu doit le détecter
+    // et proposer un chemin concret ("Ouvrir dans Chrome"), jamais rester
+    // silencieux en espérant que l'invite native apparaisse.
+    {
+      const context = await browser.newContext({
+        viewport: { width: 390, height: 844 },
+        hasTouch: true,
+        userAgent:
+          "Mozilla/5.0 (Linux; Android 13; Pixel 7; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/120.0.0.0 Mobile Safari/537.36",
+      });
+      const page = await context.newPage();
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      const bannerText = await page.textContent(".install-banner-warn").catch(() => "");
+      const openChromeVisible = (await page.locator("#btn-open-chrome").count()) > 0;
+      const installState = await page.evaluate(() => window.__bastionDebugInstallState());
+      if (!bannerText.includes("intégré") || !openChromeVisible || !installState.embeddedWebView) {
+        failures += 1;
+        log("ÉCHEC détection navigateur intégré (WebView Android)", { bannerText, openChromeVisible, installState });
+      } else {
+        log("OK : navigateur intégré Android détecté, chemin \"Ouvrir dans Chrome\" proposé");
+      }
+      await page.close();
+    }
+
+    // --- Test 12 : invite native d'installation (beforeinstallprompt) --
+    // quand Chrome la signale réellement disponible, un vrai bouton
+    // "Installer" doit apparaître et déclencher l'invite native (jamais une
+    // simple supposition que le menu caché du navigateur suffit).
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+      const page = await context.newPage();
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.evaluate(() => {
+        window.__promptCalled = false;
+        const ev = new Event("beforeinstallprompt", { cancelable: true });
+        ev.prompt = () => {
+          window.__promptCalled = true;
+        };
+        ev.userChoice = Promise.resolve({ outcome: "accepted" });
+        window.dispatchEvent(ev);
+      });
+      await page.waitForTimeout(150);
+      const installBtnVisible = (await page.locator("#btn-install-app").count()) > 0;
+      const stateBefore = await page.evaluate(() => window.__bastionDebugInstallState());
+      if (installBtnVisible) await page.locator("#btn-install-app").click();
+      await page.waitForTimeout(150);
+      const promptCalled = await page.evaluate(() => window.__promptCalled === true);
+      if (!installBtnVisible || !stateBefore.promptAvailable || !promptCalled) {
+        failures += 1;
+        log("ÉCHEC invite native d'installation", { installBtnVisible, stateBefore, promptCalled });
+      } else {
+        log("OK : bouton d'installation natif apparaît et déclenche bien l'invite Chrome quand elle est disponible");
       }
       await page.close();
     }

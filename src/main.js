@@ -8,6 +8,7 @@ import { createTapController, hitTestTower, hitTestEmptySlot } from "./ui/input.
 import { drawFrame } from "./ui/render.js";
 import { createTutorialController } from "./ui/tutorial.js";
 import { sfx, setAudioEnabled, setMusicEnabled, startMusic, stopMusic, resumeMusic, getAudioDebugState } from "./ui/audio.js";
+import { createInstallController } from "./ui/pwaInstall.js";
 
 const FIXED_DT = 1000 / 60;
 const MAX_FRAME_MS = 250; // clamp après un long gel (onglet en arrière-plan) : jamais rattraper des secondes d'un coup
@@ -39,6 +40,13 @@ let nowMs = 0;
 
 const tutorial = createTutorialController(save, tutorialToast);
 const tap = createTapController(canvas, onTap);
+const installCtl = createInstallController(window);
+window.addEventListener("beforeinstallprompt", () => {
+  // Le natif Chrome ne signale sa disponibilité qu'APRÈS coup -- si le menu
+  // est déjà affiché, on le redessine pour que le bouton "Installer"
+  // apparaisse sans que le joueur ait à rouvrir l'écran.
+  if (appPhase === "menu") showMenu();
+});
 
 function resizeCanvas() {
   const rect = canvas.parentElement.getBoundingClientRect();
@@ -76,6 +84,46 @@ function updateHud() {
   }
 }
 
+// Priorité absolue V1 (cahier, section 3) : un chemin ÉVIDENT (pas caché
+// dans les réglages) pour sortir d'un navigateur intégré incapable
+// d'installer, ou pour déclencher l'invite native quand elle est vraiment
+// disponible -- jamais une simple supposition que l'un ou l'autre marche.
+function renderInstallBanner() {
+  const s = installCtl.getState();
+  if (s.standalone) return ""; // déjà installée : ne rien afficher
+  if (s.embeddedWebView) {
+    return `
+      <div class="install-banner install-banner-warn">
+        <p><strong>Navigateur intégré détecté.</strong> L'installation n'est pas possible depuis cette fenêtre.</p>
+        <button class="overlay-btn small" id="btn-open-chrome">Ouvrir dans Chrome</button>
+      </div>`;
+  }
+  if (s.promptAvailable) {
+    return `
+      <div class="install-banner">
+        <button class="overlay-btn" id="btn-install-app">📲 Installer l'application</button>
+      </div>`;
+  }
+  if (s.isIOS) {
+    return `
+      <div class="install-banner">
+        <p>Pour installer : appuie sur <strong>Partager</strong> puis <strong>Sur l'écran d'accueil</strong>.</p>
+      </div>`;
+  }
+  return `
+    <div class="install-banner">
+      <p>Pas d'invite d'installation ? Menu du navigateur (⋮) → <strong>Installer l'application</strong> / <strong>Ajouter à l'écran d'accueil</strong>.</p>
+    </div>`;
+}
+
+function wireInstallBanner() {
+  document.getElementById("btn-open-chrome")?.addEventListener("click", () => installCtl.openInChrome());
+  document.getElementById("btn-install-app")?.addEventListener("click", async () => {
+    await installCtl.promptInstall();
+    showMenu();
+  });
+}
+
 function showMenu() {
   appPhase = "menu";
   clearOverlay();
@@ -87,6 +135,7 @@ function showMenu() {
       <p>Construis, défends, prépare la vague suivante.</p>
       <button class="overlay-btn" id="btn-play">${unlocked > 0 ? "Continuer" : "Jouer"}</button>
       <button class="overlay-btn secondary" id="btn-settings">Réglages</button>
+      ${renderInstallBanner()}
     </div>
   `);
   document.getElementById("btn-play").addEventListener("click", () => {
@@ -94,6 +143,7 @@ function showMenu() {
     startLevel(unlocked);
   });
   document.getElementById("btn-settings").addEventListener("click", showSettings);
+  wireInstallBanner();
 }
 
 function showSettings() {
@@ -357,6 +407,7 @@ window.__bastionDebugTapArena = (x, y) => onTap({ x, y });
 window.__bastionDebugState = () => state;
 window.__bastionDebugStartLevel = (index) => startLevel(index);
 window.__bastionDebugAudioState = getAudioDebugState;
+window.__bastionDebugInstallState = () => installCtl.getState();
 
 // PWA : enregistrement + rafraîchissement du service worker (même socle
 // validé sur les projets précédents).

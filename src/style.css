@@ -222,6 +222,21 @@ html, body {
 .overlay-btn.small { padding: 8px 18px; font-size: 0.9rem; min-width: 0; }
 .overlay-btn.secondary { background: #22331f; color: var(--text); }
 
+.install-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: rgba(233, 196, 106, 0.12);
+  border: 1px solid rgba(233, 196, 106, 0.35);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-top: 6px;
+  max-width: 300px;
+}
+.install-banner p { margin: 0; font-size: 0.82rem; line-height: 1.3; }
+.install-banner-warn { background: rgba(231, 111, 81, 0.15); border-color: rgba(231, 111, 81, 0.45); }
+
 .build-id {
   color: var(--text-dim);
   opacity: 0.5;
