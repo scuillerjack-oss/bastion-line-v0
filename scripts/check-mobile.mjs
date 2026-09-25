@@ -117,6 +117,63 @@ async function main() {
       await page.close();
     }
 
+    // --- Test 2b : construction via un VRAI tap tactile, à un ratio de
+    // pixels par point (deviceScaleFactor) réaliste pour un téléphone Android
+    // (ex. 3) -- non-régression de la bêta physique V0 : le test 2
+    // ci-dessus utilise le hook de debug __bastionDebugTapArena, qui
+    // court-circuite entièrement le mapping écran->arène et ne peut donc
+    // JAMAIS révéler un bug de coordonnées. Playwright par défaut utilise un
+    // deviceScaleFactor de 1 (canvas.width == largeur CSS), ce qui masquait
+    // silencieusement le bug réel : sur un vrai téléphone, canvas.width est
+    // mis à l'échelle par le devicePixelRatio (voir main.js resizeCanvas)
+    // alors que les événements pointeur réels restent en pixels CSS. Ce test
+    // dispatch un VRAI événement tactile (page.touchscreen.tap) à la
+    // position ÉCRAN calculée à partir du rendu réel, exactement comme un
+    // doigt sur un écran haute densité.
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+
+      const stateBefore = await page.evaluate(() => window.__bastionDebugState());
+      const slot = stateBefore.buildSlots[0];
+
+      // Reproduit exactement computeViewport() (src/ui/viewport.js) pour
+      // convertir la position arène du slot en position ÉCRAN réelle, à
+      // partir des dimensions CSS réelles du canvas -- jamais de son buffer.
+      const screenPos = await page.evaluate(([sx, sy]) => {
+        const canvas = document.getElementById("game-canvas");
+        const rect = canvas.getBoundingClientRect();
+        const ARENA_W = 400, ARENA_H = 700;
+        const scale = Math.min(rect.width / ARENA_W, rect.height / ARENA_H);
+        const offsetX = (rect.width - ARENA_W * scale) / 2;
+        const offsetY = (rect.height - ARENA_H * scale) / 2;
+        return { x: rect.left + offsetX + sx * scale, y: rect.top + offsetY + sy * scale };
+      }, [slot.x, slot.y]);
+
+      await page.touchscreen.tap(screenPos.x, screenPos.y);
+      await page.waitForTimeout(200);
+      const buildOptionVisible = (await page.locator(".tower-option").count()) > 0;
+      if (buildOptionVisible) {
+        await page.locator(".tower-option").first().click();
+        await page.waitForTimeout(150);
+      }
+      const stateAfter = await page.evaluate(() => window.__bastionDebugState());
+      const towerBuilt = stateAfter.towers.length === 1;
+
+      if (errors.length > 0 || !buildOptionVisible || !towerBuilt) {
+        failures += 1;
+        log("ÉCHEC construction via vrai tap tactile (deviceScaleFactor=3)", { screenPos, buildOptionVisible, towerBuilt, errors });
+      } else {
+        log("OK : construction fonctionne via un vrai tap tactile à deviceScaleFactor=3 (non-régression bêta physique)");
+      }
+      await page.close();
+    }
+
     // --- Test 3 : perte de focus -> pause automatique ---
     {
       const page = await (await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true })).newPage();
@@ -193,6 +250,14 @@ async function main() {
       const manifestHref = await page.evaluate(() => document.querySelector('link[rel="manifest"]')?.href);
       let manifestOk = false;
       let iconsOk = false;
+      // Non-régression bêta physique V0 (#3) : ce test vérifiait seulement
+      // que le manifest est un JSON valide et que ses icônes répondent en
+      // 200 -- il ne vérifiait JAMAIS les critères réels d'installabilité
+      // Chrome/Android (au moins une icône RASTER -- PNG/WebP, jamais SVG
+      // seul -- déclarant une taille standard 192x192 ou 512x512). C'est
+      // exactement pourquoi ce test était vert alors que l'invite
+      // d'installation n'apparaissait jamais sur téléphone réel.
+      let installableIconOk = false;
       if (manifestHref) {
         const res = await page.evaluate(async (href) => {
           const r = await fetch(href);
@@ -214,6 +279,14 @@ async function main() {
             return results;
           }, res.icons);
           iconsOk = iconChecks.length > 0 && iconChecks.every(Boolean);
+          installableIconOk = res.icons.some((icon) => {
+            const isRaster = icon.type === "image/png" || icon.type === "image/webp";
+            const sizeOk = (icon.sizes || "").split(" ").some((s) => {
+              const [w, h] = s.split("x").map(Number);
+              return w >= 192 && h >= 192;
+            });
+            return isRaster && sizeOk;
+          });
         }
       }
       await page.waitForTimeout(300);
@@ -222,11 +295,11 @@ async function main() {
         const regs = await navigator.serviceWorker.getRegistrations();
         return regs.length > 0;
       });
-      if (!manifestOk || !iconsOk || !swRegistered) {
+      if (!manifestOk || !iconsOk || !swRegistered || !installableIconOk) {
         failures += 1;
-        log("ÉCHEC PWA", { manifestHref, manifestOk, iconsOk, swRegistered });
+        log("ÉCHEC PWA", { manifestHref, manifestOk, iconsOk, swRegistered, installableIconOk });
       } else {
-        log("OK : PWA (manifest valide, icônes accessibles, service worker enregistré)");
+        log("OK : PWA (manifest valide, icônes accessibles dont une raster >=192x192, service worker enregistré)");
       }
       await page.close();
     }

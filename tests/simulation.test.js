@@ -328,6 +328,33 @@ test("un ennemi qui atteint la base réduit baseHp et disparaît", () => {
   assert.equal(state.enemies.length, 0);
 });
 
+// Non-régression bêta physique V0 (#2) : la seule "conséquence" d'un coup à
+// la base était un nombre de HUD discret + un son -- aucun indice visuel sur
+// la carte elle-même. Le correctif ajoute un flash sur la base, qui a besoin
+// des coordonnées d'impact dans l'événement -- ce test verrouille ce
+// contrat de données pour que le rendu ne puisse plus silencieusement les
+// perdre à nouveau.
+test("l'événement base_hit transporte les coordonnées d'impact (nécessaires au flash visuel)", () => {
+  const state = createLevelState(makeTestLevel({ baseHp: 10 }));
+  enterWave(state);
+  const pathLen = state.paths[0].totalLength;
+  const basePoint = state.paths[0].points[state.paths[0].points.length - 1];
+  pushEnemy(state, "standard", pathLen - 1, 0, ENEMY_KINDS.standard.speed);
+  // state.events est réinitialisé à CHAQUE tick (voir tick() : "state.events
+  // = []") -- il faut donc capturer l'événement au tick précis où il est
+  // émis, jamais après une série de ticks à l'aveugle (l'ennemi peut déjà
+  // avoir disparu plusieurs ticks avant la fin d'une boucle plus longue).
+  let hitEvent = null;
+  for (let i = 0; i < 10 && !hitEvent; i++) {
+    tick(state, DT);
+    hitEvent = state.events.find((e) => e.type === "base_hit");
+  }
+  assert.ok(hitEvent, "aucun événement base_hit émis");
+  assert.equal(typeof hitEvent.x, "number");
+  assert.equal(typeof hitEvent.y, "number");
+  assert.ok(Math.hypot(hitEvent.x - basePoint.x, hitEvent.y - basePoint.y) < 5, "coordonnées éloignées de la base");
+});
+
 test("baseHp <= 0 déclenche le statut 'lost'", () => {
   const state = createLevelState(makeTestLevel({ baseHp: 1 }));
   enterWave(state);

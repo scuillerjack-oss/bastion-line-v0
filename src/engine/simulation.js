@@ -54,7 +54,7 @@ function stepEnemies(state, dtMs) {
       enemy.alive = false;
       const kindDef = ENEMY_KINDS[enemy.kind];
       state.baseHp -= kindDef.baseDamage ?? 1;
-      state.events.push({ type: "base_hit", kind: enemy.kind, damage: kindDef.baseDamage ?? 1 });
+      state.events.push({ type: "base_hit", kind: enemy.kind, damage: kindDef.baseDamage ?? 1, x: enemy.x, y: enemy.y });
     }
   }
 }

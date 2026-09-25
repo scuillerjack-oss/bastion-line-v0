@@ -6,11 +6,26 @@ import { TAP_HIT_RADIUS } from "../engine/constants.js";
 // coordonnées de l'arène logique, puis testé contre les tours existantes
 // D'ABORD (rayon de détection généreux, doigt réel) puis les emplacements
 // vides -- jamais une zone de tap plus petite qu'un doigt.
+// Le viewport utilisé pour traduire un tap DOIT être calculé à partir des
+// dimensions CSS du canvas (getBoundingClientRect), jamais de canvas.width/
+// height : ces derniers sont la résolution du BUFFER de dessin, mise à
+// l'échelle par le devicePixelRatio (voir main.js resizeCanvas), alors que
+// clientX/clientY d'un événement pointeur sont TOUJOURS en pixels CSS. Sur
+// un poste de test avec devicePixelRatio=1 (Playwright par défaut), les deux
+// espaces coïncident et le bug est invisible -- sur un vrai téléphone
+// (devicePixelRatio 2-3), mélanger les deux espaces divise chaque position
+// tapée par un facteur ~2-3x trop grand et fait rater presque tous les
+// emplacements de construction. Découvert lors de la bêta physique V0.
 export function createTapController(canvas, onTap) {
-  let viewport = computeViewport(canvas.width, canvas.height);
+  function computeCssViewport() {
+    const rect = canvas.getBoundingClientRect();
+    return computeViewport(rect.width, rect.height);
+  }
+
+  let viewport = computeCssViewport();
 
   function updateViewport() {
-    viewport = computeViewport(canvas.width, canvas.height);
+    viewport = computeCssViewport();
   }
 
   function handlePointerDown(ev) {

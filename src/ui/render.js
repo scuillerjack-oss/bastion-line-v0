@@ -167,6 +167,17 @@ function drawEffects(ctx, effects, nowMs) {
     const t = (nowMs - fx.createdAt) / fx.durationMs;
     if (t >= 1) continue;
     const alpha = 1 - t;
+    // Flash rouge plein, distinct des anneaux dorés d'impact de tour --
+    // conséquence d'un coup porté à LA BASE, doit être impossible à manquer
+    // à l'écran même sans le son (retour bêta physique V0 : le seul HUD
+    // discret + un son optionnel n'étaient pas une "conséquence visible").
+    if (fx.kind === "base_hit") {
+      ctx.fillStyle = `rgba(231, 111, 81, ${alpha * 0.75})`;
+      ctx.beginPath();
+      ctx.arc(fx.x, fx.y, (fx.radius || 14) * (1 + t * 0.9), 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
     ctx.strokeStyle = `rgba(233, 196, 106, ${alpha})`;
     ctx.lineWidth = 3;
     ctx.beginPath();

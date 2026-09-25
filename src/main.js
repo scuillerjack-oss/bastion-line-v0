@@ -1,4 +1,5 @@
 import { createLevelState } from "./engine/state.js";
+import { BASE_R } from "./engine/constants.js";
 import { tick, buildTower, upgradeTower, requestEarlyWave } from "./engine/simulation.js";
 import { LEVELS } from "./engine/levels.js";
 import { TOWER_FAMILIES, getMaxTier } from "./engine/towers.js";
@@ -293,6 +294,7 @@ function handleEvents(events) {
       sfx.enemyKilled();
     } else if (ev.type === "base_hit") {
       sfx.baseHit();
+      effects.push({ kind: "base_hit", x: ev.x, y: ev.y, radius: BASE_R + 8, createdAt: nowMs, durationMs: 380 });
     } else if (ev.type === "wave_started") {
       sfx.waveStart();
       tutorial.show("first_wave");
