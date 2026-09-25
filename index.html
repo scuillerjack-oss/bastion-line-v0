@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<meta name="theme-color" content="#0d1a12" />
+<title>BASTION LINE</title>
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="./icons/icon-180.svg" />
+<link rel="stylesheet" href="./src/style.css" />
+</head>
+<body>
+<div id="app" class="app">
+  <header class="topbar">
+    <div class="stat stat-base"><span class="stat-icon" aria-hidden="true">&#9873;</span><span id="base-hp-value">20</span></div>
+    <div class="stat stat-coins"><span class="stat-icon" aria-hidden="true">&#9679;</span><span id="coins-value">0</span></div>
+    <div class="stat stat-wave"><span class="stat-label">Vague</span><span id="wave-value">1/5</span></div>
+    <button id="pause-btn" class="icon-btn" aria-label="Pause">&#10074;&#10074;</button>
+  </header>
+
+  <main class="stage-wrap" id="stage-wrap">
+    <canvas id="game-canvas"></canvas>
+    <div id="tutorial-toast" class="tutorial-toast" hidden></div>
+  </main>
+
+  <footer class="bottombar" id="bottombar">
+    <div class="prep-row" id="prep-row" hidden>
+      <div class="prep-timer" id="prep-timer">15s</div>
+      <button id="btn-launch-wave" class="overlay-btn small">Lancer la vague</button>
+    </div>
+  </footer>
+
+  <div id="overlay-root" class="overlay-root"></div>
+  <div id="panel-root" class="panel-root"></div>
+</div>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

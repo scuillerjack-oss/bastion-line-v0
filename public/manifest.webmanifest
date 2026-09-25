@@ -1,0 +1,15 @@
+{
+  "name": "BASTION LINE",
+  "short_name": "BASTION LINE",
+  "description": "Tower Defense mobile compact en portrait.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1a12",
+  "theme_color": "#0d1a12",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-180.svg", "sizes": "180x180", "type": "image/svg+xml" }
+  ]
+}
