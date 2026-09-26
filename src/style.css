@@ -142,6 +142,18 @@ html, body {
   z-index: 8;
 }
 .panel-root:empty { display: none; }
+/* Positionnement adaptatif (cahier V2, priorité 2) : un emplacement proche
+   du bas de l'écran ouvre le sélecteur ANCRÉ EN HAUT plutôt qu'en bas, pour
+   qu'il n'apparaisse jamais superposé à l'endroit tapé. */
+.panel-root.panel-root--top {
+  top: 0;
+  bottom: auto;
+}
+.panel-root--top .build-panel {
+  border-top: none;
+  border-bottom: 1px solid rgba(233, 196, 106, 0.3);
+  padding: 12px 14px calc(12px + var(--safe-top)) !important;
+}
 
 .build-panel {
   background: var(--panel);

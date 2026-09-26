@@ -526,6 +526,168 @@ async function main() {
       await page.close();
     }
 
+    // --- Test 13 : un SEUL appui sur un '+' proche du bas de l'écran
+    // n'ouvre QUE le sélecteur, jamais une construction immédiate --
+    // non-régression du bug bêta V1 (cahier V2, priorité 2). Utilise un
+    // vrai tap tactile (page.touchscreen) sur un emplacement RÉEL du
+    // niveau 1 (s5, proche du bas), à deviceScaleFactor=3, exactement le
+    // scénario physique rapporté.
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+
+      async function tapArena(ax, ay) {
+        const screenPos = await page.evaluate(([sx, sy]) => {
+          const canvas = document.getElementById("game-canvas");
+          const rect = canvas.getBoundingClientRect();
+          const ARENA_W = 400, ARENA_H = 700;
+          const scale = Math.min(rect.width / ARENA_W, rect.height / ARENA_H);
+          const offsetX = (rect.width - ARENA_W * scale) / 2;
+          const offsetY = (rect.height - ARENA_H * scale) / 2;
+          return { x: rect.left + offsetX + sx * scale, y: rect.top + offsetY + sy * scale };
+        }, [ax, ay]);
+        await page.touchscreen.tap(screenPos.x, screenPos.y);
+        await page.waitForTimeout(150);
+      }
+
+      const stateBefore = await page.evaluate(() => window.__bastionDebugState());
+      const bottomSlot = stateBefore.buildSlots.find((s) => s.id === "s5"); // (330,480) -- proche du bas, niveau 1
+      await tapArena(bottomSlot.x, bottomSlot.y);
+      const panelClassAfterFirstTap = await page.evaluate(() => document.getElementById("panel-root").className);
+      const towersAfterFirstTap = (await page.evaluate(() => window.__bastionDebugState().towers)).length;
+      const optionCount = await page.locator(".tower-option").count();
+
+      const noPhantomBuild = towersAfterFirstTap === 0;
+      const selectorOpened = optionCount > 0;
+      const anchoredTop = panelClassAfterFirstTap.includes("panel-root--top");
+
+      if (errors.length > 0 || !noPhantomBuild || !selectorOpened || !anchoredTop) {
+        failures += 1;
+        log("ÉCHEC : appui unique sur '+' proche du bas construit immédiatement ou ne s'adapte pas", {
+          panelClassAfterFirstTap,
+          towersAfterFirstTap,
+          optionCount,
+          errors,
+        });
+      } else {
+        log("OK : un seul appui sur un '+' proche du bas ouvre uniquement le sélecteur (ancré en haut), sans construction immédiate");
+      }
+
+      // Deuxième action volontaire : DOIT construire.
+      await page.locator(".tower-option").first().click();
+      await page.waitForTimeout(150);
+      const towersAfterDeliberateClick = (await page.evaluate(() => window.__bastionDebugState().towers)).length;
+      if (towersAfterDeliberateClick !== 1) {
+        failures += 1;
+        log("ÉCHEC : une seconde action volontaire sur une option ne construit pas", { towersAfterDeliberateClick });
+      } else {
+        log("OK : une seconde action volontaire sur une option construit bien la tour choisie");
+      }
+      await page.close();
+    }
+
+    // --- Test 14 : un emplacement proche du HAUT de l'écran garde le
+    // sélecteur ancré en bas (comportement V1 préservé -- seuls les
+    // emplacements proches du bas doivent changer d'ancrage). ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
+      const page = await context.newPage();
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+
+      const stateBefore = await page.evaluate(() => window.__bastionDebugState());
+      const topSlot = stateBefore.buildSlots.find((s) => s.id === "s1"); // (130,120) -- proche du haut, niveau 1
+      const screenPos = await page.evaluate(([sx, sy]) => {
+        const canvas = document.getElementById("game-canvas");
+        const rect = canvas.getBoundingClientRect();
+        const ARENA_W = 400, ARENA_H = 700;
+        const scale = Math.min(rect.width / ARENA_W, rect.height / ARENA_H);
+        const offsetX = (rect.width - ARENA_W * scale) / 2;
+        const offsetY = (rect.height - ARENA_H * scale) / 2;
+        return { x: rect.left + offsetX + sx * scale, y: rect.top + offsetY + sy * scale };
+      }, [topSlot.x, topSlot.y]);
+      await page.touchscreen.tap(screenPos.x, screenPos.y);
+      await page.waitForTimeout(150);
+      const panelClass = await page.evaluate(() => document.getElementById("panel-root").className);
+      const stillBottomAnchored = !panelClass.includes("panel-root--top");
+      if (!stillBottomAnchored) {
+        failures += 1;
+        log("ÉCHEC : un emplacement proche du haut ouvre à tort le sélecteur ancré en haut", { panelClass });
+      } else {
+        log("OK : un emplacement proche du haut garde le sélecteur ancré en bas (comportement V1 préservé)");
+      }
+      await page.close();
+    }
+
+    // --- Test 15 : l'asset Leonardo (tour rapide) charge réellement dans
+    // le build de production et s'affiche à la taille de jeu réelle --
+    // cahier V2, priorité 3 + section 5 ("vérification visuelle mobile de
+    // la tour Leonardo à sa taille réelle"). ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      const responses = [];
+      page.on("response", (r) => {
+        if (r.url().includes("tour_rapide_arbalete.png")) responses.push(r.status());
+      });
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+      const stateBefore = await page.evaluate(() => window.__bastionDebugState());
+      const slot = stateBefore.buildSlots[0];
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slot.x, slot.y]);
+      await page.waitForTimeout(150);
+      await page.locator(".tower-option[data-family='rapide']").click();
+      await page.waitForTimeout(300); // laisse le temps au chargement réseau de l'image
+      const screenshotPath = join(ROOT, "docs", "screenshots", "07_tour_leonardo_taille_reelle.png");
+      await page.screenshot({ path: screenshotPath });
+      const assetLoadedOk = responses.length > 0 && responses.every((s) => s === 200);
+      if (errors.length > 0 || !assetLoadedOk) {
+        failures += 1;
+        log("ÉCHEC chargement réel de l'asset Leonardo", { responses, errors });
+      } else {
+        log(`OK : l'asset Leonardo (tour rapide) charge réellement (HTTP ${responses.join(",")}) et s'affiche sans erreur console`);
+      }
+      await page.close();
+    }
+
+    // --- Test 16 : si l'asset Leonardo échoue à charger (réseau coupé),
+    // le jeu ne casse jamais -- la tour retombe sur la silhouette Canvas
+    // V1, sans écran cassé ni blocage (cahier V2, priorité 3 : "prévoir un
+    // chargement robuste"). ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      await page.route("**/tour_rapide_arbalete.png", (route) => route.abort());
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+      const stateBefore = await page.evaluate(() => window.__bastionDebugState());
+      const slot = stateBefore.buildSlots[0];
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slot.x, slot.y]);
+      await page.waitForTimeout(150);
+      await page.locator(".tower-option[data-family='rapide']").click();
+      await page.waitForTimeout(300);
+      const gameStillPlayable = (await page.locator("#panel-close").count()) === 0 && (await page.evaluate(() => window.__bastionDebugState().towers.length)) === 1;
+      if (errors.length > 0 || !gameStillPlayable) {
+        failures += 1;
+        log("ÉCHEC fallback asset Leonardo bloqué", { errors, gameStillPlayable });
+      } else {
+        log("OK : si l'asset Leonardo échoue à charger, le jeu reste jouable sans erreur (fallback silencieux)");
+      }
+      await page.close();
+    }
+
     await browser.close();
   } finally {
     server.kill();

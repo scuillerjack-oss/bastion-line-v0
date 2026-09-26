@@ -13,6 +13,8 @@
 //    "possibilité de tester deux chemins dans le dernier prototype si le
 //    moteur est stable").
 
+import { findFootprintViolations } from "./footprint.js";
+
 function spawnBurst(kind, count, pathIndex, startDelayMs, intervalMs) {
   const spawns = [];
   for (let i = 0; i < count; i++) {
@@ -41,7 +43,7 @@ const LEVEL_1 = {
   buildSlots: [
     { id: "s1", x: 130, y: 120 },
     { id: "s2", x: 270, y: 120 },
-    { id: "s3", x: 40, y: 300 },
+    { id: "s3", x: 26, y: 300 }, // décalé de x=40 (cahier V2 §1 : trop proche du chemin vertical x=90)
     { id: "s4", x: 160, y: 300 },
     { id: "s5", x: 330, y: 480 },
     { id: "s6", x: 190, y: 500 },
@@ -74,7 +76,7 @@ const LEVEL_2 = {
   paths: [PATH_2],
   buildSlots: [
     { id: "s1", x: 130, y: 60 },
-    { id: "s2", x: 130, y: 250 },
+    { id: "s2", x: 130, y: 320 }, // décalé de y=250 (cahier V2 §1 : emplacement placé EXACTEMENT sur le chemin -- cause du "canon posé sur la route" observé en bêta V1)
     { id: "s3", x: 290, y: 190 },
     { id: "s4", x: 290, y: 330 },
     { id: "s5", x: 40, y: 450 },
@@ -197,7 +199,7 @@ const LEVEL_5 = {
     { id: "s2", x: 240, y: 130 },
     { id: "s3", x: 30, y: 300 },
     { id: "s4", x: 370, y: 300 },
-    { id: "s5", x: 200, y: 420 },
+    { id: "s5", x: 130, y: 420 }, // décalé de x=200 (cahier V2 §1 : emplacement placé EXACTEMENT sur le chemin commun après convergence des deux voies)
     { id: "s6", x: 300, y: 480 },
     { id: "s7", x: 40, y: 560 },
     { id: "s8", x: 200, y: 560 },
@@ -259,6 +261,15 @@ export function validateLevel(level) {
     for (const spawn of wave.spawns) {
       if (spawn.pathIndex >= level.paths.length) errors.push(`spawn référence un chemin inexistant (${spawn.pathIndex})`);
     }
+  }
+  // Garde-fou permanent (cahier V2, priorité 1) : un emplacement dont
+  // l'emprise visuelle empièterait sur le chemin est une erreur de
+  // validation structurelle, au même titre qu'un chemin trop court --
+  // jamais un simple avertissement optionnel.
+  for (const violation of findFootprintViolations(level)) {
+    errors.push(
+      `emplacement ${violation.slotId} trop proche du chemin (distance ${violation.distance.toFixed(1)} < ${violation.required.toFixed(1)} requis)`
+    );
   }
   return errors;
 }

@@ -64,8 +64,23 @@ function renderOverlay(html) {
 function clearOverlay() {
   overlayRoot.innerHTML = "";
 }
-function renderPanel(html) {
+function renderPanel(html, anchorTop = false) {
+  panelRoot.classList.toggle("panel-root--top", anchorTop);
   panelRoot.innerHTML = html;
+}
+
+// Positionnement adaptatif du sélecteur (cahier V2, priorité 2) : une
+// feuille ancrée en bas qui s'ouvre sur un emplacement déjà proche du bas
+// de l'écran finit par se superposer au point que le joueur vient de
+// tapoter. On calcule la position ÉCRAN réelle (pas seulement l'arène) du
+// point tapé via le même viewport que la couche tactile, et on ouvre le
+// sélecteur ancré en haut dès qu'il tomberait dans la zone basse que la
+// feuille occuperait de toute façon.
+function shouldAnchorPanelTop(arenaY) {
+  const viewport = tap.getViewport();
+  const rect = canvas.getBoundingClientRect();
+  const screenY = rect.top + viewport.offsetY + arenaY * viewport.scale;
+  return screenY > window.innerHeight * 0.6;
 }
 function closePanel() {
   panelRoot.innerHTML = "";
@@ -265,13 +280,16 @@ function openBuildPanel(slot) {
   const rows = state.unlockedTowers
     .map((familyId) => familyDescRow(familyId, TOWER_FAMILIES[familyId].buildCost, state.coins < TOWER_FAMILIES[familyId].buildCost, null))
     .join("");
-  renderPanel(`
+  renderPanel(
+    `
     <div class="build-panel">
       <h2>Construire</h2>
       ${rows}
       <button class="panel-close" id="panel-close">Fermer</button>
     </div>
-  `);
+  `,
+    shouldAnchorPanelTop(slot.y)
+  );
   panelRoot.querySelectorAll(".tower-option").forEach((btn) => {
     btn.addEventListener("click", () => {
       const familyId = btn.getAttribute("data-family");
@@ -293,7 +311,8 @@ function openUpgradePanel(tower) {
   const maxTier = getMaxTier(tower.family);
   const isMax = tower.tier >= maxTier;
   const nextStats = isMax ? null : family.tiers[tower.tier + 1];
-  renderPanel(`
+  renderPanel(
+    `
     <div class="build-panel">
       <h2>${family.name} -- palier ${tower.tier + 1}/${maxTier + 1}</h2>
       ${
@@ -303,7 +322,9 @@ function openUpgradePanel(tower) {
       }
       <button class="panel-close" id="panel-close">Fermer</button>
     </div>
-  `);
+  `,
+    shouldAnchorPanelTop(tower.y)
+  );
   const upgradeBtn = panelRoot.querySelector(".tower-option");
   if (upgradeBtn) {
     upgradeBtn.addEventListener("click", () => {

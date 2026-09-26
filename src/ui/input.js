@@ -28,7 +28,25 @@ export function createTapController(canvas, onTap) {
     viewport = computeCssViewport();
   }
 
+  // Cause réelle du bug bêta V1 ("le premier appui sur un '+' proche du bas
+  // de l'écran construit immédiatement une tour") : hitTestEmptySlot()
+  // ouvre le panneau de construction de façon SYNCHRONE, à l'intérieur même
+  // de ce gestionnaire de pointerdown -- avant que le pointeur qui vient de
+  // tapoter ne se soit relâché. Le panneau (feuille ancrée en bas de
+  // l'écran, voir style.css .panel-root) insère alors un vrai <button> de
+  // choix de tour exactement sous le doigt encore posé. Au relâchement, le
+  // navigateur résout le "click" de compatibilité en fonction de l'élément
+  // RÉELLEMENT présent à cet endroit AU MOMENT du relâchement -- ce nouveau
+  // bouton, pas le canvas -- et déclenche donc une construction alors que
+  // le joueur n'a fait qu'UN seul appui. C'est un comportement standard et
+  // documenté (spécification Pointer Events) : annuler l'événement
+  // "pointerdown" d'origine supprime la génération de CE click de
+  // compatibilité pour la suite de ce même pointeur, quel que soit
+  // l'élément qui se retrouve sous le doigt ensuite. C'est la correction de
+  // la cause elle-même (propagation pointer -> click), jamais un délai
+  // arbitraire masquant le symptôme.
   function handlePointerDown(ev) {
+    ev.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const arenaPos = screenToArena(ev.clientX, ev.clientY, rect, viewport);
     onTap(arenaPos);

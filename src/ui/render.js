@@ -1,7 +1,27 @@
 import { computeViewport } from "./viewport.js";
-import { ARENA_W, ARENA_H, BASE_R, ENEMY_R, TOWER_R } from "../engine/constants.js";
+import { ARENA_W, ARENA_H, BASE_R, ENEMY_R, TOWER_R, PATH_WIDTH } from "../engine/constants.js";
 import { TOWER_FAMILIES } from "../engine/towers.js";
 import { ENEMY_KINDS } from "../engine/enemies.js";
+import { loadSprite } from "./sprites.js";
+
+// Pilote d'intégration graphique V2 (cahier des charges V2, priorité 3) :
+// remplacement de la tour "rapide" par l'asset Leonardo fourni, traité
+// techniquement dans scripts/process_leonardo_asset.py (voir ce fichier
+// pour le détail des traitements : recadrage, fond retiré, transparence,
+// redimensionnement). Chargement démarré une seule fois au chargement du
+// module -- si l'asset échoue à charger (réseau, 404...), drawTowerShape
+// retombe sur la silhouette Canvas V1 existante, JAMAIS un écran cassé.
+const rapideSprite = loadSprite("./assets/towers/tour_rapide_arbalete.png");
+// Dimensions d'affichage choisies pour rester dans l'enveloppe d'emprise
+// partagée par toutes les tours (voir engine/constants.js,
+// TOWER_FOOTPRINT_RADIUS) : largeur 34 (demi-largeur 17 <= budget latéral
+// 20), hauteur 48 avec ancrage bas décalé de +14 sous le centre logique de
+// la tour (bas<=20, haut=34<=36 -- l'anneau de palier max existant monte
+// déjà jusqu'à -36, donc ce sprite ne dépasse jamais ce qui était déjà
+// toléré visuellement en V1).
+const RAPIDE_SPRITE_W = 34;
+const RAPIDE_SPRITE_H = 48;
+const RAPIDE_SPRITE_BOTTOM_OFFSET = 14;
 
 // Identité visuelle V1 (cahier des charges V1, section 4) -- passer de
 // primitives géométriques abstraites (ronds/triangles/lettres) à un petit
@@ -12,7 +32,6 @@ import { ENEMY_KINDS } from "../engine/enemies.js";
 
 const PATH_BORDER_COLOR = "#2a2420";
 const PATH_FILL_COLOR = "#8a6d4f";
-const PATH_WIDTH = 34;
 const BG_COLOR = "#3a5a30";
 const SLOT_STONE_COLOR = "#6b6459";
 const SLOT_STONE_EDGE = "#4a4438";
@@ -231,6 +250,21 @@ function drawTowerShape(ctx, tower, familyDef) {
   ctx.lineWidth = 2;
   switch (tower.family) {
     case "rapide": {
+      // Pilote d'intégration Leonardo (cahier V2, priorité 3) : si l'asset
+      // est chargé, il remplace entièrement la silhouette Canvas. Sinon
+      // (chargement en cours ou échoué), fallback immédiat et silencieux
+      // sur la silhouette Canvas V1 -- jamais d'écran cassé ni de tour
+      // invisible en attendant.
+      if (rapideSprite.status === "loaded") {
+        ctx.drawImage(
+          rapideSprite.image,
+          x - RAPIDE_SPRITE_W / 2,
+          y + RAPIDE_SPRITE_BOTTOM_OFFSET - RAPIDE_SPRITE_H,
+          RAPIDE_SPRITE_W,
+          RAPIDE_SPRITE_H
+        );
+        break;
+      }
       // Arbalète montée sur poste : bras anguleux flairés vers l'arrière
       // (silhouette "arme légère"), jamais une simple barre horizontale --
       // trouvé par QA visuelle : un arc fin fondu au poste se lisait comme
