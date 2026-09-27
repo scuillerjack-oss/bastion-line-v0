@@ -6,9 +6,8 @@ import { markTutorialSeen } from "../engine/save.js";
 // jamais réapparaître.
 export const TUTORIAL_TEXTS = {
   first_build_slot: "Touche un emplacement vide pour construire une tour.",
-  first_tower_rapide: "Tour rapide : cadence élevée, efficace contre les ennemis fragiles ou rapides.",
+  first_tower_rapide: "Tour d'archers : cadence élevée, efficace contre les ennemis fragiles ou rapides.",
   first_tower_canon: "Canon : explosion de zone, idéal contre les groupes d'ennemis.",
-  first_tower_controle: "Tour de contrôle : ralentit les ennemis, renforce tes autres tours.",
   first_tower_longue_portee: "Longue portée : dégâts ciblés élevés, utile contre les ennemis résistants.",
   first_upgrade: "Touche une tour existante pour l'améliorer : plus puissante, coûte des pièces.",
   first_wave: "La vague avance automatiquement. Prépare tes défenses avant qu'elle n'arrive.",

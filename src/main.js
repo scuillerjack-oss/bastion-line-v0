@@ -64,28 +64,55 @@ function renderOverlay(html) {
 function clearOverlay() {
   overlayRoot.innerHTML = "";
 }
-function renderPanel(html, anchorTop = false) {
-  panelRoot.classList.toggle("panel-root--top", anchorTop);
+function renderPanel(html) {
   panelRoot.innerHTML = html;
 }
 
-// Positionnement adaptatif du sélecteur (cahier V2, priorité 2) : une
-// feuille ancrée en bas qui s'ouvre sur un emplacement déjà proche du bas
-// de l'écran finit par se superposer au point que le joueur vient de
-// tapoter. On calcule la position ÉCRAN réelle (pas seulement l'arène) du
-// point tapé via le même viewport que la couche tactile, et on ouvre le
-// sélecteur ancré en haut dès qu'il tomberait dans la zone basse que la
-// feuille occuperait de toute façon.
-function shouldAnchorPanelTop(arenaY) {
-  const viewport = tap.getViewport();
-  const rect = canvas.getBoundingClientRect();
-  const screenY = rect.top + viewport.offsetY + arenaY * viewport.scale;
-  return screenY > window.innerHeight * 0.6;
-}
 function closePanel() {
   panelRoot.innerHTML = "";
   if (state) state.selectedTowerId = null;
+  panelGate = null;
 }
+
+// --- Verrou tactile en deux temps (cahier V3, section 1) -------------------
+// Retour bêta V2 : malgré la correction Pointer Events (qui supprime déjà le
+// click de compatibilité pour LE pointeur qui vient d'ouvrir le sélecteur),
+// un vrai réflexe de double-tap RAPIDE -- deux contacts tactiles distincts et
+// authentiques, très rapprochés dans le temps -- pouvait encore faire
+// atterrir un second tap involontaire pile sur l'option qui vient d'
+// apparaître. La règle V3 est stricte : un même GESTE (au sens large, y
+// compris un double-tap réflexe) ne doit jamais à la fois sélectionner un
+// emplacement et construire/choisir une défense. Deux conditions, cumulées,
+// doivent être vraies avant qu'un bouton du sélecteur ne devienne actif :
+//  1. le pointeur qui a ouvert le panneau a réellement été relâché
+//     (pointerup/pointercancel) -- garantit qu'il ne s'agit jamais du MÊME
+//     contact tactile qui glisserait sous le bouton ;
+//  2. un délai minimal s'est écoulé depuis l'ouverture -- sépare un second
+//     tap réellement délibéré d'un réflexe de double-tap. 300ms n'est pas
+//     un nombre arbitraire masquant un bug : c'est la fenêtre de double-tap
+//     standard des plateformes mobiles elles-mêmes (Android
+//     ViewConfiguration.getDoubleTapTimeout() ≈ 300ms, iOS similaire) --
+//     donc précisément le seuil au-delà duquel ces plateformes elles-mêmes
+//     cessent de considérer deux taps comme UN SEUL geste.
+// Le hook de debug __bastionDebugTapArena (tests non-tactiles uniquement,
+// jamais exposé au joueur) n'a pas de pointerId réel : il ouvre un panneau
+// directement "armé", puisqu'il ne correspond à aucun geste physique et ne
+// peut donc jamais reproduire le risque de double-tap qu'on protège ici.
+const PANEL_ARM_DELAY_MS = 300;
+let panelGate = null;
+
+function armPanelGate(pointerId) {
+  panelGate = pointerId == null ? null : { pointerId, openedAt: performance.now(), released: false };
+}
+function isPanelArmed() {
+  if (!panelGate) return true;
+  return panelGate.released && performance.now() - panelGate.openedAt >= PANEL_ARM_DELAY_MS;
+}
+function releasePanelGate(ev) {
+  if (panelGate && ev.pointerId === panelGate.pointerId) panelGate.released = true;
+}
+window.addEventListener("pointerup", releasePanelGate);
+window.addEventListener("pointercancel", releasePanelGate);
 
 function updateHud() {
   if (!state) return;
@@ -274,24 +301,23 @@ function familyDescRow(familyId, cost, disabled, onClick) {
   </button>`;
 }
 
-function openBuildPanel(slot) {
+function openBuildPanel(slot, pointerId) {
   if (!state || appPhase !== "playing") return;
   tutorial.show("first_build_slot");
+  armPanelGate(pointerId);
   const rows = state.unlockedTowers
     .map((familyId) => familyDescRow(familyId, TOWER_FAMILIES[familyId].buildCost, state.coins < TOWER_FAMILIES[familyId].buildCost, null))
     .join("");
-  renderPanel(
-    `
+  renderPanel(`
     <div class="build-panel">
       <h2>Construire</h2>
       ${rows}
       <button class="panel-close" id="panel-close">Fermer</button>
     </div>
-  `,
-    shouldAnchorPanelTop(slot.y)
-  );
+  `);
   panelRoot.querySelectorAll(".tower-option").forEach((btn) => {
     btn.addEventListener("click", () => {
+      if (!isPanelArmed()) return; // deuxième action pas encore reconnue comme distincte/volontaire (cahier V3 §1)
       const familyId = btn.getAttribute("data-family");
       if (buildTower(state, slot.id, familyId)) {
         sfx.build();
@@ -303,16 +329,16 @@ function openBuildPanel(slot) {
   document.getElementById("panel-close").addEventListener("click", closePanel);
 }
 
-function openUpgradePanel(tower) {
+function openUpgradePanel(tower, pointerId) {
   if (!state || appPhase !== "playing") return;
   tutorial.show("first_upgrade");
   state.selectedTowerId = tower.id;
+  armPanelGate(pointerId);
   const family = TOWER_FAMILIES[tower.family];
   const maxTier = getMaxTier(tower.family);
   const isMax = tower.tier >= maxTier;
   const nextStats = isMax ? null : family.tiers[tower.tier + 1];
-  renderPanel(
-    `
+  renderPanel(`
     <div class="build-panel">
       <h2>${family.name} -- palier ${tower.tier + 1}/${maxTier + 1}</h2>
       ${
@@ -322,12 +348,11 @@ function openUpgradePanel(tower) {
       }
       <button class="panel-close" id="panel-close">Fermer</button>
     </div>
-  `,
-    shouldAnchorPanelTop(tower.y)
-  );
+  `);
   const upgradeBtn = panelRoot.querySelector(".tower-option");
   if (upgradeBtn) {
     upgradeBtn.addEventListener("click", () => {
+      if (!isPanelArmed()) return;
       if (upgradeTower(state, tower.id)) {
         sfx.upgrade();
         closePanel();
@@ -337,16 +362,16 @@ function openUpgradePanel(tower) {
   document.getElementById("panel-close").addEventListener("click", closePanel);
 }
 
-function onTap(arenaPos) {
+function onTap(arenaPos, pointerId) {
   if (!state || appPhase !== "playing") return;
   const tower = hitTestTower(state, arenaPos);
   if (tower) {
-    openUpgradePanel(tower);
+    openUpgradePanel(tower, pointerId);
     return;
   }
   const slot = hitTestEmptySlot(state, arenaPos);
   if (slot) {
-    openBuildPanel(slot);
+    openBuildPanel(slot, pointerId);
     return;
   }
   closePanel();
@@ -360,7 +385,6 @@ function handleEvents(events) {
       if (ev.family === "rapide") sfx.shootRapide();
       else if (ev.family === "canon") sfx.shootCanon();
       else if (ev.family === "longue_portee") sfx.shootLongue();
-      else if (ev.family === "controle") sfx.shootControle();
     } else if (ev.type === "enemy_killed") {
       sfx.enemyKilled();
     } else if (ev.type === "base_hit") {

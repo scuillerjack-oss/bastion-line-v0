@@ -29,9 +29,32 @@ test("progression perceptible : chaque niveau débloque au moins autant de famil
   }
 });
 
-test("les 4 familles de tours sont représentées au total sur l'ensemble des niveaux", () => {
+test("toutes les familles de tours (TOWER_ORDER) sont représentées au total sur l'ensemble des niveaux", () => {
   const allUnlocked = new Set(LEVELS.flatMap((l) => l.unlockedTowers));
   for (const family of TOWER_ORDER) assert.ok(allUnlocked.has(family), `famille jamais débloquée: ${family}`);
+});
+
+// Non-régression V3 (cahier, section 3) : "Supprimer la Tour de contrôle du
+// jeu et de tous les menus, descriptions, coûts, règles de déblocage et
+// tests associés" -- verrouille qu'elle ne peut plus jamais réapparaître
+// silencieusement dans un niveau.
+test("la Tour de contrôle a bien été retirée : aucun niveau ne la débloque, TOWER_ORDER ne la contient plus", () => {
+  assert.ok(!TOWER_ORDER.includes("controle"), "TOWER_ORDER contient encore 'controle'");
+  for (const level of LEVELS) {
+    assert.ok(!level.unlockedTowers.includes("controle"), `niveau ${level.id} débloque encore 'controle'`);
+  }
+});
+
+// Non-régression V3 (cahier, section 3) : la Longue portée doit apparaître
+// nettement avant le dernier niveau (choix documenté : niveau 3, voir
+// levels.js et le rapport technique V3), jamais réservée au niveau final.
+test("la Longue portée est débloquée sensiblement plus tôt que le dernier niveau (V3)", () => {
+  const firstLevelWithLonguePortee = LEVELS.find((l) => l.unlockedTowers.includes("longue_portee"));
+  assert.ok(firstLevelWithLonguePortee, "aucun niveau ne débloque la longue portée");
+  assert.ok(
+    firstLevelWithLonguePortee.id <= LEVELS.length - 2,
+    `longue portée débloquée trop tard (niveau ${firstLevelWithLonguePortee.id})`
+  );
 });
 
 test("seul le dernier niveau peut avoir plusieurs chemins (les autres : un chemin unique au départ)", () => {

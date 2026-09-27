@@ -49,7 +49,15 @@ export function createTapController(canvas, onTap) {
     ev.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const arenaPos = screenToArena(ev.clientX, ev.clientY, rect, viewport);
-    onTap(arenaPos);
+    // L'identifiant du pointeur d'origine est transmis jusqu'au sélecteur
+    // (voir main.js, panelGate) : cahier V3, section 1 -- "un même geste ne
+    // doit jamais à la fois sélectionner un emplacement et choisir/
+    // construire une défense". La suppression du click de compatibilité
+    // (ci-dessus) empêche déjà CE pointeur précis de déclencher un bouton
+    // nouvellement inséré, mais ne protège pas contre un réflexe de double
+    // tap RÉEL et rapide (deux contacts distincts) sur le même endroit --
+    // c'est ce que le verrou temporel de main.js couvre en complément.
+    onTap(arenaPos, ev.pointerId);
   }
 
   canvas.addEventListener("pointerdown", handlePointerDown);

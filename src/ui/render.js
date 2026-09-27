@@ -4,24 +4,24 @@ import { TOWER_FAMILIES } from "../engine/towers.js";
 import { ENEMY_KINDS } from "../engine/enemies.js";
 import { loadSprite } from "./sprites.js";
 
-// Pilote d'intégration graphique V2 (cahier des charges V2, priorité 3) :
-// remplacement de la tour "rapide" par l'asset Leonardo fourni, traité
-// techniquement dans scripts/process_leonardo_asset.py (voir ce fichier
-// pour le détail des traitements : recadrage, fond retiré, transparence,
-// redimensionnement). Chargement démarré une seule fois au chargement du
-// module -- si l'asset échoue à charger (réseau, 404...), drawTowerShape
-// retombe sur la silhouette Canvas V1 existante, JAMAIS un écran cassé.
-const rapideSprite = loadSprite("./assets/towers/tour_rapide_arbalete.png");
-// Dimensions d'affichage choisies pour rester dans l'enveloppe d'emprise
-// partagée par toutes les tours (voir engine/constants.js,
-// TOWER_FOOTPRINT_RADIUS) : largeur 34 (demi-largeur 17 <= budget latéral
-// 20), hauteur 48 avec ancrage bas décalé de +14 sous le centre logique de
-// la tour (bas<=20, haut=34<=36 -- l'anneau de palier max existant monte
-// déjà jusqu'à -36, donc ce sprite ne dépasse jamais ce qui était déjà
-// toléré visuellement en V1).
-const RAPIDE_SPRITE_W = 34;
-const RAPIDE_SPRITE_H = 48;
-const RAPIDE_SPRITE_BOTTOM_OFFSET = 14;
+// Registre d'intégration graphique Leonardo (né en V2 comme pilote sur la
+// seule tour "rapide", généralisé en V3 -- cahier V3, section 6 :
+// "préparer une architecture d'intégration propre et réutilisable" pour les
+// assets Canon/Longue portée/ennemis/carte encore à venir). Chaque entrée
+// est INDÉPENDANTE et OPTIONNELLE : une famille sans asset ici garde
+// simplement sa silhouette Canvas existante, sans aucun code à ajouter
+// ailleurs. w/h/bottomOffset restent à choisir pour que le rendu tienne
+// dans l'enveloppe d'emprise partagée (engine/constants.js,
+// TOWER_FOOTPRINT_RADIUS) -- voir tour_rapide_arbalete.png pour un exemple
+// de calcul (largeur 34, hauteur 48, ancrage bas +14 sous le centre
+// logique : bas<=20, haut=34<=36, l'anneau de palier max montant déjà
+// jusqu'à -36).
+const TOWER_SPRITE_CONFIG = {
+  rapide: { src: "./assets/towers/tour_rapide_arbalete.png", w: 34, h: 48, bottomOffset: 14 },
+};
+const towerSprites = Object.fromEntries(
+  Object.entries(TOWER_SPRITE_CONFIG).map(([family, cfg]) => [family, { ...cfg, sprite: loadSprite(cfg.src) }])
+);
 
 // Identité visuelle V1 (cahier des charges V1, section 4) -- passer de
 // primitives géométriques abstraites (ronds/triangles/lettres) à un petit
@@ -244,27 +244,36 @@ function drawEmptySlot(ctx, slot) {
 // comprendre qu'il voit une base, des tours et des ennemis").
 function drawTowerShape(ctx, tower, familyDef) {
   const { x, y } = tower;
+  // Registre d'assets réutilisable (cahier V3, section 6) : si un sprite
+  // Leonardo est configuré ET chargé pour cette famille, il remplace
+  // entièrement la silhouette Canvas. Sinon (pas d'asset prévu, chargement
+  // en cours ou échoué), fallback immédiat et silencieux sur la silhouette
+  // Canvas -- jamais d'écran cassé ni de tour invisible en attendant.
+  const spriteEntry = towerSprites[tower.family];
+  if (spriteEntry && spriteEntry.sprite.status === "loaded") {
+    ctx.drawImage(spriteEntry.sprite.image, x - spriteEntry.w / 2, y + spriteEntry.bottomOffset - spriteEntry.h, spriteEntry.w, spriteEntry.h);
+  } else {
+    drawTowerFallbackShape(ctx, tower, familyDef);
+  }
+  // Anneaux de palier : un petit anneau par palier possédé au-dessus de la
+  // tour -- lisible d'un coup d'oeil sans devoir ouvrir le panneau.
+  for (let i = 0; i < tower.tier; i++) {
+    ctx.strokeStyle = "#f4f1de";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y - 30 - i * 6, 3, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+}
+
+function drawTowerFallbackShape(ctx, tower, familyDef) {
+  const { x, y } = tower;
   const c = familyDef.color;
   ctx.fillStyle = c;
   ctx.strokeStyle = "#241f19";
   ctx.lineWidth = 2;
   switch (tower.family) {
     case "rapide": {
-      // Pilote d'intégration Leonardo (cahier V2, priorité 3) : si l'asset
-      // est chargé, il remplace entièrement la silhouette Canvas. Sinon
-      // (chargement en cours ou échoué), fallback immédiat et silencieux
-      // sur la silhouette Canvas V1 -- jamais d'écran cassé ni de tour
-      // invisible en attendant.
-      if (rapideSprite.status === "loaded") {
-        ctx.drawImage(
-          rapideSprite.image,
-          x - RAPIDE_SPRITE_W / 2,
-          y + RAPIDE_SPRITE_BOTTOM_OFFSET - RAPIDE_SPRITE_H,
-          RAPIDE_SPRITE_W,
-          RAPIDE_SPRITE_H
-        );
-        break;
-      }
       // Arbalète montée sur poste : bras anguleux flairés vers l'arrière
       // (silhouette "arme légère"), jamais une simple barre horizontale --
       // trouvé par QA visuelle : un arc fin fondu au poste se lisait comme
@@ -327,14 +336,12 @@ function drawTowerShape(ctx, tower, familyDef) {
       ctx.stroke();
       break;
     }
-    case "controle":
     default: {
-      // Tour de contrôle : corps CYLINDRIQUE à parois droites (jamais un
-      // trapèze "torse") + orbe encastré au sommet -- trouvé par QA
-      // visuelle : un trapèze surmonté d'un rond lisait comme une
-      // silhouette HUMANOÏDE (torse+tête), risquant une confusion directe
-      // avec l'ennemi "standard". Le corps architectural (parois
-      // verticales + bandeaux de pierre) évite ce risque.
+      // Filet de sécurité défensif pour une famille inconnue (aucune des 3
+      // familles actuelles ne l'atteint) -- ancienne silhouette de la Tour
+      // de contrôle, retirée du jeu en V3 (cahier, section 3) mais laissée
+      // ici comme fallback plutôt que de risquer un rendu vide en cas
+      // d'ajout futur mal branché.
       ctx.beginPath();
       ctx.moveTo(x - 8, y + 12);
       ctx.lineTo(x - 8, y - 8);
@@ -375,15 +382,6 @@ function drawTowerShape(ctx, tower, familyDef) {
       ctx.stroke();
       break;
     }
-  }
-  // Anneaux de palier : un petit anneau par palier possédé au-dessus de la
-  // tour -- lisible d'un coup d'oeil sans devoir ouvrir le panneau.
-  for (let i = 0; i < tower.tier; i++) {
-    ctx.strokeStyle = "#f4f1de";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(x, y - 30 - i * 6, 3, 0, Math.PI * 2);
-    ctx.stroke();
   }
 }
 
@@ -485,25 +483,56 @@ function drawEnemy(ctx, enemy, elapsedMs) {
 function drawProjectile(ctx, proj) {
   const familyDef = TOWER_FAMILIES[proj.family];
   ctx.fillStyle = familyDef.color;
-  if (proj.family === "longue_portee") {
+  if (proj.family === "rapide") {
+    drawArrowProjectile(ctx, proj);
+  } else if (proj.family === "longue_portee") {
     ctx.strokeStyle = familyDef.color;
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.moveTo(proj.x - proj.vx * 0.025, proj.y - proj.vy * 0.025);
     ctx.lineTo(proj.x, proj.y);
     ctx.stroke();
-  } else if (proj.family === "controle") {
-    // Petit anneau "magique" plutôt qu'un disque plein.
-    ctx.strokeStyle = familyDef.color;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.arc(proj.x, proj.y, 4.5, 0, Math.PI * 2);
-    ctx.stroke();
   } else {
     ctx.beginPath();
     ctx.arc(proj.x, proj.y, proj.family === "canon" ? 6 : 4, 0, Math.PI * 2);
     ctx.fill();
   }
+}
+
+// Flèche d'archer clairement lisible (cahier V3, section 2 : "les archers
+// doivent tirer des flèches clairement lisibles, et non des billes/points
+// jaunes"). Hampe + pointe + empennage, orientée le long du vecteur de
+// déplacement réel du projectile -- jamais un simple disque de couleur.
+function drawArrowProjectile(ctx, proj) {
+  const angle = Math.atan2(proj.vy, proj.vx);
+  const len = 15;
+  const headLen = 5;
+  const headW = 3.2;
+  ctx.save();
+  ctx.translate(proj.x, proj.y);
+  ctx.rotate(angle);
+  ctx.strokeStyle = "#6b4a2b";
+  ctx.lineWidth = 1.8;
+  ctx.beginPath();
+  ctx.moveTo(-len / 2, 0);
+  ctx.lineTo(len / 2 - headLen, 0);
+  ctx.stroke();
+  ctx.fillStyle = "#e9e4d4";
+  ctx.beginPath();
+  ctx.moveTo(len / 2, 0);
+  ctx.lineTo(len / 2 - headLen, -headW);
+  ctx.lineTo(len / 2 - headLen, headW);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = TOWER_FAMILIES.rapide.color;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(-len / 2, 0);
+  ctx.lineTo(-len / 2 + 4, -3);
+  ctx.moveTo(-len / 2, 0);
+  ctx.lineTo(-len / 2 + 4, 3);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawEffects(ctx, effects, nowMs) {

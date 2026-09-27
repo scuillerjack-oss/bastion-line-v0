@@ -3,15 +3,19 @@
 // future V1 ne sont PAS anticipés ici : seulement ce qui est nécessaire pour
 // valider la boucle centrale.
 //
-// Introduction progressive des 4 familles de tours et des 4 archétypes
+// Introduction progressive des familles de tours et des archétypes
 // d'ennemis à travers les niveaux (jamais tout d'un coup) :
-//  - Niveau 1 : rapide seul, ennemis standard uniquement (démonstration).
+//  - Niveau 1 : rapide (archers) seul, ennemis standard uniquement.
 //  - Niveau 2 : + canon, + ennemi blindé.
-//  - Niveau 3 : + contrôle, + ennemi essaim.
-//  - Niveau 4 : + longue portée (les 4 familles réunies), mélange complet.
-//  - Niveau 5 : les 4 familles, DEUX chemins convergents (cahier, section 3 :
+//  - Niveau 3 : + longue portée (avancée depuis le niveau 4 -- cahier V3,
+//    section 3), + ennemi essaim.
+//  - Niveau 4 : les 3 familles réunies, mélange complet.
+//  - Niveau 5 : les 3 familles, DEUX chemins convergents (cahier, section 3 :
 //    "possibilité de tester deux chemins dans le dernier prototype si le
 //    moteur est stable").
+//
+// La Tour de contrôle (4e famille V0-V2) a été retirée en V3 (cahier,
+// section 3) -- voir towers.js.
 
 import { findFootprintViolations } from "./footprint.js";
 
@@ -84,11 +88,24 @@ const LEVEL_2 = {
     { id: "s7", x: 60, y: 560 },
   ],
   unlockedTowers: ["rapide", "canon"],
+  // Rééquilibrage V3 (cahier, section 4) : l'audit par simulation
+  // reproductible (scripts/balance_simulation.mjs) montrait 100% de PV de
+  // base restants sur CE niveau avec un joueur "raisonnable" -- confirmation
+  // d'une facilité excessive, pas un simple effet de début de partie (voir
+  // le même constat jusqu'au niveau 5). Remède appliqué, dans cet ordre :
+  // plus d'ennemis par vague, une vague supplémentaire, ET un resserrement
+  // du délai d'apparition (intervalMs) des ennemis blindés -- l'audit a
+  // montré qu'AUGMENTER LE SEUL NOMBRE d'ennemis de même archétype ne change
+  // rien contre un plateau de tours déjà construit/amélioré (le surplus
+  // meurt simplement aussi vite qu'il arrive) : seule une arrivée plus
+  // dense crée une pression réelle et mesurable, sans toucher aux
+  // statistiques d'ennemi ni introduire de nouvel archétype.
   waves: [
-    { prepMs: 12000, spawns: spawnBurst("standard", 6, 0, 0, 850) },
-    { prepMs: 14000, spawns: [...spawnBurst("standard", 5, 0, 0, 800), ...spawnBurst("blinde", 2, 0, 5200, 1800)] },
-    { prepMs: 14000, spawns: [...spawnBurst("standard", 6, 0, 0, 700), ...spawnBurst("blinde", 3, 0, 4600, 1600)] },
-    { prepMs: 14000, spawns: [...spawnBurst("standard", 8, 0, 0, 650), ...spawnBurst("blinde", 3, 0, 5600, 1500)] },
+    { prepMs: 12000, spawns: spawnBurst("standard", 8, 0, 0, 750) },
+    { prepMs: 14000, spawns: [...spawnBurst("standard", 7, 0, 0, 750), ...spawnBurst("blinde", 3, 0, 5200, 550)] },
+    { prepMs: 14000, spawns: [...spawnBurst("standard", 8, 0, 0, 650), ...spawnBurst("blinde", 4, 0, 4600, 500)] },
+    { prepMs: 14000, spawns: [...spawnBurst("standard", 10, 0, 0, 600), ...spawnBurst("blinde", 5, 0, 5600, 480)] },
+    { prepMs: 15000, spawns: [...spawnBurst("standard", 8, 0, 0, 550), ...spawnBurst("blinde", 4, 0, 4800, 460)] },
   ],
 };
 
@@ -106,7 +123,11 @@ const PATH_3 = [
 
 const LEVEL_3 = {
   id: 3,
-  name: "Contrôle de la vitesse",
+  // Renommé en V3 (cahier, section 3) : ce niveau introduisait la Tour de
+  // contrôle (retirée) ; il introduit désormais la Longue portée à la
+  // place -- voir le rapport technique V3 pour la justification de cet
+  // emplacement de déblocage.
+  name: "Renfort lointain",
   baseHp: 22,
   startCoins: 150,
   paths: [PATH_3],
@@ -119,16 +140,27 @@ const LEVEL_3 = {
     { id: "s6", x: 130, y: 560 },
     { id: "s7", x: 270, y: 560 },
   ],
-  unlockedTowers: ["rapide", "canon", "controle"],
+  // Longue portée avancée du niveau 4 au niveau 3 (cahier V3, section 3 :
+  // "la faire apparaître/débloquer sensiblement plus tôt... pas
+  // obligatoirement niveau 1"). Choix documenté dans le rapport technique
+  // V3 : ce niveau introduit déjà l'ennemi "blindé" en nombre croissant,
+  // exactement la cible de rôle de la longue portée (bonus anti-blindé) ;
+  // l'économie de départ (150) couvre son coût de construction (70) sans
+  // écraser l'accès aux 2 autres familles déjà débloquées.
+  unlockedTowers: ["rapide", "canon", "longue_portee"],
+  // Rééquilibrage V3 (cahier, section 4) -- même constat et même remède que
+  // le niveau 2 (voir commentaire là-bas) : plus d'ennemis, une vague de
+  // plus, aucune stat d'ennemi ni nouvel archétype.
   waves: [
-    { prepMs: 12000, spawns: [...spawnBurst("standard", 5, 0, 0, 800), ...spawnBurst("essaim", 6, 0, 4600, 220)] },
-    { prepMs: 14000, spawns: [...spawnBurst("standard", 4, 0, 0, 750), ...spawnBurst("blinde", 2, 0, 3200, 1700), ...spawnBurst("essaim", 8, 0, 6800, 200)] },
-    { prepMs: 14000, spawns: [...spawnBurst("essaim", 10, 0, 0, 220), ...spawnBurst("standard", 6, 0, 2600, 700)] },
-    { prepMs: 14000, spawns: [...spawnBurst("standard", 6, 0, 0, 650), ...spawnBurst("blinde", 3, 0, 4200, 1500), ...spawnBurst("essaim", 10, 0, 8800, 200)] },
+    { prepMs: 12000, spawns: [...spawnBurst("standard", 7, 0, 0, 700), ...spawnBurst("essaim", 8, 0, 4600, 70)] },
+    { prepMs: 14000, spawns: [...spawnBurst("standard", 6, 0, 0, 700), ...spawnBurst("blinde", 3, 0, 3200, 520), ...spawnBurst("essaim", 10, 0, 6800, 65)] },
+    { prepMs: 14000, spawns: [...spawnBurst("essaim", 13, 0, 0, 70), ...spawnBurst("standard", 8, 0, 2600, 650)] },
+    { prepMs: 14000, spawns: [...spawnBurst("standard", 8, 0, 0, 600), ...spawnBurst("blinde", 4, 0, 4200, 480), ...spawnBurst("essaim", 12, 0, 8800, 65)] },
+    { prepMs: 15000, spawns: [...spawnBurst("standard", 8, 0, 0, 550), ...spawnBurst("blinde", 5, 0, 4000, 450), ...spawnBurst("essaim", 12, 0, 7500, 62)] },
   ],
 };
 
-// --- Niveau 4 : + longue portée, les 4 familles réunies --------------------
+// --- Niveau 4 : les 3 familles réunies, mélange complet --------------------
 const PATH_4 = [
   { x: 360, y: 30 },
   { x: 360, y: 180 },
@@ -143,7 +175,11 @@ const PATH_4 = [
 
 const LEVEL_4 = {
   id: 4,
-  name: "Portée et précision",
+  // Renommé en V3 : "Portée et précision" décrivait l'introduction de la
+  // longue portée à CE niveau -- désormais avancée au niveau 3 (cahier V3,
+  // section 3), ce niveau devient un mélange de vagues plus dense avec les
+  // 3 familles déjà toutes disponibles.
+  name: "Vagues croisées",
   baseHp: 22,
   startCoins: 160,
   paths: [PATH_4],
@@ -157,13 +193,24 @@ const LEVEL_4 = {
     { id: "s7", x: 40, y: 540 },
     { id: "s8", x: 200, y: 560 },
   ],
-  unlockedTowers: ["rapide", "canon", "controle", "longue_portee"],
+  unlockedTowers: ["rapide", "canon", "longue_portee"],
+  // Rééquilibrage V3 (cahier, section 4) -- même constat et même remède
+  // (voir niveau 2) : plus d'ennemis par vague + une vague supplémentaire.
   waves: [
-    { prepMs: 13000, spawns: [...spawnBurst("standard", 6, 0, 0, 750), ...spawnBurst("blinde", 2, 0, 4000, 1700)] },
-    { prepMs: 14000, spawns: [...spawnBurst("rapide", 6, 0, 0, 500), ...spawnBurst("standard", 4, 0, 2800, 750)] },
-    { prepMs: 14000, spawns: [...spawnBurst("essaim", 10, 0, 0, 200), ...spawnBurst("blinde", 3, 0, 5200, 1500)] },
-    { prepMs: 15000, spawns: [...spawnBurst("standard", 6, 0, 0, 700), ...spawnBurst("rapide", 5, 0, 3800, 480), ...spawnBurst("blinde", 3, 0, 6800, 1400)] },
-    { prepMs: 15000, spawns: [...spawnBurst("blinde", 5, 0, 0, 1600), ...spawnBurst("essaim", 10, 0, 3000, 200), ...spawnBurst("rapide", 6, 0, 8000, 450)] },
+    { prepMs: 13000, spawns: [...spawnBurst("standard", 9, 0, 0, 650), ...spawnBurst("blinde", 3, 0, 4000, 520)] },
+    { prepMs: 14000, spawns: [...spawnBurst("rapide", 9, 0, 0, 450), ...spawnBurst("standard", 6, 0, 2800, 650)] },
+    { prepMs: 14000, spawns: [...spawnBurst("essaim", 14, 0, 0, 62), ...spawnBurst("blinde", 4, 0, 5200, 480)] },
+    { prepMs: 15000, spawns: [...spawnBurst("standard", 9, 0, 0, 600), ...spawnBurst("rapide", 7, 0, 3800, 420), ...spawnBurst("blinde", 5, 0, 6800, 450)] },
+    { prepMs: 15000, spawns: [...spawnBurst("blinde", 7, 0, 0, 450), ...spawnBurst("essaim", 14, 0, 3000, 62), ...spawnBurst("rapide", 9, 0, 8000, 400)] },
+    {
+      prepMs: 16000,
+      spawns: [
+        ...spawnBurst("standard", 8, 0, 0, 550),
+        ...spawnBurst("blinde", 5, 0, 3600, 450),
+        ...spawnBurst("essaim", 12, 0, 6200, 62),
+        ...spawnBurst("rapide", 6, 0, 8600, 420),
+      ],
+    },
   ],
 };
 
@@ -204,40 +251,55 @@ const LEVEL_5 = {
     { id: "s7", x: 40, y: 560 },
     { id: "s8", x: 200, y: 560 },
   ],
-  unlockedTowers: ["rapide", "canon", "controle", "longue_portee"],
+  unlockedTowers: ["rapide", "canon", "longue_portee"],
+  // Rééquilibrage V3 (cahier, section 4) -- même constat et même remède
+  // (voir niveau 2) : plus d'ennemis par vague + une vague supplémentaire.
+  // Niveau final : la vague 6 mêle les deux chemins et les 3 archétypes
+  // renforcés (standard/blindé/essaim), jamais un nouvel archétype.
   waves: [
     {
       prepMs: 14000,
-      spawns: [...spawnBurst("standard", 5, 0, 0, 800), ...spawnBurst("standard", 5, 1, 400, 800)],
+      spawns: [...spawnBurst("standard", 7, 0, 0, 700), ...spawnBurst("standard", 7, 1, 350, 700)],
     },
     {
       prepMs: 15000,
       spawns: [
-        ...spawnBurst("rapide", 5, 0, 0, 500),
-        ...spawnBurst("blinde", 2, 1, 1000, 1700),
-        ...spawnBurst("standard", 4, 1, 5200, 750),
+        ...spawnBurst("rapide", 7, 0, 0, 450),
+        ...spawnBurst("blinde", 3, 1, 1000, 850),
+        ...spawnBurst("standard", 6, 1, 5200, 650),
       ],
     },
     {
       prepMs: 15000,
-      spawns: [...spawnBurst("essaim", 8, 0, 0, 220), ...spawnBurst("essaim", 8, 1, 300, 220)],
+      spawns: [...spawnBurst("essaim", 11, 0, 0, 105), ...spawnBurst("essaim", 11, 1, 280, 105)],
     },
     {
       prepMs: 16000,
       spawns: [
-        ...spawnBurst("blinde", 3, 0, 0, 1600),
-        ...spawnBurst("blinde", 3, 1, 800, 1600),
-        ...spawnBurst("rapide", 6, 0, 6000, 450),
-        ...spawnBurst("rapide", 6, 1, 6400, 450),
+        ...spawnBurst("blinde", 4, 0, 0, 800),
+        ...spawnBurst("blinde", 4, 1, 800, 800),
+        ...spawnBurst("rapide", 8, 0, 6000, 420),
+        ...spawnBurst("rapide", 8, 1, 6400, 420),
       ],
     },
     {
       prepMs: 16000,
       spawns: [
-        ...spawnBurst("standard", 6, 0, 0, 650),
-        ...spawnBurst("standard", 6, 1, 300, 650),
-        ...spawnBurst("essaim", 10, 0, 5000, 200),
-        ...spawnBurst("blinde", 4, 1, 5000, 1400),
+        ...spawnBurst("standard", 8, 0, 0, 600),
+        ...spawnBurst("standard", 8, 1, 300, 600),
+        ...spawnBurst("essaim", 13, 0, 5000, 105),
+        ...spawnBurst("blinde", 5, 1, 5000, 700),
+      ],
+    },
+    {
+      prepMs: 17000,
+      spawns: [
+        ...spawnBurst("standard", 6, 0, 0, 550),
+        ...spawnBurst("standard", 6, 1, 300, 550),
+        ...spawnBurst("blinde", 4, 0, 4000, 700),
+        ...spawnBurst("blinde", 4, 1, 4400, 700),
+        ...spawnBurst("essaim", 10, 0, 8000, 100),
+        ...spawnBurst("essaim", 10, 1, 8300, 100),
       ],
     },
   ],

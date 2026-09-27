@@ -1,4 +1,5 @@
-// Quatre familles de tours (cahier des charges V0, section 6) -- chaque
+// Familles de tours (cahier des charges V0, section 6 ; la Tour de contrôle
+// initialement présente a été retirée en V3, cahier section 3) -- chaque
 // famille doit avoir une identité RESSENTIE en jeu, pas seulement des
 // statistiques différentes en coulisses. Toutes les valeurs sont ici,
 // centralisées et configurables (cahier, section 5 : "coûts, récompenses et
@@ -14,12 +15,15 @@
 //  - canon : le rayon de zone augmente (touche plus d'ennemis à la fois)
 //  - longue_portee : gagne un bonus de dégâts spécifique contre les ennemis
 //    "blindés" (renforce son rôle "utile contre les unités résistantes")
-//  - controle : le ralentissement touche aussi les ennemis proches de la
-//    cible (petite zone), renforçant sa synergie avec les tours de dégâts
 export const TOWER_FAMILIES = {
   rapide: {
     id: "rapide",
-    name: "Tour rapide",
+    // Renommage V3 (cahier, section 2) : l'asset Leonardo pilote de V2
+    // devient la référence qualitative -- "Tour rapide" devient "Tour
+    // d'archers" à l'écran et dans les textes. L'identifiant interne
+    // "rapide" reste inchangé (sauvegardes, tests, simulation) : seul
+    // l'habillage visible change.
+    name: "Tour d'archers",
     shortDesc: "Cadence très élevée, dégâts faibles. Idéale contre les ennemis fragiles ou rapides.",
     color: "#e9c46a",
     buildCost: 40,
@@ -57,25 +61,13 @@ export const TOWER_FAMILIES = {
       { range: 200, damage: 32, fireIntervalMs: 780, aoeRadius: 0, slowFactor: 0, slowDurationMs: 0, bonusVsArmored: 2.1, upgradeCost: 110 },
     ],
   },
-  controle: {
-    id: "controle",
-    name: "Tour de contrôle",
-    shortDesc: "Dégâts modestes, ralentit les ennemis. Crée des synergies avec les autres tours.",
-    color: "#2a9d8f",
-    buildCost: 50,
-    // slowAoeRadius : à 0 au palier 1 (ne ralentit que la cible directe), >0
-    // à partir du palier 2 (ralentit aussi les ennemis proches de la cible)
-    // -- c'est CE changement, pas un bonus de dégâts, qui fait l'identité de
-    // l'amélioration ici.
-    tiers: [
-      { range: 100, damage: 2, fireIntervalMs: 700, aoeRadius: 0, slowFactor: 0.55, slowDurationMs: 1400, slowAoeRadius: 0, upgradeCost: 0 },
-      { range: 105, damage: 2, fireIntervalMs: 650, aoeRadius: 0, slowFactor: 0.45, slowDurationMs: 1600, slowAoeRadius: 50, upgradeCost: 55 },
-      { range: 110, damage: 3, fireIntervalMs: 600, aoeRadius: 0, slowFactor: 0.35, slowDurationMs: 1800, slowAoeRadius: 65, upgradeCost: 85 },
-    ],
-  },
 };
 
-export const TOWER_ORDER = ["rapide", "canon", "longue_portee", "controle"];
+// Tour de contrôle : retirée en V3 (cahier, section 3). Rôle "synergie/
+// ralentissement" jugé à réévaluer plus tard, pas remplacé arbitrairement --
+// voir le rapport technique V3 pour des pistes de 4e famille proposées à
+// décision humaine (jamais implémentées ici sans validation).
+export const TOWER_ORDER = ["rapide", "canon", "longue_portee"];
 
 export function getTowerTierStats(familyId, tierIndex) {
   return TOWER_FAMILIES[familyId].tiers[tierIndex];

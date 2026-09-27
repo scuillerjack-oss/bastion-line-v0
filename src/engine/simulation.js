@@ -7,7 +7,7 @@ import { ENEMY_KINDS } from "./enemies.js";
 import { TOWER_FAMILIES, getMaxTier } from "./towers.js";
 import { entryPointFor, positionAtProgress, freshId } from "./state.js";
 
-const PROJECTILE_SPEED = { rapide: 520, canon: 260, longue_portee: 900, controle: 340 };
+const PROJECTILE_SPEED = { rapide: 520, canon: 260, longue_portee: 900 };
 const HIT_RADIUS = 12;
 
 function startWave(state) {

@@ -74,7 +74,6 @@ export const sfx = {
   shootRapide: () => tone({ freq: 700, duration: 0.04, type: "square", gain: 0.08 }),
   shootCanon: () => noiseBurst({ duration: 0.14, gain: 0.24, highpass: 200 }),
   shootLongue: () => tone({ freq: 1400, duration: 0.05, type: "sine", gain: 0.14 }),
-  shootControle: () => tone({ freq: 500, duration: 0.09, type: "sine", gain: 0.12, glideTo: 260 }),
   enemyKilled: () => tone({ freq: 520, duration: 0.09, type: "sine", gain: 0.16, glideTo: 220 }),
   baseHit: () => tone({ freq: 180, duration: 0.28, type: "sawtooth", gain: 0.2, glideTo: 60 }),
   waveStart: () => tone({ freq: 330, duration: 0.22, type: "triangle", gain: 0.2, glideTo: 440 }),

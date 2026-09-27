@@ -27,7 +27,7 @@ function makeTestLevel(overrides = {}) {
       { id: "a", x: 100, y: 350 },
       { id: "b", x: 300, y: 350 },
     ],
-    unlockedTowers: ["rapide", "canon", "longue_portee", "controle"],
+    unlockedTowers: ["rapide", "canon", "longue_portee"],
     waves: [{ prepMs: 0, spawns: [] }],
     ...overrides,
   };
@@ -184,33 +184,6 @@ test("le canon inflige des dégâts à TOUS les ennemis dans son rayon d'effet, 
   assert.equal(target.alive, false, "la cible directe doit mourir");
   assert.equal(bystander.alive, false, "un ennemi proche du point d'impact doit aussi être touché (zone d'effet)");
   assert.equal(outOfRadius.alive, true, "un ennemi hors du rayon d'effet ne doit jamais être touché par CE tir");
-});
-
-// --- Ralentissement (contrôle) ---------------------------------------------
-
-test("la tour de contrôle ralentit sa cible : la vitesse effective diminue pendant slowDurationMs", () => {
-  const state = createLevelState(makeTestLevel());
-  buildTower(state, "a", "controle");
-  enterWave(state);
-  const enemy = pushEnemy(state, "standard", 100, 0, ENEMY_KINDS.standard.speed); // vraie vitesse : le déplacement est le sujet de ce test
-  const traveledBefore = enemy.traveled;
-  // Laisse le temps au projectile (portée/vitesse courtes) d'atteindre la
-  // cible et d'appliquer le ralentissement.
-  tickN(state, 30);
-  assert.ok(enemy.slowUntilMs > state.elapsedMs, "l'ennemi doit être sous effet de ralentissement actif");
-  const traveledWithSlow = enemy.traveled - traveledBefore;
-  // Compare sur une fenêtre identique sans ralentissement (ennemi neuf, même position de départ, aucune tour à portée).
-  const state2 = createLevelState(makeTestLevel());
-  enterWave(state2);
-  // 250 (pas 500) : doit rester loin de la portée de toute tour tout en
-  // laissant assez de chemin devant lui pour se déplacer librement sur
-  // toute la fenêtre de test, sans jamais atteindre la fin du chemin
-  // (400) -- un ennemi qui atteint la base est retiré de state.enemies
-  // (voir stepEnemies), ce qui figerait par erreur cette référence.
-  const enemy2 = pushEnemy(state2, "standard", 250, 0, ENEMY_KINDS.standard.speed); // hors de portée de toute tour : jamais ralenti
-  tickN(state2, 30);
-  const traveledWithoutSlow = enemy2.traveled - 250;
-  assert.ok(traveledWithSlow < traveledWithoutSlow, "un ennemi ralenti doit parcourir moins de distance qu'un ennemi non ralenti sur la même durée");
 });
 
 // --- Bonus longue portée vs blindé -----------------------------------------

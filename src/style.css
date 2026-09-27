@@ -142,18 +142,12 @@ html, body {
   z-index: 8;
 }
 .panel-root:empty { display: none; }
-/* Positionnement adaptatif (cahier V2, priorité 2) : un emplacement proche
-   du bas de l'écran ouvre le sélecteur ANCRÉ EN HAUT plutôt qu'en bas, pour
-   qu'il n'apparaisse jamais superposé à l'endroit tapé. */
-.panel-root.panel-root--top {
-  top: 0;
-  bottom: auto;
-}
-.panel-root--top .build-panel {
-  border-top: none;
-  border-bottom: 1px solid rgba(233, 196, 106, 0.3);
-  padding: 12px 14px calc(12px + var(--safe-top)) !important;
-}
+/* Position stable et prévisible (cahier V3, section 1) : la bascule
+   adaptative haut/bas de V2 est supprimée volontairement -- le panneau
+   s'ouvre toujours ancré en bas, quel que soit l'emplacement tapé. La
+   sécurité contre les constructions involontaires est désormais assurée par
+   le verrou tactile en deux temps (voir src/main.js, panelGate), jamais par
+   un positionnement qui masquerait le point tapé. */
 
 .build-panel {
   background: var(--panel);

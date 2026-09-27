@@ -159,6 +159,11 @@ async function main() {
       await page.waitForTimeout(200);
       const buildOptionVisible = (await page.locator(".tower-option").count()) > 0;
       if (buildOptionVisible) {
+        // Délai d'armement du verrou tactile en deux temps (cahier V3,
+        // section 1 : PANEL_ARM_DELAY_MS=300ms dans main.js) -- ce test
+        // vérifie le mapping écran->arène, pas la vitesse de la seconde
+        // action, donc on attend au-delà du délai avant de cliquer.
+        await page.waitForTimeout(350);
         await page.locator(".tower-option").first().click();
         await page.waitForTimeout(150);
       }
@@ -526,12 +531,17 @@ async function main() {
       await page.close();
     }
 
-    // --- Test 13 : un SEUL appui sur un '+' proche du bas de l'écran
-    // n'ouvre QUE le sélecteur, jamais une construction immédiate --
-    // non-régression du bug bêta V1 (cahier V2, priorité 2). Utilise un
-    // vrai tap tactile (page.touchscreen) sur un emplacement RÉEL du
-    // niveau 1 (s5, proche du bas), à deviceScaleFactor=3, exactement le
-    // scénario physique rapporté.
+    // --- Test 13 : un SEUL appui sur un '+' (près du bas OU du haut de
+    // l'écran) n'ouvre QUE le sélecteur, jamais une construction immédiate,
+    // ET le panneau garde une position STABLE et prévisible -- cahier V3,
+    // section 1 : "un même geste ne doit jamais à la fois sélectionner un
+    // emplacement et choisir/construire une défense" + "supprimer la
+    // logique qui déplace automatiquement le panneau". La bascule
+    // adaptative haut/bas de V2 est donc bien supprimée : les DEUX
+    // emplacements doivent ouvrir le panneau à la MÊME position (jamais de
+    // classe panel-root--top). Utilise un vrai tap tactile
+    // (page.touchscreen) à deviceScaleFactor=3, exactement le scénario
+    // physique rapporté.
     {
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
       const page = await context.newPage();
@@ -552,48 +562,48 @@ async function main() {
           return { x: rect.left + offsetX + sx * scale, y: rect.top + offsetY + sy * scale };
         }, [ax, ay]);
         await page.touchscreen.tap(screenPos.x, screenPos.y);
-        await page.waitForTimeout(150);
       }
 
       const stateBefore = await page.evaluate(() => window.__bastionDebugState());
       const bottomSlot = stateBefore.buildSlots.find((s) => s.id === "s5"); // (330,480) -- proche du bas, niveau 1
       await tapArena(bottomSlot.x, bottomSlot.y);
-      const panelClassAfterFirstTap = await page.evaluate(() => document.getElementById("panel-root").className);
+      await page.waitForTimeout(150);
+      const panelClassBottom = await page.evaluate(() => document.getElementById("panel-root").className);
       const towersAfterFirstTap = (await page.evaluate(() => window.__bastionDebugState().towers)).length;
       const optionCount = await page.locator(".tower-option").count();
-
       const noPhantomBuild = towersAfterFirstTap === 0;
       const selectorOpened = optionCount > 0;
-      const anchoredTop = panelClassAfterFirstTap.includes("panel-root--top");
+      const noTopClassBottomSlot = !panelClassBottom.includes("panel-root--top");
 
-      if (errors.length > 0 || !noPhantomBuild || !selectorOpened || !anchoredTop) {
+      if (errors.length > 0 || !noPhantomBuild || !selectorOpened || !noTopClassBottomSlot) {
         failures += 1;
-        log("ÉCHEC : appui unique sur '+' proche du bas construit immédiatement ou ne s'adapte pas", {
-          panelClassAfterFirstTap,
+        log("ÉCHEC : appui unique près du bas construit immédiatement ou déplace encore le panneau", {
+          panelClassBottom,
           towersAfterFirstTap,
           optionCount,
           errors,
         });
       } else {
-        log("OK : un seul appui sur un '+' proche du bas ouvre uniquement le sélecteur (ancré en haut), sans construction immédiate");
+        log("OK : un seul appui près du bas ouvre uniquement le sélecteur, à une position stable, sans construction immédiate");
       }
 
-      // Deuxième action volontaire : DOIT construire.
+      // Deuxième action volontaire, après le délai d'armement (300ms) : DOIT construire.
+      await page.waitForTimeout(350);
       await page.locator(".tower-option").first().click();
       await page.waitForTimeout(150);
       const towersAfterDeliberateClick = (await page.evaluate(() => window.__bastionDebugState().towers)).length;
       if (towersAfterDeliberateClick !== 1) {
         failures += 1;
-        log("ÉCHEC : une seconde action volontaire sur une option ne construit pas", { towersAfterDeliberateClick });
+        log("ÉCHEC : une seconde action volontaire (après le délai d'armement) sur une option ne construit pas", { towersAfterDeliberateClick });
       } else {
-        log("OK : une seconde action volontaire sur une option construit bien la tour choisie");
+        log("OK : une seconde action volontaire (après le délai d'armement) construit bien la tour choisie");
       }
       await page.close();
     }
 
-    // --- Test 14 : un emplacement proche du HAUT de l'écran garde le
-    // sélecteur ancré en bas (comportement V1 préservé -- seuls les
-    // emplacements proches du bas doivent changer d'ancrage). ---
+    // --- Test 14 : position du panneau STABLE quel que soit l'emplacement
+    // (haut ou bas de l'écran) -- non-régression volontaire de la bascule
+    // adaptative V2, supprimée par le cahier V3 (section 1). ---
     {
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
       const page = await context.newPage();
@@ -615,12 +625,116 @@ async function main() {
       await page.touchscreen.tap(screenPos.x, screenPos.y);
       await page.waitForTimeout(150);
       const panelClass = await page.evaluate(() => document.getElementById("panel-root").className);
-      const stillBottomAnchored = !panelClass.includes("panel-root--top");
-      if (!stillBottomAnchored) {
+      const noTopClassTopSlot = !panelClass.includes("panel-root--top");
+      if (!noTopClassTopSlot) {
         failures += 1;
-        log("ÉCHEC : un emplacement proche du haut ouvre à tort le sélecteur ancré en haut", { panelClass });
+        log("ÉCHEC : un emplacement proche du haut ouvre à tort un panneau avec la classe supprimée panel-root--top", { panelClass });
       } else {
-        log("OK : un emplacement proche du haut garde le sélecteur ancré en bas (comportement V1 préservé)");
+        log("OK : la position du panneau est stable (identique) quel que soit l'emplacement tapé, comme demandé par le cahier V3");
+      }
+      await page.close();
+    }
+
+    // --- Test 14b : un réflexe de DOUBLE-TAP RÉEL et rapide (deux contacts
+    // tactiles distincts et authentiques, très rapprochés) ne doit JAMAIS
+    // construire une tour -- coeur de la règle V3 (section 1 : "double tap
+    // accidentel"). Le second tap arrive AVANT le délai d'armement
+    // (300ms) : il doit être ignoré, sans casser le jeu. Un troisième tap,
+    // lui, après le délai, doit fonctionner -- prouve que le verrou n'est
+    // pas un simple blocage permanent. ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+
+      const stateBefore = await page.evaluate(() => window.__bastionDebugState());
+      const slot = stateBefore.buildSlots.find((s) => s.id === "s1");
+      const screenPos = await page.evaluate(([sx, sy]) => {
+        const canvas = document.getElementById("game-canvas");
+        const rect = canvas.getBoundingClientRect();
+        const ARENA_W = 400, ARENA_H = 700;
+        const scale = Math.min(rect.width / ARENA_W, rect.height / ARENA_H);
+        const offsetX = (rect.width - ARENA_W * scale) / 2;
+        const offsetY = (rect.height - ARENA_H * scale) / 2;
+        return { x: rect.left + offsetX + sx * scale, y: rect.top + offsetY + sy * scale };
+      }, [slot.x, slot.y]);
+
+      // Premier tap : ouvre le sélecteur.
+      await page.touchscreen.tap(screenPos.x, screenPos.y);
+      await page.waitForTimeout(60); // très rapide -- réflexe de double-tap, PAS une seconde action délibérée
+      // Second tap RÉEL (nouveau contact), sur l'option qui vient d'apparaître, arrivant AVANT le délai d'armement.
+      await page.locator(".tower-option").first().tap();
+      await page.waitForTimeout(100);
+      const towersAfterFastDoubleTap = (await page.evaluate(() => window.__bastionDebugState().towers)).length;
+      const noBuildFromFastDoubleTap = towersAfterFastDoubleTap === 0;
+
+      if (errors.length > 0 || !noBuildFromFastDoubleTap) {
+        failures += 1;
+        log("ÉCHEC : un double-tap réel et rapide construit une tour -- la règle V3 'geste unique jamais = construction' est violée", {
+          towersAfterFastDoubleTap,
+          errors,
+        });
+      } else {
+        log("OK : un double-tap réel et rapide ne construit jamais de tour (verrou d'armement respecté)");
+      }
+
+      // Un troisième tap, après le délai d'armement, doit lui fonctionner (le verrou n'est pas un blocage permanent).
+      await page.waitForTimeout(350);
+      await page.locator(".tower-option").first().click();
+      await page.waitForTimeout(150);
+      const towersAfterArmedTap = (await page.evaluate(() => window.__bastionDebugState().towers)).length;
+      if (towersAfterArmedTap !== 1) {
+        failures += 1;
+        log("ÉCHEC : après le délai d'armement, une action volontaire ne construit toujours pas", { towersAfterArmedTap });
+      } else {
+        log("OK : après le délai d'armement, l'action délibérée construit normalement (le verrou n'est pas un blocage permanent)");
+      }
+      await page.close();
+    }
+
+    // --- Test 14c : le même verrou en deux temps s'applique à un tap sur
+    // une tour DÉJÀ CONSTRUITE (panneau d'amélioration) -- cahier V3,
+    // section 1 : "un tap sur une tour déjà construite doit également être
+    // traité sans propagation involontaire vers une autre action". ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
+      const page = await context.newPage();
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+      const stateBefore = await page.evaluate(() => window.__bastionDebugState());
+      const slot = stateBefore.buildSlots[0];
+      // Construit une tour via le hook de debug (setup, pas le sujet du test).
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slot.x, slot.y]);
+      await page.waitForTimeout(150);
+      await page.locator(".tower-option").first().click();
+      await page.waitForTimeout(150);
+
+      const screenPos = await page.evaluate(([sx, sy]) => {
+        const canvas = document.getElementById("game-canvas");
+        const rect = canvas.getBoundingClientRect();
+        const ARENA_W = 400, ARENA_H = 700;
+        const scale = Math.min(rect.width / ARENA_W, rect.height / ARENA_H);
+        const offsetX = (rect.width - ARENA_W * scale) / 2;
+        const offsetY = (rect.height - ARENA_H * scale) / 2;
+        return { x: rect.left + offsetX + sx * scale, y: rect.top + offsetY + sy * scale };
+      }, [slot.x, slot.y]);
+      // Tap réel sur la tour existante, puis tap rapide sur l'option d'amélioration (réflexe de double-tap).
+      await page.touchscreen.tap(screenPos.x, screenPos.y);
+      await page.waitForTimeout(60);
+      await page.locator(".tower-option").first().tap();
+      await page.waitForTimeout(100);
+      const tierAfterFastTap = (await page.evaluate(() => window.__bastionDebugState().towers[0])).tier;
+      const noUpgradeFromFastTap = tierAfterFastTap === 0;
+      if (!noUpgradeFromFastTap) {
+        failures += 1;
+        log("ÉCHEC : un tap rapide sur une tour existante puis son option améliore quand même (verrou non appliqué à l'amélioration)", { tierAfterFastTap });
+      } else {
+        log("OK : le verrou en deux temps s'applique aussi au panneau d'amélioration d'une tour déjà construite");
       }
       await page.close();
     }
