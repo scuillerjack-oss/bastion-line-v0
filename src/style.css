@@ -182,6 +182,8 @@ html, body {
 .tower-option .name { font-weight: 700; font-size: 0.95rem; }
 .tower-option .desc { font-size: 0.72rem; color: var(--text-dim); }
 .tower-option .cost { font-weight: 700; color: var(--accent); white-space: nowrap; }
+.tower-option.sell-option { background: #2a1d1c; }
+.tower-option .cost.sell { color: #7fb069; }
 
 .panel-close {
   align-self: center;

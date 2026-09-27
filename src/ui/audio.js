@@ -71,6 +71,7 @@ function noiseBurst({ duration, gain = 0.2, highpass = 1800 }) {
 export const sfx = {
   build: () => tone({ freq: 300, duration: 0.1, type: "triangle", gain: 0.18, glideTo: 480 }),
   upgrade: () => tone({ freq: 420, duration: 0.16, type: "triangle", gain: 0.2, glideTo: 720 }),
+  sell: () => tone({ freq: 500, duration: 0.14, type: "triangle", gain: 0.18, glideTo: 260 }), // glissade descendante -- distincte de build/upgrade (montantes)
   shootRapide: () => tone({ freq: 700, duration: 0.04, type: "square", gain: 0.08 }),
   shootCanon: () => noiseBurst({ duration: 0.14, gain: 0.24, highpass: 200 }),
   shootLongue: () => tone({ freq: 1400, duration: 0.05, type: "sine", gain: 0.14 }),

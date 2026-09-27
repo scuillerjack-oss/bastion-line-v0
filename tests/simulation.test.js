@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createLevelState } from "../src/engine/state.js";
-import { tick, buildTower, upgradeTower, requestEarlyWave } from "../src/engine/simulation.js";
-import { TOWER_FAMILIES } from "../src/engine/towers.js";
+import { tick, buildTower, upgradeTower, requestEarlyWave, sellTower } from "../src/engine/simulation.js";
+import { TOWER_FAMILIES, getTowerInvestedValue, getTowerSellRefund } from "../src/engine/towers.js";
+import { TOWER_SELL_REFUND_RATE } from "../src/engine/constants.js";
 import { ENEMY_KINDS } from "../src/engine/enemies.js";
 
 const DT = 1000 / 60;
@@ -226,6 +227,98 @@ test("impossible d'améliorer au-delà du palier maximum", () => {
   const ok = upgradeTower(state, tower.id);
   assert.equal(ok, false);
   assert.equal(tower.tier, maxTier);
+});
+
+// --- Revente d'une tour (cahier V4, section 3) ------------------------------
+
+test("revendre une tour BRUTE rembourse exactement 60% de son coût de construction", () => {
+  const state = createLevelState(makeTestLevel());
+  buildTower(state, "a", "rapide");
+  const tower = state.towers[0];
+  const before = state.coins;
+  const expectedRefund = Math.round(TOWER_FAMILIES.rapide.buildCost * TOWER_SELL_REFUND_RATE);
+  const ok = sellTower(state, tower.id);
+  assert.equal(ok, true);
+  assert.equal(state.coins, before + expectedRefund);
+});
+
+test("revendre une tour AMÉLIORÉE rapporte plus qu'une tour brute, sans jamais rembourser 100% de l'investissement", () => {
+  const stateBrute = createLevelState(makeTestLevel());
+  buildTower(stateBrute, "a", "rapide");
+  const refundBrute = getTowerSellRefund(stateBrute.towers[0]);
+
+  const stateAmelioree = createLevelState(makeTestLevel());
+  buildTower(stateAmelioree, "a", "rapide");
+  const towerAmelioree = stateAmelioree.towers[0];
+  upgradeTower(stateAmelioree, towerAmelioree.id); // palier 1
+  const investedAmelioree = getTowerInvestedValue(towerAmelioree);
+  const refundAmelioree = getTowerSellRefund(towerAmelioree);
+
+  assert.ok(refundAmelioree > refundBrute, "une tour améliorée doit se revendre plus cher qu'une tour brute");
+  assert.ok(refundAmelioree < investedAmelioree, "le remboursement ne doit jamais couvrir 100% de l'investissement total");
+});
+
+test("chaque palier d'amélioration réellement acheté augmente la valeur investie ET le remboursement de revente", () => {
+  const state = createLevelState(makeTestLevel());
+  buildTower(state, "a", "canon");
+  const tower = state.towers[0];
+  const maxTier = TOWER_FAMILIES.canon.tiers.length - 1;
+  let previousRefund = getTowerSellRefund(tower);
+  for (let i = 0; i < maxTier; i++) {
+    upgradeTower(state, tower.id);
+    const refund = getTowerSellRefund(tower);
+    assert.ok(refund > previousRefund, `le remboursement doit augmenter après le palier ${tower.tier}`);
+    previousRefund = refund;
+  }
+});
+
+test("le montant réellement crédité après la vente est EXACTEMENT le montant annoncé par getTowerSellRefund (même source de vérité)", () => {
+  const state = createLevelState(makeTestLevel());
+  buildTower(state, "a", "longue_portee");
+  const tower = state.towers[0];
+  upgradeTower(state, tower.id);
+  const announcedRefund = getTowerSellRefund(tower);
+  const before = state.coins;
+  sellTower(state, tower.id);
+  assert.equal(state.coins, before + announcedRefund);
+});
+
+test("après la vente, l'emplacement est réellement libéré et peut accueillir une nouvelle tour", () => {
+  const state = createLevelState(makeTestLevel());
+  buildTower(state, "a", "rapide");
+  const tower = state.towers[0];
+  sellTower(state, tower.id);
+  const slot = state.buildSlots.find((s) => s.id === "a");
+  assert.equal(slot.towerId, null, "l'emplacement doit être libre après la vente");
+  const ok = buildTower(state, "a", "canon");
+  assert.equal(ok, true, "une nouvelle tour doit pouvoir être construite sur l'emplacement libéré");
+});
+
+test("la tour vendue disparaît réellement de la liste des tours (jamais un fantôme qui continue de tirer)", () => {
+  const state = createLevelState(makeTestLevel());
+  buildTower(state, "a", "rapide");
+  const tower = state.towers[0];
+  sellTower(state, tower.id);
+  assert.equal(state.towers.length, 0);
+});
+
+test("impossible de vendre une tour qui n'existe pas (identifiant invalide, jamais un crash ni un crédit fantôme)", () => {
+  const state = createLevelState(makeTestLevel());
+  const before = state.coins;
+  const ok = sellTower(state, "id-inexistant");
+  assert.equal(ok, false);
+  assert.equal(state.coins, before);
+});
+
+test("impossible de vendre une tour après la fin de la partie (victoire ou défaite)", () => {
+  const state = createLevelState(makeTestLevel({ waves: [{ prepMs: 0, spawns: [] }] }));
+  buildTower(state, "a", "rapide");
+  const tower = state.towers[0];
+  tick(state, DT); // démarre puis vide immédiatement l'unique vague sans spawn -> "won"
+  tick(state, DT);
+  assert.equal(state.status, "won");
+  const ok = sellTower(state, tower.id);
+  assert.equal(ok, false, "une vente ne doit plus être possible une fois la partie terminée");
 });
 
 // --- Vagues, timer, lancement anticipé --------------------------------------

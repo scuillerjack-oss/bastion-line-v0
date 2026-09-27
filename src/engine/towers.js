@@ -1,3 +1,5 @@
+import { TOWER_SELL_REFUND_RATE } from "./constants.js";
+
 // Familles de tours (cahier des charges V0, section 6 ; la Tour de contrôle
 // initialement présente a été retirée en V3, cahier section 3) -- chaque
 // famille doit avoir une identité RESSENTIE en jeu, pas seulement des
@@ -75,4 +77,24 @@ export function getTowerTierStats(familyId, tierIndex) {
 
 export function getMaxTier(familyId) {
   return TOWER_FAMILIES[familyId].tiers.length - 1;
+}
+
+// Revente de tour (cahier V4, section 3) -- valeur totale RÉELLEMENT
+// investie dans une tour posée : son coût de construction initial, PLUS le
+// coût de chaque palier d'amélioration effectivement acheté jusqu'à son
+// palier actuel (tiers[1..tower.tier], jamais tiers[0] qui est le palier de
+// base sans coût d'amélioration). C'est cette somme, jamais le seul coût de
+// construction, qui doit servir de référence au remboursement -- sans quoi
+// une tour très améliorée se revendrait au même prix qu'une tour brute.
+export function getTowerInvestedValue(tower) {
+  const family = TOWER_FAMILIES[tower.family];
+  let total = family.buildCost;
+  for (let i = 1; i <= tower.tier; i++) total += family.tiers[i].upgradeCost;
+  return total;
+}
+
+// Arrondi à l'entier le plus proche : les coûts/récompenses du jeu sont
+// toujours des entiers de pièces, jamais de fraction affichée au joueur.
+export function getTowerSellRefund(tower) {
+  return Math.round(getTowerInvestedValue(tower) * TOWER_SELL_REFUND_RATE);
 }

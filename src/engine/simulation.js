@@ -4,7 +4,7 @@
 // déterministe et testable indépendamment du rendu (même discipline que les
 // projets précédents).
 import { ENEMY_KINDS } from "./enemies.js";
-import { TOWER_FAMILIES, getMaxTier } from "./towers.js";
+import { TOWER_FAMILIES, getMaxTier, getTowerSellRefund } from "./towers.js";
 import { entryPointFor, positionAtProgress, freshId } from "./state.js";
 
 const PROJECTILE_SPEED = { rapide: 520, canon: 260, longue_portee: 900 };
@@ -299,6 +299,28 @@ export function upgradeTower(state, towerId) {
   state.coins -= nextTierStats.upgradeCost;
   tower.tier += 1;
   state.events.push({ type: "tower_upgraded", family: tower.family, towerId: tower.id, tier: tower.tier });
+  return true;
+}
+
+// Revente d'une tour (cahier V4, section 3) : "Après vente : supprimer
+// proprement la tour, libérer l'emplacement et créditer exactement la
+// somme annoncée." Le montant crédité provient de getTowerSellRefund(),
+// LA MÊME fonction que celle utilisée pour l'affichage AVANT confirmation
+// (src/main.js) -- une seule source de vérité, jamais un calcul dupliqué
+// qui pourrait diverger entre "montant affiché" et "montant crédité"
+// (cahier, section 9 : "montant affiché = montant réellement crédité").
+export function sellTower(state, towerId) {
+  if (state.status === "won" || state.status === "lost") return false;
+  const index = state.towers.findIndex((t) => t.id === towerId);
+  if (index === -1) return false;
+  const tower = state.towers[index];
+  const refund = getTowerSellRefund(tower);
+  state.coins += refund;
+  state.towers.splice(index, 1);
+  const slot = state.buildSlots.find((s) => s.id === tower.slotId);
+  if (slot) slot.towerId = null;
+  if (state.selectedTowerId === tower.id) state.selectedTowerId = null;
+  state.events.push({ type: "tower_sold", family: tower.family, towerId: tower.id, refund });
   return true;
 }
 

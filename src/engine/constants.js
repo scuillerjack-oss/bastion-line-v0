@@ -43,3 +43,12 @@ export const FOOTPRINT_SAFETY_MARGIN = 3;
 export const DEFAULT_BASE_HP = 20;
 
 export const MAX_SUBSTEPS_PER_TICK = 8;
+
+// Revente de tour (cahier V4, section 3) : "Référence V4 proposée :
+// remboursement de 60% de la valeur totale investie. Centraliser ce taux
+// dans une constante/configuration facilement ajustable." Valeur investie =
+// coût de construction + coût de CHAQUE palier d'amélioration réellement
+// acheté (voir engine/towers.js, getTowerInvestedValue) -- jamais le seul
+// coût de base, pour qu'une tour améliorée se revende toujours plus cher
+// qu'une tour brute, sans jamais rembourser 100% de l'investissement.
+export const TOWER_SELL_REFUND_RATE = 0.6;

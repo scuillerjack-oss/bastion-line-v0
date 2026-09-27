@@ -802,6 +802,201 @@ async function main() {
       await page.close();
     }
 
+    // --- Test 17 : l'affichage du niveau montre "NIVEAU N" SEUL, jamais
+    // "N/total" -- cahier V4, section 6. Le compteur de vagues (VAGUE N/M,
+    // une information différente : la progression DANS le niveau) reste
+    // inchangé et n'est pas concerné. ---
+    {
+      const page = await browser.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+      const levelLabel = await page.textContent("#level-label");
+      const matchesFormat = /^Niveau \d+$/.test(levelLabel);
+      const noTotalShown = !levelLabel.includes("/");
+      if (errors.length > 0 || !matchesFormat || !noTotalShown) {
+        failures += 1;
+        log("ÉCHEC affichage du niveau", { levelLabel, matchesFormat, noTotalShown, errors });
+      } else {
+        log(`OK : le niveau s'affiche sous la forme "${levelLabel}" (jamais de total)`);
+      }
+      await page.close();
+    }
+
+    // --- Test 18 : revente d'une tour BRUTE -- le prix est affiché AVANT
+    // confirmation, une confirmation explicite est requise (avec son propre
+    // délai anti-reflexe), le montant crédité correspond exactement au
+    // montant annoncé, et l'emplacement est réellement libéré ensuite
+    // (cahier V4, section 3 + section 9). ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+      const slot = (await page.evaluate(() => window.__bastionDebugState())).buildSlots[0];
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slot.x, slot.y]);
+      await page.waitForTimeout(150);
+      await page.locator(".tower-option[data-family='rapide']").click();
+      await page.waitForTimeout(150);
+      const coinsBeforeSell = (await page.evaluate(() => window.__bastionDebugState())).coins;
+
+      const tower = (await page.evaluate(() => window.__bastionDebugState())).towers[0];
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [tower.x, tower.y]);
+      await page.waitForTimeout(150);
+      const sellButtonText = await page.textContent("#btn-sell");
+      const announcedRefund = parseInt(sellButtonText.match(/\+(\d+)/)?.[1] ?? "-1", 10);
+
+      await page.locator("#btn-sell").click();
+      await page.waitForTimeout(100);
+      const confirmVisible = (await page.locator("#btn-sell-confirm").count()) > 0;
+      const notSoldYet = (await page.evaluate(() => window.__bastionDebugState().towers.length)) === 1;
+
+      // Confirmation TROP rapide (avant le délai anti-reflexe) : ne doit PAS vendre.
+      await page.locator("#btn-sell-confirm").click();
+      await page.waitForTimeout(100);
+      const notSoldAfterFastClick = (await page.evaluate(() => window.__bastionDebugState().towers.length)) === 1;
+
+      // Après le délai : la confirmation doit fonctionner et créditer EXACTEMENT le montant annoncé.
+      await page.waitForTimeout(300);
+      await page.locator("#btn-sell-confirm").click();
+      await page.waitForTimeout(150);
+      const stateAfterSell = await page.evaluate(() => window.__bastionDebugState());
+      const soldNow = stateAfterSell.towers.length === 0;
+      const creditedExact = stateAfterSell.coins === coinsBeforeSell + announcedRefund;
+      const slotFreed = stateAfterSell.buildSlots.find((s) => s.id === slot.id).towerId === null;
+
+      if (errors.length > 0 || !confirmVisible || !notSoldYet || !notSoldAfterFastClick || !soldNow || !creditedExact || !slotFreed) {
+        failures += 1;
+        log("ÉCHEC revente d'une tour brute", {
+          announcedRefund,
+          confirmVisible,
+          notSoldYet,
+          notSoldAfterFastClick,
+          soldNow,
+          creditedExact,
+          slotFreed,
+          coinsBeforeSell,
+          finalCoins: stateAfterSell.coins,
+          errors,
+        });
+      } else {
+        log(`OK : revente d'une tour brute -- prix affiché (+${announcedRefund}) = montant crédité, confirmation requise (rejet du clic trop rapide), emplacement libéré`);
+      }
+
+      // Reconstruction sur l'emplacement libéré : doit fonctionner immédiatement.
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slot.x, slot.y]);
+      await page.waitForTimeout(150);
+      const rebuildOptionVisible = (await page.locator(".tower-option[data-family='rapide']").count()) > 0;
+      if (!rebuildOptionVisible) {
+        failures += 1;
+        log("ÉCHEC : impossible de reconstruire sur l'emplacement juste libéré par la vente");
+      } else {
+        log("OK : une nouvelle tour peut être construite immédiatement sur l'emplacement libéré par la vente");
+      }
+      await page.close();
+    }
+
+    // --- Test 19 : une tour AMÉLIORÉE se revend plus cher qu'une tour
+    // brute (vérifié via la vraie interface, pas seulement le moteur --
+    // cahier V4, section 3). ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+      const page = await context.newPage();
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+      const slots = (await page.evaluate(() => window.__bastionDebugState())).buildSlots;
+
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slots[0].x, slots[0].y]);
+      await page.waitForTimeout(150);
+      await page.locator(".tower-option[data-family='rapide']").click();
+      await page.waitForTimeout(150);
+      const towerBrute = (await page.evaluate(() => window.__bastionDebugState())).towers[0];
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [towerBrute.x, towerBrute.y]);
+      await page.waitForTimeout(150);
+      const refundBrute = parseInt((await page.textContent("#btn-sell")).match(/\+(\d+)/)[1], 10);
+      await page.locator("#panel-close").click();
+      await page.waitForTimeout(100);
+
+      await page.evaluate(() => { window.__bastionDebugState().coins = 5000; });
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slots[1].x, slots[1].y]);
+      await page.waitForTimeout(150);
+      await page.locator(".tower-option[data-family='rapide']").click();
+      await page.waitForTimeout(150);
+      const towerToUpgrade = (await page.evaluate(() => window.__bastionDebugState())).towers.find((t) => t.slotId === slots[1].id);
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [towerToUpgrade.x, towerToUpgrade.y]);
+      await page.waitForTimeout(150);
+      await page.locator(".tower-option:not(.sell-option)").first().click();
+      await page.waitForTimeout(150);
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [towerToUpgrade.x, towerToUpgrade.y]);
+      await page.waitForTimeout(150);
+      const refundUpgraded = parseInt((await page.textContent("#btn-sell")).match(/\+(\d+)/)[1], 10);
+
+      if (!(refundUpgraded > refundBrute)) {
+        failures += 1;
+        log("ÉCHEC : une tour améliorée ne se revend pas plus cher qu'une tour brute", { refundBrute, refundUpgraded });
+      } else {
+        log(`OK : revente plus chère pour une tour améliorée (brute=+${refundBrute}, améliorée=+${refundUpgraded})`);
+      }
+      await page.close();
+    }
+
+    // --- Test 20 : bug de reprise de progression (cahier V4, section 5) --
+    // cycles réels et consécutifs progression -> sauvegarde -> RECHARGEMENT
+    // RÉEL de la page (jamais seulement une réinitialisation en mémoire) ->
+    // reprise. Le joueur doit systématiquement retrouver le bon niveau. ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      let allCyclesOk = true;
+      for (let unlockedLevelIndex = 0; unlockedLevelIndex <= 3; unlockedLevelIndex++) {
+        // Simule la persistance résultant d'une vraie progression jusqu'à ce niveau.
+        await page.goto(BASE_URL, { waitUntil: "networkidle" });
+        await page.evaluate((idx) => {
+          localStorage.setItem(
+            "bastion-line-v0-save",
+            JSON.stringify({ version: 1, unlockedLevelIndex: idx, tutorialsSeen: {}, settings: { music: true, sfx: true } })
+          );
+        }, unlockedLevelIndex);
+        // "Fermeture/rechargement" réel : un vrai page.reload(), jamais une
+        // simple réinitialisation d'état en mémoire -- exactement le
+        // scénario décrit par le cahier.
+        await page.reload({ waitUntil: "networkidle" });
+        const btnText = await page.textContent("#btn-play").catch(() => "");
+        const expectedBtn = unlockedLevelIndex > 0 ? "Continuer" : "Jouer";
+        if (btnText !== expectedBtn) {
+          allCyclesOk = false;
+          log(`ÉCHEC cycle reprise (unlockedLevelIndex=${unlockedLevelIndex}) : bouton "${btnText}" attendu "${expectedBtn}"`);
+          break;
+        }
+        if (unlockedLevelIndex > 0) {
+          await page.click("#btn-play");
+          await page.waitForTimeout(200);
+          const levelLabel = await page.textContent("#level-label");
+          const expectedLabel = `Niveau ${unlockedLevelIndex + 1}`;
+          if (levelLabel !== expectedLabel) {
+            allCyclesOk = false;
+            log(`ÉCHEC cycle reprise (unlockedLevelIndex=${unlockedLevelIndex}) : niveau affiché "${levelLabel}" attendu "${expectedLabel}"`);
+            break;
+          }
+        }
+      }
+      if (errors.length > 0 || !allCyclesOk) {
+        failures += 1;
+        log("ÉCHEC : cycles progression -> sauvegarde -> rechargement -> reprise", { errors });
+      } else {
+        log("OK : 4 cycles consécutifs progression -> sauvegarde -> rechargement réel -> reprise retrouvent systématiquement le bon niveau");
+      }
+      await page.close();
+    }
+
     await browser.close();
   } finally {
     server.kill();

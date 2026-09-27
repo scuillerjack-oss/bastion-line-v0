@@ -1,8 +1,8 @@
 import { createLevelState } from "./engine/state.js";
 import { BASE_R } from "./engine/constants.js";
-import { tick, buildTower, upgradeTower, requestEarlyWave } from "./engine/simulation.js";
+import { tick, buildTower, upgradeTower, sellTower, requestEarlyWave } from "./engine/simulation.js";
 import { LEVELS } from "./engine/levels.js";
-import { TOWER_FAMILIES, getMaxTier } from "./engine/towers.js";
+import { TOWER_FAMILIES, getMaxTier, getTowerSellRefund } from "./engine/towers.js";
 import { loadSave, writeSave, markLevelUnlocked } from "./engine/save.js";
 import { createTapController, hitTestTower, hitTestEmptySlot } from "./ui/input.js";
 import { drawFrame } from "./ui/render.js";
@@ -21,6 +21,7 @@ const tutorialToast = document.getElementById("tutorial-toast");
 const baseHpEl = document.getElementById("base-hp-value");
 const coinsEl = document.getElementById("coins-value");
 const waveEl = document.getElementById("wave-value");
+const levelLabelEl = document.getElementById("level-label");
 const pauseBtn = document.getElementById("pause-btn");
 const prepRow = document.getElementById("prep-row");
 const prepTimerEl = document.getElementById("prep-timer");
@@ -223,6 +224,11 @@ function startLevel(index) {
   clearOverlay();
   closePanel();
   appPhase = "playing";
+  // Affichage du niveau courant SEUL (cahier V4, section 6) : jamais de
+  // forme "X/Y" pour le niveau -- le compteur de vagues (VAGUE X/Y,
+  // ci-dessous dans updateHud) reste inchangé, c'est une information
+  // différente (progression DANS ce niveau) non visée par cette demande.
+  levelLabelEl.textContent = `Niveau ${levelIndex + 1}`;
   updateHud();
   if (level.paths.length > 1) tutorial.show("first_multi_path");
 }
@@ -338,6 +344,7 @@ function openUpgradePanel(tower, pointerId) {
   const maxTier = getMaxTier(tower.family);
   const isMax = tower.tier >= maxTier;
   const nextStats = isMax ? null : family.tiers[tower.tier + 1];
+  const sellRefund = getTowerSellRefund(tower);
   renderPanel(`
     <div class="build-panel">
       <h2>${family.name} -- palier ${tower.tier + 1}/${maxTier + 1}</h2>
@@ -346,10 +353,14 @@ function openUpgradePanel(tower, pointerId) {
           ? `<p style="color:var(--text-dim);font-size:0.85rem;margin:0;">Palier maximum atteint.</p>`
           : familyDescRow(tower.family, nextStats.upgradeCost, state.coins < nextStats.upgradeCost, null)
       }
+      <button class="tower-option sell-option" id="btn-sell">
+        <span><span class="name">Vendre</span><br/><span class="desc">Récupère une partie de l'investissement</span></span>
+        <span class="cost sell">+${sellRefund}&#9679;</span>
+      </button>
       <button class="panel-close" id="panel-close">Fermer</button>
     </div>
   `);
-  const upgradeBtn = panelRoot.querySelector(".tower-option");
+  const upgradeBtn = panelRoot.querySelector(".tower-option:not(.sell-option)");
   if (upgradeBtn) {
     upgradeBtn.addEventListener("click", () => {
       if (!isPanelArmed()) return;
@@ -359,6 +370,43 @@ function openUpgradePanel(tower, pointerId) {
       }
     });
   }
+  document.getElementById("btn-sell").addEventListener("click", () => {
+    if (!isPanelArmed()) return;
+    openSellConfirm(tower, sellRefund);
+  });
+  document.getElementById("panel-close").addEventListener("click", closePanel);
+}
+
+// Confirmation de vente (cahier V4, section 3 : "Afficher clairement le prix
+// de revente AVANT validation de l'action" + "Prévoir une confirmation
+// explicite afin d'éviter une vente accidentelle"). Sous-panneau dédié
+// (jamais un window.confirm() natif, hors style du jeu) avec son PROPRE
+// délai anti-reflexe avant que le bouton de confirmation ne devienne actif
+// -- même logique que le verrou tactile de construction/amélioration (V3),
+// mais sans dépendre d'un pointerId : le clic qui ouvre ce sous-panneau a
+// déjà, par construction, terminé son propre cycle pointerdown/pointerup
+// (un clic ne se déclenche qu'APRÈS le relâchement), donc réutiliser
+// panelGate/armPanelGate ici bloquerait le bouton en permanence -- un simple
+// délai depuis l'ouverture suffit et reste cohérent avec le même seuil
+// (PANEL_ARM_DELAY_MS) utilisé partout ailleurs dans l'interface.
+function openSellConfirm(tower, refund) {
+  const family = TOWER_FAMILIES[tower.family];
+  const openedAt = performance.now();
+  renderPanel(`
+    <div class="build-panel">
+      <h2>Vendre ${family.name} ?</h2>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin:0 0 4px;">Action définitive. Tu récupères une partie de ton investissement.</p>
+      <button class="overlay-btn small" id="btn-sell-confirm">Confirmer (+${refund}&#9679;)</button>
+      <button class="panel-close" id="panel-close">Annuler</button>
+    </div>
+  `);
+  document.getElementById("btn-sell-confirm").addEventListener("click", () => {
+    if (performance.now() - openedAt < PANEL_ARM_DELAY_MS) return;
+    if (sellTower(state, tower.id)) {
+      sfx.sell();
+      closePanel();
+    }
+  });
   document.getElementById("panel-close").addEventListener("click", closePanel);
 }
 
@@ -453,6 +501,30 @@ window.__bastionDebugState = () => state;
 window.__bastionDebugStartLevel = (index) => startLevel(index);
 window.__bastionDebugAudioState = getAudioDebugState;
 window.__bastionDebugInstallState = () => installCtl.getState();
+
+// Resynchronisation défensive de la progression au retour au premier plan
+// (cahier V4, section 5 -- voir engine/save.js pour la cause racine
+// complète). markLevelUnlocked() rend désormais toute ÉCRITURE
+// concurrente sans risque de régression, mais une instance restée en
+// mémoire (page restaurée depuis le bfcache du navigateur, ou PWA relancée
+// sur une tâche Android déjà existante) peut encore, un court instant,
+// AFFICHER une progression périmée si elle ne relit jamais le disque. On
+// se protège donc aussi côté LECTURE : à chaque retour au premier plan (ou
+// restauration bfcache explicite via pageshow/persisted), on relit l'état
+// réellement persisté et on rafraîchit le menu s'il est actuellement affiché.
+function resyncProgressionFromStorage() {
+  const fresh = loadSave();
+  if (fresh.unlockedLevelIndex !== save.unlockedLevelIndex) {
+    save.unlockedLevelIndex = fresh.unlockedLevelIndex;
+    if (appPhase === "menu") showMenu();
+  }
+}
+window.addEventListener("pageshow", (ev) => {
+  if (ev.persisted) resyncProgressionFromStorage();
+});
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) resyncProgressionFromStorage();
+});
 
 // PWA : enregistrement + rafraîchissement du service worker (même socle
 // validé sur les projets précédents).

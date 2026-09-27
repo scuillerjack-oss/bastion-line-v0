@@ -44,9 +44,32 @@ export function writeSave(save) {
   }
 }
 
+// Cause racine du bug de reprise signalé en bêta V3 (cahier V4, section 5) :
+// "après relance d'une partie, le jeu a ramené le joueur vers d'anciens
+// niveaux ; après une nouvelle relance, le dernier niveau réellement atteint
+// est réapparu." Ce motif exact (régression PUIS auto-correction au
+// relancement suivant) est la signature d'une CONCURRENCE entre deux
+// instances de l'app possédant chacune leur PROPRE copie en mémoire de
+// `save` -- notamment plausible sur Android, où relancer une PWA installée
+// depuis l'écran d'accueil peut réutiliser une instance restée en
+// arrière-plan (ou une page restaurée depuis le bfcache du navigateur) au
+// lieu d'toujours réexécuter le script depuis zéro. Si cette instance plus
+// ANCIENNE (avec une progression périmée en mémoire) écrit APRÈS une
+// instance plus RÉCENTE, sa copie périmée écrasait silencieusement la
+// progression réellement la plus avancée -- reproduit et verrouillé par un
+// test dédié (tests/save.test.js).
+//
+// Corrigé à la cause : on ne fait plus jamais confiance à la SEULE copie en
+// mémoire de l'appelant pour décider d'écrire. On relit l'état RÉELLEMENT
+// persisté juste avant d'écrire et on ne retient que le maximum entre les
+// trois candidats (persisté, mémoire de l'appelant, nouvelle valeur) --
+// qu'importe quelle instance écrit en dernier, la progression ne peut donc
+// plus jamais régresser.
 export function markLevelUnlocked(save, levelIndex) {
-  if (levelIndex > save.unlockedLevelIndex) {
-    save.unlockedLevelIndex = levelIndex;
+  const persisted = loadSave();
+  const merged = Math.max(persisted.unlockedLevelIndex, save.unlockedLevelIndex, levelIndex);
+  save.unlockedLevelIndex = merged;
+  if (merged > persisted.unlockedLevelIndex) {
     writeSave(save);
   }
 }

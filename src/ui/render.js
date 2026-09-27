@@ -1,6 +1,6 @@
 import { computeViewport } from "./viewport.js";
 import { ARENA_W, ARENA_H, BASE_R, ENEMY_R, TOWER_R, PATH_WIDTH } from "../engine/constants.js";
-import { TOWER_FAMILIES } from "../engine/towers.js";
+import { TOWER_FAMILIES, getMaxTier } from "../engine/towers.js";
 import { ENEMY_KINDS } from "../engine/enemies.js";
 import { loadSprite } from "./sprites.js";
 
@@ -36,6 +36,27 @@ const BG_COLOR = "#3a5a30";
 const SLOT_STONE_COLOR = "#6b6459";
 const SLOT_STONE_EDGE = "#4a4438";
 const SLOT_GLOW_COLOR = "rgba(233, 196, 106, 0.55)";
+
+// Palette partagée -- chantier graphique expérimental (cahier V4, section
+// 7) : extraite PAR OBSERVATION de l'asset Leonardo protégé (tour_rapide_
+// arbalete.png -- pierre grise nuancée, bois/laiton chaud, ferrures
+// bleu-gris, petite bannière bleue), jamais copiée au pixel près. Réutilisée
+// ici sur la base, les emplacements constructibles, le canon et la longue
+// portée pour qu'ils commencent à "appartenir au même jeu" que la tour de
+// référence -- un vocabulaire de couleurs et d'ombrage commun, pas une
+// reproduction. Voir le rapport technique V4 pour les limites honnêtes de
+// cet exercice (un rendu Canvas vectoriel ne peut pas atteindre le rendu
+// 3D illustré de l'asset de référence).
+const STONE_LIGHT = "#b8b3a6";
+const STONE_MID = "#8c877a";
+const STONE_DARK = "#5c584e";
+const WOOD_GOLD = "#b8823c";
+const WOOD_GOLD_LIGHT = "#d9a662";
+const WOOD_GOLD_DARK = "#7a4f26";
+const METAL_COOL = "#5c6b78";
+const METAL_COOL_LIGHT = "#8fa3b0";
+const BANNER_BLUE = "#3a5a7a";
+const BANNER_BLUE_DARK = "#243d54";
 
 // --- PRNG déterministe minimal (mulberry32) -- décor statique stable d'un
 // rendu à l'autre pendant une session, jamais de Math.random() qui ferait
@@ -149,12 +170,21 @@ function getPathDecor(pathPoints) {
 }
 
 // --- Base : petite forteresse reconnaissable (au lieu d'un cercle "B") --
+// Ombrage et bannière harmonisés avec la palette de référence en V4 (cahier
+// V4, section 7) -- même silhouette générale, jamais la même chose que
+// l'asset protégé, mais un dégradé pierre + bannière bleue + liseré doré
+// qui commence à "appartenir au même jeu".
 function drawBase(ctx, point, hpRatio) {
   const { x, y } = point;
   const w = BASE_R * 2.1;
   const h = BASE_R * 1.7;
-  // Corps de pierre.
-  ctx.fillStyle = "#7a7264";
+  // Corps de pierre en dégradé (clair en haut-gauche, plus sombre en
+  // bas-droite) -- suggère un éclairage directionnel simple, sans viser un
+  // rendu 3D que le Canvas vectoriel ne peut de toute façon pas atteindre.
+  const bodyGrad = ctx.createLinearGradient(x - w / 2, y - h / 2, x + w / 2, y + h / 2);
+  bodyGrad.addColorStop(0, STONE_LIGHT);
+  bodyGrad.addColorStop(1, STONE_DARK);
+  ctx.fillStyle = bodyGrad;
   ctx.strokeStyle = "#3a352c";
   ctx.lineWidth = 2.5;
   ctx.beginPath();
@@ -167,16 +197,33 @@ function drawBase(ctx, point, hpRatio) {
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  // Liseré doré sous les créneaux (accent bois/laiton de la référence).
+  ctx.strokeStyle = WOOD_GOLD;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - w / 2 + 2, y - h / 2 + 3);
+  ctx.lineTo(x + w / 2 - 2, y - h / 2 + 3);
+  ctx.stroke();
   // Créneaux.
   const merlonCount = 4;
   const merlonW = w / (merlonCount * 2);
-  ctx.fillStyle = "#7a7264";
+  ctx.fillStyle = STONE_MID;
+  ctx.strokeStyle = "#3a352c";
+  ctx.lineWidth = 2.5;
   for (let i = 0; i < merlonCount; i++) {
     const mx = x - w / 2 + merlonW * (2 * i + 0.5);
     ctx.fillRect(mx, y - h / 2 - 6, merlonW, 7);
     ctx.strokeRect(mx, y - h / 2 - 6, merlonW, 7);
   }
-  // Porte voûtée.
+  // Porte voûtée avec cadre bois/doré (au lieu d'un simple trou noir).
+  ctx.strokeStyle = WOOD_GOLD_DARK;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 7, y + h / 2);
+  ctx.lineTo(x - 7, y + 1);
+  ctx.quadraticCurveTo(x, y - 6, x + 7, y + 1);
+  ctx.lineTo(x + 7, y + h / 2);
+  ctx.stroke();
   ctx.fillStyle = "#241f19";
   ctx.beginPath();
   ctx.moveTo(x - 6, y + h / 2);
@@ -185,20 +232,27 @@ function drawBase(ctx, point, hpRatio) {
   ctx.lineTo(x + 6, y + h / 2);
   ctx.closePath();
   ctx.fill();
-  // Bannière (identité chaleureuse, cahier 4.1).
-  ctx.strokeStyle = "#5c5346";
+  // Bannière bleue (référence : petites bannières bleues de la tour
+  // d'archers) avec liseré doré, plutôt que l'orange générique de V1-V3.
+  ctx.strokeStyle = WOOD_GOLD_DARK;
   ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.moveTo(x, y - h / 2 - 6);
   ctx.lineTo(x, y - h / 2 - 20);
   ctx.stroke();
-  ctx.fillStyle = "#e76f51";
+  const bannerGrad = ctx.createLinearGradient(x, y - h / 2 - 20, x + 10, y - h / 2 - 12);
+  bannerGrad.addColorStop(0, BANNER_BLUE);
+  bannerGrad.addColorStop(1, BANNER_BLUE_DARK);
+  ctx.fillStyle = bannerGrad;
   ctx.beginPath();
   ctx.moveTo(x, y - h / 2 - 20);
   ctx.lineTo(x + 10, y - h / 2 - 16);
   ctx.lineTo(x, y - h / 2 - 12);
   ctx.closePath();
   ctx.fill();
+  ctx.strokeStyle = WOOD_GOLD;
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
   // Barre de PV compacte sous la forteresse -- "impact visuel" lisible
   // sans devoir regarder le HUD (cahier 4.1 : "points de vie lisibles").
   const barW = w;
@@ -208,16 +262,39 @@ function drawBase(ctx, point, hpRatio) {
   ctx.fillRect(x - barW / 2, y + h / 2 + 6, barW * Math.max(0, hpRatio), 5);
 }
 
-// --- Emplacement vide : socle de pierre intégré au décor (au lieu d'un
-// cercle pointillé + croix) -- reste clairement interactif via une lueur.
+// --- Emplacement vide : petit socle de pierre carré (au lieu d'une ellipse
+// plate) -- écho délibéré, à petite échelle, du plinthe carré surélevé de
+// la tour de référence protégée (cahier V4, section 7 : cohérence de
+// style, jamais une copie). Reste clairement interactif via une lueur.
 function drawEmptySlot(ctx, slot) {
   const { x, y } = slot;
-  ctx.fillStyle = SLOT_STONE_COLOR;
+  const half = TOWER_R * 0.85;
+  const slotGrad = ctx.createLinearGradient(x - half, y - half * 0.6, x + half, y + half * 0.6);
+  slotGrad.addColorStop(0, STONE_MID);
+  slotGrad.addColorStop(1, STONE_DARK);
+  ctx.fillStyle = slotGrad;
   ctx.strokeStyle = SLOT_STONE_EDGE;
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.ellipse(x, y + 3, TOWER_R * 0.95, TOWER_R * 0.6, 0, 0, Math.PI * 2);
+  ctx.moveTo(x - half, y + half * 0.6);
+  ctx.lineTo(x - half, y - half * 0.2);
+  ctx.lineTo(x - half * 0.7, y - half * 0.6);
+  ctx.lineTo(x + half * 0.7, y - half * 0.6);
+  ctx.lineTo(x + half, y - half * 0.2);
+  ctx.lineTo(x + half, y + half * 0.6);
+  ctx.closePath();
   ctx.fill();
+  ctx.stroke();
+  // Petits accents dorés aux coins (liseré bois/laiton de la référence),
+  // en plus léger que le socle lui-même -- juste assez pour signaler
+  // "appartient au même jeu" sans détail excessif.
+  ctx.strokeStyle = WOOD_GOLD;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(x - half, y - half * 0.2);
+  ctx.lineTo(x - half * 0.7, y - half * 0.6);
+  ctx.moveTo(x + half * 0.7, y - half * 0.6);
+  ctx.lineTo(x + half, y - half * 0.2);
   ctx.stroke();
   // Lueur douce pulsée statique (pas d'animation par frame requise ici :
   // un simple halo semi-transparent suffit à signaler "constructible").
@@ -255,14 +332,35 @@ function drawTowerShape(ctx, tower, familyDef) {
   } else {
     drawTowerFallbackShape(ctx, tower, familyDef);
   }
-  // Anneaux de palier : un petit anneau par palier possédé au-dessus de la
-  // tour -- lisible d'un coup d'oeil sans devoir ouvrir le panneau.
-  for (let i = 0; i < tower.tier; i++) {
-    ctx.strokeStyle = "#f4f1de";
-    ctx.lineWidth = 2;
+  // Indicateur de palier (cahier V4, section 4) : l'ancienne représentation
+  // empilait un petit anneau PAR palier possédé -- au palier maximum (2
+  // anneaux très rapprochés), le résultat se lisait visuellement comme un
+  // symbole en "8", signalé en bêta comme "trop placeholder". Remplacé par
+  // un indicateur UNIQUE (jamais plus d'une forme dessinée à la fois, donc
+  // structurellement incapable de reformer un "8") : un anneau creux tant
+  // que la tour n'est pas au palier maximum, un disque PLEIN à la même
+  // position une fois le palier maximum atteint -- une progression
+  // "creux -> plein" immédiatement lisible sans ouvrir le panneau, et
+  // cohérente pour toutes les familles y compris la tour d'archers, dont
+  // l'asset protégé ne peut pas lui-même évoluer visuellement par palier
+  // (cahier V4, section 7 : asset protégé, jamais modifié). Solution
+  // délibérément sobre et remplaçable par une vraie évolution visuelle de
+  // la tour elle-même le jour où des assets par palier existeront.
+  if (tower.tier > 0) {
+    const isMaxTier = tower.tier >= getMaxTier(tower.family);
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = "#241f19";
     ctx.beginPath();
-    ctx.arc(x, y - 30 - i * 6, 3, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.arc(x, y - 32, 4, 0, Math.PI * 2);
+    if (isMaxTier) {
+      ctx.fillStyle = "#f4f1de";
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = "#f4f1de";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
   }
 }
 
@@ -304,14 +402,36 @@ function drawTowerFallbackShape(ctx, tower, familyDef) {
       break;
     }
     case "canon": {
-      // Tourelle lourde ronde + canon massif.
+      // Base de pierre en dégradé + bandeau doré (harmonisation V4,
+      // section 7) -- même vocabulaire que la base/les emplacements,
+      // remplace l'aplat gris uniforme de V1.
+      const baseGrad = ctx.createRadialGradient(x - 4, y, 2, x, y + 4, 14);
+      baseGrad.addColorStop(0, STONE_LIGHT);
+      baseGrad.addColorStop(1, STONE_DARK);
+      ctx.fillStyle = baseGrad;
+      ctx.strokeStyle = "#241f19";
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(x, y + 4, 13, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle = "#3a352c";
+      ctx.strokeStyle = WOOD_GOLD;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(x, y + 4, 9.5, 0, Math.PI * 2);
+      ctx.stroke();
+      // Tourelle métal froid (au lieu d'un brun générique).
+      ctx.fillStyle = METAL_COOL;
       ctx.fillRect(x - 6, y - 15, 12, 16);
+      ctx.strokeStyle = "#241f19";
       ctx.strokeRect(x - 6, y - 15, 12, 16);
+      ctx.strokeStyle = METAL_COOL_LIGHT;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x - 5, y - 13);
+      ctx.lineTo(x - 5, y - 1);
+      ctx.stroke();
+      // Bouche du canon dans la couleur d'identité de famille (inchangé).
       ctx.fillStyle = c;
       ctx.beginPath();
       ctx.arc(x, y - 15, 6, Math.PI, 0);
@@ -320,7 +440,14 @@ function drawTowerFallbackShape(ctx, tower, familyDef) {
     }
     case "longue_portee": {
       // Tour haute effilée en forme de balise/baliste -- silhouette la
-      // plus HAUTE des quatre, renforce le rôle "longue portée".
+      // plus HAUTE des trois, renforce le rôle "longue portée". Dégradé de
+      // pierre + bandeau doré + pointe métallique (harmonisation V4).
+      const spireGrad = ctx.createLinearGradient(x - 7, y, x + 7, y);
+      spireGrad.addColorStop(0, STONE_LIGHT);
+      spireGrad.addColorStop(1, STONE_MID);
+      ctx.fillStyle = spireGrad;
+      ctx.strokeStyle = "#241f19";
+      ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.moveTo(x, y - 24);
       ctx.lineTo(x + 7, y + 10);
@@ -328,6 +455,20 @@ function drawTowerFallbackShape(ctx, tower, familyDef) {
       ctx.closePath();
       ctx.fill();
       ctx.stroke();
+      ctx.strokeStyle = WOOD_GOLD;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(x - 5, y - 1);
+      ctx.lineTo(x + 5, y - 1);
+      ctx.stroke();
+      // Pointe métallique (accent froid, cohérent avec les ferrures de la référence).
+      ctx.fillStyle = METAL_COOL_LIGHT;
+      ctx.beginPath();
+      ctx.moveTo(x, y - 26);
+      ctx.lineTo(x + 2.5, y - 20);
+      ctx.lineTo(x - 2.5, y - 20);
+      ctx.closePath();
+      ctx.fill();
       ctx.strokeStyle = "#3a352c";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
