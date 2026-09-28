@@ -150,7 +150,7 @@ h2("1.4 Lisibilité et interface")
 body("HUD, panneaux, boutons et zones tactiles restent des éléments DOM séparés au-dessus du canvas, "
      "inchangés par cette mission. Vérifié sur 5 largeurs mobiles (320/360/390/414/480px) : aucun débordement, "
      "aucun scroll de page. Le fond reste fixe et stable.")
-shot("16_carte_ensemble_v5.png", "Vue d'ensemble réelle de la carte Leonardo en jeu (niveau 1) — portail haut, chemin en S, emplacements sur l'herbe, forteresse basse.", width=68*mm, ratio=1688/780)
+shot("16_carte_ensemble_v5.jpg", "Vue d'ensemble réelle de la carte Leonardo en jeu (niveau 1) — portail haut, chemin en S, emplacements sur l'herbe, forteresse basse.", width=68*mm, ratio=1688/780)
 hr()
 story.append(PageBreak())
 
@@ -182,7 +182,7 @@ body("Le canon est intégré au même registre d'assets réutilisable que la tou
      "repli silencieux sur l'ancienne silhouette Canvas si le chargement échoue (jamais d'écran cassé). Aucune "
      "statistique, coût, cadence, dégâts ou portée du Canon n'a été modifié. L'indicateur de palier V4 (anneau "
      "creux / disque plein) continue de fonctionner sans altérer l'image elle-même.")
-shot("17_canon_pose_v5.png", "Canon Leonardo réellement posé sur un emplacement (niveau 2), transparence propre, aucun damier résiduel.", width=68*mm, ratio=1688/780)
+shot("17_canon_pose_v5.jpg", "Canon Leonardo réellement posé sur un emplacement (niveau 2), transparence propre, aucun damier résiduel.", width=68*mm, ratio=1688/780)
 hr()
 
 h1("3. Tests et non-régressions (cahier V5, section 6)")
@@ -201,7 +201,7 @@ body("Suite complète : <b>77/77 tests unitaires</b> (node:test) + <b>31/31 vér
      "(27 héritées de V0 à V4 + 4 nouvelles ou étendues pour la V5 : chargement réel carte+canon, rendu non "
      "replié sur le fond de secours, cycle complet construction/sélection/amélioration/revente sur le canon avec "
      "le nouveau sprite).")
-shot("18_ennemis_chemin_v5.png", "Vague réelle en cours (niveau 1) : les ennemis avancent visiblement le long de la route dessinée, y compris dans les virages.", width=68*mm, ratio=1688/780)
+shot("18_ennemis_chemin_v5.jpg", "Vague réelle en cours (niveau 1) : les ennemis avancent visiblement le long de la route dessinée, y compris dans les virages.", width=68*mm, ratio=1688/780)
 hr()
 story.append(PageBreak())
 
@@ -227,7 +227,7 @@ table([
     ["src/engine/levels.js", "Modifié — PATH_MAP calé sur la route réelle (niveaux 1-4), adaptation documentée niveau 5, emplacements recalés"],
     ["src/ui/render.js", "Modifié — carte Leonardo comme fond (avec repli Canvas), canon dans TOWER_SPRITE_CONFIG, forteresse Canvas non redessinée par-dessus la carte"],
     ["scripts/check-mobile.mjs", "Modifié — nouveau test dédié carte+canon (chargement réel, rendu, cycle complet UI)"],
-    ["docs/screenshots/16_carte_ensemble_v5.png, 17_canon_pose_v5.png, 18_ennemis_chemin_v5.png", "Ajoutés — captures réelles exigées par le cahier"],
+    ["docs/screenshots/16_carte_ensemble_v5.jpg, 17_canon_pose_v5.jpg, 18_ennemis_chemin_v5.jpg", "Ajoutés — captures réelles exigées par le cahier"],
 ], [78*mm, 87*mm])
 hr()
 
