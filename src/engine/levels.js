@@ -27,16 +27,34 @@ function spawnBurst(kind, count, pathIndex, startDelayMs, intervalMs) {
   return spawns;
 }
 
-// --- Niveau 1 : chemin unique en S, simple et lisible --------------------
-const PATH_1 = [
-  { x: 200, y: 30 },
-  { x: 200, y: 190 },
-  { x: 90, y: 190 },
-  { x: 90, y: 400 },
-  { x: 260, y: 400 },
-  { x: 260, y: 560 },
-  { x: 200, y: 620 },
+// --- Calage V5 sur la nouvelle carte Leonardo (cahier V5, section 3) -----
+// Le chemin ci-dessous n'est PAS un tracé arbitraire : ses points ont été
+// obtenus en suivant programmatiquement (recherche du centre de la bande de
+// couleur "route" ligne par ligne, cf. assets/leonardo/trace_road.py) le
+// chemin RÉELLEMENT dessiné sur assets/leonardo/carte_terrain_original.jpg,
+// puis convertis dans l'espace logique ARENA_W x ARENA_H via la même fenêtre
+// de recadrage que public/assets/map/carte_terrain.jpg (voir
+// scripts/process_leonardo_map.py pour le recadrage et la conversion
+// pixels -> coordonnées logiques). Un seul asset de carte a été fourni : ce
+// même tracé sert donc de fond visuel à TOUS les niveaux (1 à 4) -- seules
+// les vagues/difficultés changent d'un niveau à l'autre, jamais la
+// géométrie du chemin, puisqu'il n'existe qu'une seule route dessinée.
+const PATH_MAP = [
+  { x: 185, y: 60 },
+  { x: 260, y: 125 },
+  { x: 356, y: 173 }, // virage 1 (droite)
+  { x: 170, y: 250 },
+  { x: 60, y: 295 }, // virage 2 (gauche)
+  { x: 255, y: 360 },
+  { x: 356, y: 405 }, // virage 3 (droite)
+  { x: 187, y: 469 },
+  { x: 57, y: 500 }, // virage 4 (gauche)
+  { x: 214, y: 590 },
+  { x: 200, y: 615 }, // porte de la forteresse dessinée sur la carte
 ];
+
+// --- Niveau 1 : chemin calé sur la carte Leonardo -------------------------
+const PATH_1 = PATH_MAP;
 
 const LEVEL_1 = {
   id: 1,
@@ -45,12 +63,12 @@ const LEVEL_1 = {
   startCoins: 120,
   paths: [PATH_1],
   buildSlots: [
-    { id: "s1", x: 130, y: 120 },
-    { id: "s2", x: 270, y: 120 },
-    { id: "s3", x: 26, y: 300 }, // décalé de x=40 (cahier V2 §1 : trop proche du chemin vertical x=90)
-    { id: "s4", x: 160, y: 300 },
-    { id: "s5", x: 330, y: 480 },
-    { id: "s6", x: 190, y: 500 },
+    { id: "s1", x: 300, y: 70 },
+    { id: "s2", x: 75, y: 150 },
+    { id: "s3", x: 340, y: 300 },
+    { id: "s4", x: 100, y: 400 },
+    { id: "s5", x: 320, y: 500 },
+    { id: "s6", x: 100, y: 610 },
   ],
   unlockedTowers: ["rapide"],
   waves: [
@@ -61,16 +79,10 @@ const LEVEL_1 = {
 };
 
 // --- Niveau 2 : + canon, + blindé -----------------------------------------
-const PATH_2 = [
-  { x: 40, y: 30 },
-  { x: 40, y: 250 },
-  { x: 220, y: 250 },
-  { x: 220, y: 120 },
-  { x: 360, y: 120 },
-  { x: 360, y: 450 },
-  { x: 150, y: 450 },
-  { x: 150, y: 620 },
-];
+// Chemin calé sur la carte Leonardo (voir PATH_MAP) : un seul asset de
+// carte fourni = une seule géométrie de route pour tous les niveaux à
+// chemin unique (cahier V5, section 3.2).
+const PATH_2 = PATH_MAP;
 
 const LEVEL_2 = {
   id: 2,
@@ -79,13 +91,13 @@ const LEVEL_2 = {
   startCoins: 140,
   paths: [PATH_2],
   buildSlots: [
-    { id: "s1", x: 130, y: 60 },
-    { id: "s2", x: 130, y: 320 }, // décalé de y=250 (cahier V2 §1 : emplacement placé EXACTEMENT sur le chemin -- cause du "canon posé sur la route" observé en bêta V1)
-    { id: "s3", x: 290, y: 190 },
-    { id: "s4", x: 290, y: 330 },
-    { id: "s5", x: 40, y: 450 },
-    { id: "s6", x: 250, y: 530 },
-    { id: "s7", x: 60, y: 560 },
+    { id: "s1", x: 300, y: 70 },
+    { id: "s2", x: 75, y: 150 },
+    { id: "s3", x: 340, y: 300 },
+    { id: "s4", x: 100, y: 400 },
+    { id: "s5", x: 320, y: 500 },
+    { id: "s6", x: 100, y: 610 },
+    { id: "s7", x: 375, y: 610 },
   ],
   unlockedTowers: ["rapide", "canon"],
   // Rééquilibrage V3 (cahier, section 4) : l'audit par simulation
@@ -110,16 +122,7 @@ const LEVEL_2 = {
 };
 
 // --- Niveau 3 : + contrôle, + essaim ---------------------------------------
-const PATH_3 = [
-  { x: 200, y: 30 },
-  { x: 200, y: 150 },
-  { x: 340, y: 150 },
-  { x: 340, y: 330 },
-  { x: 60, y: 330 },
-  { x: 60, y: 500 },
-  { x: 200, y: 500 },
-  { x: 200, y: 620 },
-];
+const PATH_3 = PATH_MAP;
 
 const LEVEL_3 = {
   id: 3,
@@ -132,13 +135,13 @@ const LEVEL_3 = {
   startCoins: 150,
   paths: [PATH_3],
   buildSlots: [
-    { id: "s1", x: 270, y: 90 },
-    { id: "s2", x: 270, y: 240 },
-    { id: "s3", x: 130, y: 240 },
-    { id: "s4", x: 140, y: 415 },
-    { id: "s5", x: 300, y: 415 },
-    { id: "s6", x: 130, y: 560 },
-    { id: "s7", x: 270, y: 560 },
+    { id: "s1", x: 300, y: 70 },
+    { id: "s2", x: 75, y: 150 },
+    { id: "s3", x: 100, y: 400 },
+    { id: "s4", x: 320, y: 500 },
+    { id: "s5", x: 100, y: 610 },
+    { id: "s6", x: 375, y: 610 },
+    { id: "s7", x: 20, y: 350 },
   ],
   // Longue portée avancée du niveau 4 au niveau 3 (cahier V3, section 3 :
   // "la faire apparaître/débloquer sensiblement plus tôt... pas
@@ -161,17 +164,7 @@ const LEVEL_3 = {
 };
 
 // --- Niveau 4 : les 3 familles réunies, mélange complet --------------------
-const PATH_4 = [
-  { x: 360, y: 30 },
-  { x: 360, y: 180 },
-  { x: 60, y: 180 },
-  { x: 60, y: 340 },
-  { x: 340, y: 340 },
-  { x: 340, y: 480 },
-  { x: 120, y: 480 },
-  { x: 120, y: 600 },
-  { x: 200, y: 630 },
-];
+const PATH_4 = PATH_MAP;
 
 const LEVEL_4 = {
   id: 4,
@@ -184,14 +177,14 @@ const LEVEL_4 = {
   startCoins: 160,
   paths: [PATH_4],
   buildSlots: [
-    { id: "s1", x: 230, y: 100 },
-    { id: "s2", x: 150, y: 240 },
-    { id: "s3", x: 300, y: 240 },
-    { id: "s4", x: 200, y: 400 },
-    { id: "s5", x: 60, y: 410 },
-    { id: "s6", x: 260, y: 540 },
-    { id: "s7", x: 40, y: 540 },
-    { id: "s8", x: 200, y: 560 },
+    { id: "s1", x: 300, y: 70 },
+    { id: "s2", x: 75, y: 150 },
+    { id: "s3", x: 340, y: 300 },
+    { id: "s4", x: 100, y: 400 },
+    { id: "s5", x: 320, y: 500 },
+    { id: "s6", x: 100, y: 610 },
+    { id: "s7", x: 375, y: 610 },
+    { id: "s8", x: 20, y: 350 },
   ],
   unlockedTowers: ["rapide", "canon", "longue_portee"],
   // Rééquilibrage V3 (cahier, section 4) -- même constat et même remède
@@ -215,25 +208,23 @@ const LEVEL_4 = {
 };
 
 // --- Niveau 5 : deux chemins convergents, les 4 familles, mélange complet --
-const PATH_5A = [
-  { x: 80, y: 30 },
-  { x: 80, y: 260 },
-  { x: 200, y: 340 },
-];
-const PATH_5B = [
-  { x: 320, y: 30 },
-  { x: 320, y: 260 },
-  { x: 200, y: 340 },
-];
-const PATH_5_COMMON_TAIL = [
-  { x: 200, y: 340 },
-  { x: 200, y: 480 },
-  { x: 100, y: 480 },
-  { x: 100, y: 600 },
-  { x: 200, y: 630 },
-];
-const PATH_5A_FULL = [...PATH_5A, ...PATH_5_COMMON_TAIL.slice(1)];
-const PATH_5B_FULL = [...PATH_5B, ...PATH_5_COMMON_TAIL.slice(1)];
+// Limite documentée (cahier V5, section 3.1/9 -- "si cela est impossible
+// sans dégrader le gameplay, le signaler clairement") : la carte Leonardo
+// fournie ne dessine qu'UNE SEULE route, avec une unique porte d'entrée
+// haute encadrée de deux tourelles décoratives -- jamais deux routes
+// séparées. Le mécanisme V4 "deux chemins convergents" (deux voies de
+// spawn distinctes, cahier V0 section 3) ne peut donc pas être recalé sur
+// deux routes visuellement différentes sans soit fabriquer une route
+// absente de l'asset protégé (interdit), soit supprimer le mécanisme
+// (régression interdite). Solution retenue : les deux voies logiques
+// démarrent à quelques pixels d'écart, DANS la largeur de la porte unique
+// dessinée, puis rejoignent immédiatement le même tracé PATH_MAP -- le
+// mécanisme (deux files de spawn, temporisations indépendantes) reste
+// intact, mais les deux flux restent visuellement confondus sur l'unique
+// route dessinée au lieu de sembler sortir de l'herbe. Cette limite doit
+// être rappelée telle quelle dans le rapport officiel V5, jamais masquée.
+const PATH_5A_FULL = [{ x: 172, y: 45 }, ...PATH_MAP];
+const PATH_5B_FULL = [{ x: 218, y: 45 }, ...PATH_MAP];
 
 const LEVEL_5 = {
   id: 5,
@@ -242,14 +233,14 @@ const LEVEL_5 = {
   startCoins: 180,
   paths: [PATH_5A_FULL, PATH_5B_FULL],
   buildSlots: [
-    { id: "s1", x: 160, y: 130 },
-    { id: "s2", x: 240, y: 130 },
-    { id: "s3", x: 30, y: 300 },
-    { id: "s4", x: 370, y: 300 },
-    { id: "s5", x: 130, y: 420 }, // décalé de x=200 (cahier V2 §1 : emplacement placé EXACTEMENT sur le chemin commun après convergence des deux voies)
-    { id: "s6", x: 300, y: 480 },
-    { id: "s7", x: 40, y: 560 },
-    { id: "s8", x: 200, y: 560 },
+    { id: "s1", x: 300, y: 70 },
+    { id: "s2", x: 75, y: 150 },
+    { id: "s3", x: 340, y: 300 },
+    { id: "s4", x: 100, y: 400 },
+    { id: "s5", x: 320, y: 500 },
+    { id: "s6", x: 100, y: 610 },
+    { id: "s7", x: 375, y: 610 },
+    { id: "s8", x: 20, y: 350 },
   ],
   unlockedTowers: ["rapide", "canon", "longue_portee"],
   // Rééquilibrage V3 (cahier, section 4) -- même constat et même remède

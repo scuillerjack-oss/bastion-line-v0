@@ -18,10 +18,22 @@ import { loadSprite } from "./sprites.js";
 // jusqu'à -36).
 const TOWER_SPRITE_CONFIG = {
   rapide: { src: "./assets/towers/tour_rapide_arbalete.png", w: 34, h: 48, bottomOffset: 14 },
+  // Canon Leonardo (cahier V5, section 4) : même registre, même règle de
+  // fallback silencieux. w/h/bottomOffset choisis pour rester sous
+  // TOWER_FOOTPRINT_RADIUS comme la tour d'archers -- voir
+  // scripts/process_leonardo_map.py pour la mesure exacte du ratio source.
+  canon: { src: "./assets/towers/canon.png", w: 40, h: 46, bottomOffset: 12 },
 };
 const towerSprites = Object.fromEntries(
   Object.entries(TOWER_SPRITE_CONFIG).map(([family, cfg]) => [family, { ...cfg, sprite: loadSprite(cfg.src) }])
 );
+
+// Carte Leonardo (cahier V5, section 3) : asset protégé, fond visuel
+// principal du champ de bataille. Même registre "sprite ou fallback
+// silencieux" que les tours -- si le chargement échoue, le terrain
+// procédural existant (getTerrainCanvas/getPathDecor, inchangés) reprend
+// automatiquement le relais, jamais un écran cassé.
+const mapSprite = loadSprite("./assets/map/carte_terrain.jpg");
 
 // Identité visuelle V1 (cahier des charges V1, section 4) -- passer de
 // primitives géométriques abstraites (ronds/triangles/lettres) à un petit
@@ -174,10 +186,21 @@ function getPathDecor(pathPoints) {
 // V4, section 7) -- même silhouette générale, jamais la même chose que
 // l'asset protégé, mais un dégradé pierre + bannière bleue + liseré doré
 // qui commence à "appartenir au même jeu".
-function drawBase(ctx, point, hpRatio) {
+// mapLoaded (cahier V5, section 3) : la carte Leonardo dessine déjà sa
+// propre forteresse à l'emplacement de fin de chemin -- redessiner par-
+// dessus la forteresse Canvas complète produirait deux forteresses
+// superposées. Quand la carte est chargée, seule la barre de PV (retour
+// fonctionnel indispensable) est dessinée ; la forteresse Canvas complète
+// ne sert plus que de secours si l'asset échoue à charger (mapLoaded
+// false), pour ne jamais casser l'écran.
+function drawBase(ctx, point, hpRatio, mapLoaded) {
   const { x, y } = point;
   const w = BASE_R * 2.1;
   const h = BASE_R * 1.7;
+  if (mapLoaded) {
+    drawBaseHpBar(ctx, x, y, w, h, hpRatio);
+    return;
+  }
   // Corps de pierre en dégradé (clair en haut-gauche, plus sombre en
   // bas-droite) -- suggère un éclairage directionnel simple, sans viser un
   // rendu 3D que le Canvas vectoriel ne peut de toute façon pas atteindre.
@@ -253,8 +276,14 @@ function drawBase(ctx, point, hpRatio) {
   ctx.strokeStyle = WOOD_GOLD;
   ctx.lineWidth = 0.8;
   ctx.stroke();
-  // Barre de PV compacte sous la forteresse -- "impact visuel" lisible
-  // sans devoir regarder le HUD (cahier 4.1 : "points de vie lisibles").
+  drawBaseHpBar(ctx, x, y, w, h, hpRatio);
+}
+
+// Barre de PV compacte sous la forteresse -- "impact visuel" lisible sans
+// devoir regarder le HUD (cahier 4.1 : "points de vie lisibles"). Extraite
+// à part (cahier V5, section 3) pour rester affichée MÊME quand la carte
+// Leonardo remplace le reste du dessin Canvas de la forteresse.
+function drawBaseHpBar(ctx, x, y, w, h, hpRatio) {
   const barW = w;
   ctx.fillStyle = "rgba(0,0,0,0.45)";
   ctx.fillRect(x - barW / 2, y + h / 2 + 6, barW, 5);
@@ -709,13 +738,18 @@ export function drawFrame(ctx, canvasW, canvasH, state, effects, nowMs) {
   ctx.translate(viewport.offsetX, viewport.offsetY);
   ctx.scale(viewport.scale, viewport.scale);
 
-  ctx.drawImage(getTerrainCanvas(), 0, 0);
-  for (const pathData of state.paths) ctx.drawImage(getPathDecor(pathData.points), 0, 0);
+  const mapLoaded = mapSprite.status === "loaded";
+  if (mapLoaded) {
+    ctx.drawImage(mapSprite.image, 0, 0, ARENA_W, ARENA_H);
+  } else {
+    ctx.drawImage(getTerrainCanvas(), 0, 0);
+    for (const pathData of state.paths) ctx.drawImage(getPathDecor(pathData.points), 0, 0);
+  }
 
   const baseHpRatio = Math.max(0, state.baseHp) / state.baseMaxHp;
   for (const pathData of state.paths) {
     const last = pathData.points[pathData.points.length - 1];
-    drawBase(ctx, last, baseHpRatio);
+    drawBase(ctx, last, baseHpRatio, mapLoaded);
   }
 
   for (const slot of state.buildSlots) {

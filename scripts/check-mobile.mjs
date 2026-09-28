@@ -997,6 +997,88 @@ async function main() {
       await page.close();
     }
 
+    // --- Test 20 : intégration V5 -- la carte Leonardo ET le canon Leonardo
+    // se chargent réellement (HTTP 200), le canvas affiche bien la carte
+    // (jamais le seul fond procédural de secours), et le cycle complet
+    // construction/sélection/amélioration/revente fonctionne sur le canon
+    // avec le nouveau sprite exactement comme avec la silhouette Canvas
+    // (cahier V5, section 6 : lignes "Carte" et "Canon"). ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 2 });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      const responses = [];
+      page.on("response", (r) => {
+        if (r.url().includes("carte_terrain.jpg") || r.url().includes("canon.png")) responses.push({ url: r.url(), status: r.status() });
+      });
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(400);
+
+      // La carte est bien dessinée (pas le fond de secours plat #3a5a30) :
+      // on échantillonne un pixel de terrain connu, loin de tout élément UI.
+      const terrainSample = await page.evaluate(() => {
+        const canvas = document.getElementById("game-canvas");
+        const ctx = canvas.getContext("2d");
+        const rect = canvas.getBoundingClientRect();
+        const px = Math.round(rect.width * 0.5 * (canvas.width / rect.width));
+        const py = Math.round(rect.height * 0.3 * (canvas.height / rect.height));
+        return Array.from(ctx.getImageData(px, py, 1, 1).data);
+      });
+      const FALLBACK_BG = [0x3a, 0x5a, 0x30];
+      const matchesFlatFallback = terrainSample.slice(0, 3).every((c, i) => Math.abs(c - FALLBACK_BG[i]) < 4);
+
+      // Niveau 2 (canon débloqué) : construction réelle sur un emplacement.
+      await page.evaluate(() => window.__bastionDebugStartLevel(1));
+      await page.waitForTimeout(200);
+      const slot = (await page.evaluate(() => window.__bastionDebugState())).buildSlots[0];
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slot.x, slot.y]);
+      await page.waitForTimeout(150);
+      await page.locator(".tower-option[data-family='canon']").click();
+      await page.waitForTimeout(400);
+      let s = await page.evaluate(() => window.__bastionDebugState());
+      const builtOk = s.towers.length === 1 && s.towers[0].family === "canon" && s.towers[0].tier === 0;
+
+      // Sélection + amélioration réelles (retap sur la tour déjà posée --
+      // le hook de debug n'a pas de pointerId réel donc le panneau s'ouvre
+      // déjà armé, voir le commentaire sur armPanelGate dans main.js).
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slot.x, slot.y]);
+      await page.waitForTimeout(150);
+      await page.locator(".tower-option:not(.sell-option)").click();
+      await page.waitForTimeout(150);
+      s = await page.evaluate(() => window.__bastionDebugState());
+      const upgradedOk = s.towers[0].tier === 1;
+
+      // Revente réelle : emplacement libéré, une nouvelle tour reconstructible.
+      await page.evaluate(([x, y]) => window.__bastionDebugTapArena(x, y), [slot.x, slot.y]);
+      await page.waitForTimeout(150);
+      await page.locator("#btn-sell").click();
+      await page.waitForTimeout(350); // au-delà de PANEL_ARM_DELAY_MS (300ms) avant de confirmer
+      await page.locator("#btn-sell-confirm").click();
+      await page.waitForTimeout(150);
+      s = await page.evaluate(() => window.__bastionDebugState());
+      const soldOk = s.towers.length === 0 && s.buildSlots.find((sl) => sl.id === slot.id).towerId === null;
+
+      // Le SW peut faire re-fetcher un même asset (mise en cache runtime) --
+      // on vérifie qu'AU MOINS une réponse 200 existe pour chacun des deux
+      // assets (même convention que le test 15 ci-dessus), jamais un compte
+      // exact de requêtes.
+      const gotCanon = responses.some((r) => r.url.includes("canon.png"));
+      const gotMap = responses.some((r) => r.url.includes("carte_terrain.jpg"));
+      const assetsOk = gotCanon && gotMap && responses.every((r) => r.status === 200);
+      const allOk = assetsOk && !matchesFlatFallback && builtOk && upgradedOk && soldOk && errors.length === 0;
+      if (!allOk) {
+        failures += 1;
+        log("ÉCHEC intégration V5 (carte/canon)", { responses, matchesFlatFallback, builtOk, upgradedOk, soldOk, errors });
+      } else {
+        log(
+          "OK : carte Leonardo chargée et dessinée (HTTP 200, non le fond de secours), canon Leonardo chargé (HTTP 200) et pleinement fonctionnel (construction/sélection/amélioration/revente)"
+        );
+      }
+      await page.close();
+    }
+
     await browser.close();
   } finally {
     server.kill();
