@@ -27,30 +27,61 @@ function spawnBurst(kind, count, pathIndex, startDelayMs, intervalMs) {
   return spawns;
 }
 
-// --- Calage V5 sur la nouvelle carte Leonardo (cahier V5, section 3) -----
+// --- Calage V6 sur la nouvelle carte Leonardo (cahier V6, section 3) -----
 // Le chemin ci-dessous n'est PAS un tracé arbitraire : ses points ont été
 // obtenus en suivant programmatiquement (recherche du centre de la bande de
 // couleur "route" ligne par ligne, cf. assets/leonardo/trace_road.py) le
 // chemin RÉELLEMENT dessiné sur assets/leonardo/carte_terrain_original.jpg,
 // puis convertis dans l'espace logique ARENA_W x ARENA_H via la même fenêtre
 // de recadrage que public/assets/map/carte_terrain.jpg (voir
-// scripts/process_leonardo_map.py pour le recadrage et la conversion
-// pixels -> coordonnées logiques). Un seul asset de carte a été fourni : ce
+// scripts/process_leonardo_map.py). Un seul asset de carte a été fourni : ce
 // même tracé sert donc de fond visuel à TOUS les niveaux (1 à 4) -- seules
 // les vagues/difficultés changent d'un niveau à l'autre, jamais la
 // géométrie du chemin, puisqu'il n'existe qu'une seule route dessinée.
+//
+// Correction V6 à LA CAUSE (cahier V6, section 3 : "les ennemis coupent les
+// courbes, ce qui donne un rendu brouillon") : la version V5 de ce tracé ne
+// comptait que 11 points -- largement assez pour la validation d'emprise,
+// mais bien trop clairsemé pour qu'un mouvement en LIGNE DROITE entre deux
+// points consécutifs épouse un virage réel de la route peinte : sur un
+// virage serré, le segment droit coupait visiblement l'intérieur de la
+// courbe (diagonale traversant l'herbe). Le système d'interpolation lui-
+// même (engine/path.js, pointAtDistance -- marche linéaire entre points)
+// n'a PAS été réécrit : c'est le nombre et la densité des points qui
+// étaient insuffisants, pas l'algorithme. Remède structurel : le même
+// tracé RÉEL (assets/leonardo/trace_road.py, échantillonné au pixel près
+// verticalement) est repris, puis simplifié par Douglas-Peucker (tolérance
+// 1,5 unité logique -- très inférieure à la demi-largeur de route, 17) pour
+// ne garder que les points nécessaires à rester à moins de 1,5 unité du
+// tracé réel en tout point. Résultat : 82 points au lieu de 11, un mouvement
+// qui épouse visuellement chaque virage, sans jamais dépendre d'un point
+// spécial ajouté à la main pour UN niveau -- puisque tous les niveaux à
+// chemin unique partagent ce même PATH_MAP, la correction s'applique
+// automatiquement partout. Voir tests/levels.test.js pour la vérification
+// géométrique permanente (aucun point du chemin ne s'éloigne du tracé réel
+// au-delà de cette même tolérance).
 const PATH_MAP = [
-  { x: 185, y: 60 },
-  { x: 260, y: 125 },
-  { x: 356, y: 173 }, // virage 1 (droite)
-  { x: 170, y: 250 },
-  { x: 60, y: 295 }, // virage 2 (gauche)
-  { x: 255, y: 360 },
-  { x: 356, y: 405 }, // virage 3 (droite)
-  { x: 187, y: 469 },
-  { x: 57, y: 500 }, // virage 4 (gauche)
-  { x: 214, y: 590 },
-  { x: 200, y: 615 }, // porte de la forteresse dessinée sur la carte
+  { x: 185, y: 60 }, { x: 178, y: 66 }, { x: 178, y: 68 }, { x: 179, y: 89 },
+  { x: 184, y: 93 }, { x: 222, y: 100 }, { x: 238, y: 108 }, { x: 262, y: 131 },
+  { x: 265, y: 131 }, { x: 251, y: 132 }, { x: 322, y: 136 }, { x: 344, y: 145 },
+  { x: 355, y: 155 }, { x: 354, y: 159 }, { x: 358, y: 165 }, { x: 359, y: 174 },
+  { x: 357, y: 176 }, { x: 360, y: 181 }, { x: 358, y: 186 }, { x: 359, y: 187 },
+  { x: 351, y: 202 }, { x: 331, y: 210 }, { x: 272, y: 217 }, { x: 236, y: 235 },
+  { x: 200, y: 248 }, { x: 168, y: 251 }, { x: 167, y: 253 }, { x: 176, y: 255 },
+  { x: 75, y: 258 }, { x: 64, y: 260 }, { x: 56, y: 269 }, { x: 59, y: 276 },
+  { x: 56, y: 280 }, { x: 57, y: 302 }, { x: 63, y: 308 }, { x: 63, y: 314 },
+  { x: 73, y: 319 }, { x: 124, y: 323 }, { x: 143, y: 327 }, { x: 158, y: 337 },
+  { x: 164, y: 343 }, { x: 189, y: 356 }, { x: 214, y: 359 }, { x: 255, y: 360 },
+  { x: 247, y: 361 }, { x: 252, y: 363 }, { x: 237, y: 364 }, { x: 263, y: 366 },
+  { x: 245, y: 368 }, { x: 331, y: 370 }, { x: 322, y: 371 }, { x: 347, y: 373 },
+  { x: 355, y: 381 }, { x: 359, y: 394 }, { x: 356, y: 400 }, { x: 359, y: 404 },
+  { x: 355, y: 417 }, { x: 350, y: 424 }, { x: 335, y: 431 }, { x: 272, y: 438 },
+  { x: 242, y: 458 }, { x: 226, y: 465 }, { x: 187, y: 469 }, { x: 210, y: 473 },
+  { x: 86, y: 476 }, { x: 70, y: 481 }, { x: 63, y: 487 }, { x: 57, y: 498 },
+  { x: 58, y: 508 }, { x: 55, y: 512 }, { x: 63, y: 532 }, { x: 68, y: 537 },
+  { x: 80, y: 541 }, { x: 128, y: 546 }, { x: 138, y: 550 }, { x: 141, y: 558 },
+  { x: 163, y: 574 }, { x: 186, y: 575 }, { x: 207, y: 580 }, { x: 214, y: 588 },
+  { x: 214, y: 593 }, { x: 200, y: 615 }, // porte de la forteresse dessinée sur la carte
 ];
 
 // --- Niveau 1 : chemin calé sur la carte Leonardo -------------------------
@@ -62,13 +93,21 @@ const LEVEL_1 = {
   baseHp: 20,
   startCoins: 120,
   paths: [PATH_1],
+  // Emplacements V6 (cahier V6, section 6 -- "une vraie logique de level
+  // design", jamais les seules zones vides) : chaque « + » est ancré sur
+  // une caractéristique RÉELLE de la route (un virage serré, où une tour à
+  // courte portée couvre deux segments qui se rejoignent -- ou une longue
+  // ligne droite, où l'exposition prolongée dans une seule direction
+  // profite à une tour à grande portée/cadence), jamais un point choisi au
+  // hasard dans une zone d'herbe vide. Voir le rapport technique V6 pour la
+  // carte annotée et le raisonnement complet par emplacement.
   buildSlots: [
-    { id: "s1", x: 300, y: 70 },
-    { id: "s2", x: 75, y: 150 },
-    { id: "s3", x: 340, y: 300 },
-    { id: "s4", x: 100, y: 400 },
-    { id: "s5", x: 320, y: 500 },
-    { id: "s6", x: 100, y: 610 },
+    { id: "s1", x: 296, y: 74 }, // virage haut (couvre l'entrée + le 1er virage droit)
+    { id: "s2", x: 201, y: 162 }, // virage serré haut
+    { id: "s3", x: 105, y: 196 }, // longue ligne droite haute (gauche)
+    { id: "s4", x: 155, y: 408 }, // virage central gauche
+    { id: "s5", x: 240, y: 523 }, // virage bas
+    { id: "s6", x: 104, y: 603 }, // ligne droite finale, avant la porte
   ],
   unlockedTowers: ["rapide"],
   waves: [
@@ -91,13 +130,13 @@ const LEVEL_2 = {
   startCoins: 140,
   paths: [PATH_2],
   buildSlots: [
-    { id: "s1", x: 300, y: 70 },
-    { id: "s2", x: 75, y: 150 },
-    { id: "s3", x: 340, y: 300 },
-    { id: "s4", x: 100, y: 400 },
-    { id: "s5", x: 320, y: 500 },
-    { id: "s6", x: 100, y: 610 },
-    { id: "s7", x: 375, y: 610 },
+    { id: "s1", x: 296, y: 74 },
+    { id: "s2", x: 201, y: 162 },
+    { id: "s3", x: 105, y: 196 },
+    { id: "s4", x: 246, y: 295 }, // virage central haut
+    { id: "s5", x: 155, y: 408 },
+    { id: "s6", x: 240, y: 523 },
+    { id: "s7", x: 104, y: 603 },
   ],
   unlockedTowers: ["rapide", "canon"],
   // Rééquilibrage V3 (cahier, section 4) : l'audit par simulation
@@ -135,13 +174,14 @@ const LEVEL_3 = {
   startCoins: 150,
   paths: [PATH_3],
   buildSlots: [
-    { id: "s1", x: 300, y: 70 },
-    { id: "s2", x: 75, y: 150 },
-    { id: "s3", x: 100, y: 400 },
-    { id: "s4", x: 320, y: 500 },
-    { id: "s5", x: 100, y: 610 },
-    { id: "s6", x: 375, y: 610 },
-    { id: "s7", x: 20, y: 350 },
+    { id: "s1", x: 296, y: 74 },
+    { id: "s2", x: 201, y: 162 },
+    { id: "s3", x: 105, y: 196 },
+    { id: "s4", x: 246, y: 295 },
+    { id: "s5", x: 57, y: 415 }, // longue ligne droite basse (gauche)
+    { id: "s6", x: 155, y: 408 },
+    { id: "s7", x: 240, y: 523 },
+    { id: "s8", x: 104, y: 603 },
   ],
   // Longue portée avancée du niveau 4 au niveau 3 (cahier V3, section 3 :
   // "la faire apparaître/débloquer sensiblement plus tôt... pas
@@ -177,14 +217,15 @@ const LEVEL_4 = {
   startCoins: 160,
   paths: [PATH_4],
   buildSlots: [
-    { id: "s1", x: 300, y: 70 },
-    { id: "s2", x: 75, y: 150 },
-    { id: "s3", x: 340, y: 300 },
-    { id: "s4", x: 100, y: 400 },
-    { id: "s5", x: 320, y: 500 },
-    { id: "s6", x: 100, y: 610 },
-    { id: "s7", x: 375, y: 610 },
-    { id: "s8", x: 20, y: 350 },
+    { id: "s1", x: 296, y: 74 },
+    { id: "s2", x: 201, y: 162 },
+    { id: "s3", x: 105, y: 196 },
+    { id: "s4", x: 246, y: 295 },
+    { id: "s5", x: 341, y: 310 }, // virage central droit
+    { id: "s6", x: 57, y: 415 },
+    { id: "s7", x: 155, y: 408 },
+    { id: "s8", x: 240, y: 523 },
+    { id: "s9", x: 104, y: 603 },
   ],
   unlockedTowers: ["rapide", "canon", "longue_portee"],
   // Rééquilibrage V3 (cahier, section 4) -- même constat et même remède
@@ -233,14 +274,16 @@ const LEVEL_5 = {
   startCoins: 180,
   paths: [PATH_5A_FULL, PATH_5B_FULL],
   buildSlots: [
-    { id: "s1", x: 300, y: 70 },
-    { id: "s2", x: 75, y: 150 },
-    { id: "s3", x: 340, y: 300 },
-    { id: "s4", x: 100, y: 400 },
-    { id: "s5", x: 320, y: 500 },
-    { id: "s6", x: 100, y: 610 },
-    { id: "s7", x: 375, y: 610 },
-    { id: "s8", x: 20, y: 350 },
+    { id: "s1", x: 296, y: 74 },
+    { id: "s2", x: 201, y: 162 },
+    { id: "s3", x: 105, y: 196 },
+    { id: "s4", x: 246, y: 295 },
+    { id: "s5", x: 341, y: 310 },
+    { id: "s6", x: 57, y: 415 },
+    { id: "s7", x: 155, y: 408 },
+    { id: "s8", x: 347, y: 489 }, // longue ligne droite basse (droite)
+    { id: "s9", x: 240, y: 523 },
+    { id: "s10", x: 104, y: 603 },
   ],
   unlockedTowers: ["rapide", "canon", "longue_portee"],
   // Rééquilibrage V3 (cahier, section 4) -- même constat et même remède

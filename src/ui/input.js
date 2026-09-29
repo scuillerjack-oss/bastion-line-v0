@@ -22,10 +22,22 @@ export function createTapController(canvas, onTap) {
     return computeViewport(rect.width, rect.height);
   }
 
-  let viewport = computeCssViewport();
-
-  function updateViewport() {
-    viewport = computeCssViewport();
+  // Cause racine du bug bêta V5 ("la sélection semble parfois demander deux
+  // ou trois pressions") : un viewport mis en cache et rafraîchi UNIQUEMENT
+  // sur "resize"/"orientationchange" devient silencieusement périmé dès que
+  // la boîte CSS du canvas change pour une autre raison -- notamment
+  // .prep-row qui apparaît/disparaît à CHAQUE transition préparation/vague
+  // (voir main.js updateHud), ce qui redimensionne .bottombar et donc
+  // .stage-wrap (flex:1) SANS jamais déclencher d'événement "resize" de la
+  // fenêtre. Le premier appui après une telle transition était alors
+  // traduit avec un décalage réel (mauvaise échelle/offsets), ratait
+  // l'emplacement/la tour visée, et se lisait comme "il faut retaper".
+  // Correction à la cause, pas au symptôme : plus aucun cache -- le
+  // viewport est recalculé à chaque appui, à partir de la géométrie RÉELLE
+  // du canvas à cet instant précis. Un getBoundingClientRect() est
+  // suffisamment bon marché pour être appelé à chaque pointerdown.
+  function getViewport() {
+    return computeCssViewport();
   }
 
   // Cause réelle du bug bêta V1 ("le premier appui sur un '+' proche du bas
@@ -48,7 +60,7 @@ export function createTapController(canvas, onTap) {
   function handlePointerDown(ev) {
     ev.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const arenaPos = screenToArena(ev.clientX, ev.clientY, rect, viewport);
+    const arenaPos = screenToArena(ev.clientX, ev.clientY, rect, computeViewport(rect.width, rect.height));
     // L'identifiant du pointeur d'origine est transmis jusqu'au sélecteur
     // (voir main.js, panelGate) : cahier V3, section 1 -- "un même geste ne
     // doit jamais à la fois sélectionner un emplacement et choisir/
@@ -63,8 +75,11 @@ export function createTapController(canvas, onTap) {
   canvas.addEventListener("pointerdown", handlePointerDown);
 
   return {
-    updateViewport,
-    getViewport: () => viewport,
+    // Conservée pour compatibilité d'appel (main.js l'appelle après un vrai
+    // resize de fenêtre) : ne fait plus rien, puisqu'il n'y a plus de cache
+    // à rafraîchir -- chaque appui recalcule déjà sa propre géométrie.
+    updateViewport: () => {},
+    getViewport,
     destroy: () => canvas.removeEventListener("pointerdown", handlePointerDown),
   };
 }

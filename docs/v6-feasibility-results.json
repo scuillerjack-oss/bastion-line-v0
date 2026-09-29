@@ -1,0 +1,152 @@
+{
+  "1": {
+    "name": "Premiers pas",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 6,
+        "ticks": 4063,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 6,
+        "ticks": 4063,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 6,
+        "ticks": 4063,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "2": {
+    "name": "Premier blindage",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 15,
+        "ticks": 10468,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 60,
+        "ticks": 7697,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 15,
+        "ticks": 10468,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "3": {
+    "name": "Renfort lointain",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 60,
+        "ticks": 10039,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 45,
+        "ticks": 9378,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 60,
+        "ticks": 10039,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "4": {
+    "name": "Vagues croisées",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 18,
+        "ticks": 13562,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 43,
+        "ticks": 12457,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 18,
+        "ticks": 13562,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "5": {
+    "name": "Ligne double",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 39,
+        "ticks": 13742,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 64,
+        "ticks": 12533,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 39,
+        "ticks": 13742,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  }
+}

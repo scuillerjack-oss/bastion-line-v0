@@ -10,22 +10,55 @@ import { loadSprite } from "./sprites.js";
 // assets Canon/Longue portée/ennemis/carte encore à venir). Chaque entrée
 // est INDÉPENDANTE et OPTIONNELLE : une famille sans asset ici garde
 // simplement sa silhouette Canvas existante, sans aucun code à ajouter
-// ailleurs. w/h/bottomOffset restent à choisir pour que le rendu tienne
-// dans l'enveloppe d'emprise partagée (engine/constants.js,
-// TOWER_FOOTPRINT_RADIUS) -- voir tour_rapide_arbalete.png pour un exemple
-// de calcul (largeur 34, hauteur 48, ancrage bas +14 sous le centre
-// logique : bas<=20, haut=34<=36, l'anneau de palier max montant déjà
-// jusqu'à -36).
+// ailleurs.
+//
+// Taille V6 (cahier V6, section 4 : "tour d'archer et canon sont trop
+// petits sur téléphone ; leurs détails et leur identité visuelle sont
+// difficiles à distinguer") : w/h/bottomOffset augmentés d'environ 25-29%
+// par rapport à la V5 (34x48->44x62 pour l'archer, 40x46->50x58 pour le
+// canon), un facteur choisi empiriquement -- assez grand pour que les
+// détails redeviennent lisibles sur un écran de téléphone réel (vérifié par
+// capture d'écran, voir le rapport technique V6), sans que l'enveloppe
+// visuelle n'empiète sur la route même aux emplacements les plus proches du
+// chemin. AUCUNE statistique de jeu (portée, dégâts, cadence,
+// TOWER_FOOTPRINT_RADIUS/emprise de validation des emplacements) n'est
+// modifiée par ce changement : seule la taille RENDUE change. Voir
+// getTowerVisualTop() plus bas pour l'indicateur de palier, qui doit
+// rester au-dessus de la silhouette agrandie plutôt qu'à un décalage fixe.
 const TOWER_SPRITE_CONFIG = {
-  rapide: { src: "./assets/towers/tour_rapide_arbalete.png", w: 34, h: 48, bottomOffset: 14 },
-  // Canon Leonardo (cahier V5, section 4) : même registre, même règle de
-  // fallback silencieux. w/h/bottomOffset choisis pour rester sous
-  // TOWER_FOOTPRINT_RADIUS comme la tour d'archers -- voir
-  // scripts/process_leonardo_map.py pour la mesure exacte du ratio source.
-  canon: { src: "./assets/towers/canon.png", w: 40, h: 46, bottomOffset: 12 },
+  rapide: { src: "./assets/towers/tour_rapide_arbalete.png", w: 44, h: 62, bottomOffset: 18 },
+  canon: { src: "./assets/towers/canon.png", w: 50, h: 58, bottomOffset: 15 },
 };
 const towerSprites = Object.fromEntries(
   Object.entries(TOWER_SPRITE_CONFIG).map(([family, cfg]) => [family, { ...cfg, sprite: loadSprite(cfg.src) }])
+);
+
+// Pipeline d'assets ennemis/projectiles, préparé mais VIDE (cahier V6,
+// section 6 : "préparer le pipeline d'assets pour remplacer les unités
+// provisoires sans toucher au moteur" -- "ne pas fabriquer d'ennemis
+// provisoires cette mission : un asset Leonardo doit être généré
+// individuellement pour être correctement récupérable et intégrable").
+// Registre STRUCTURELLEMENT identique à TOWER_SPRITE_CONFIG ci-dessus
+// (même paire "sprite chargé ? drawImage à taille/ancre configurées :
+// repli Canvas existant"), pour qu'un futur asset (par enemy.kind, ou pour
+// la flèche de l'archer) s'ajoute en UNE ligne ici, sans toucher à
+// drawEnemy/drawArrowProjectile ni à aucune constante de jeu. `w`/`h`/
+// `bottomOffset` sont INDÉPENDANTS de ENEMY_R (rayon de collision/gameplay,
+// engine/constants.js) -- exactement la même séparation taille-visuelle
+// / emprise-de-jeu déjà appliquée aux tours en V6 (voir
+// TOWER_FOOTPRINT_RADIUS). Vide aujourd'hui : 100% des ennemis et
+// projectiles continuent de passer par leur repli Canvas existant, sans
+// aucun changement de comportement.
+const ENEMY_SPRITE_CONFIG = {};
+const enemySprites = Object.fromEntries(
+  Object.entries(ENEMY_SPRITE_CONFIG).map(([kind, cfg]) => [kind, { ...cfg, sprite: loadSprite(cfg.src) }])
+);
+
+// Même registre pour le projectile de l'archer (flèche) -- clé = famille de
+// tour à l'origine du projectile ("rapide"), même logique vide/prête.
+const PROJECTILE_SPRITE_CONFIG = {};
+const projectileSprites = Object.fromEntries(
+  Object.entries(PROJECTILE_SPRITE_CONFIG).map(([family, cfg]) => [family, { ...cfg, sprite: loadSprite(cfg.src) }])
 );
 
 // Carte Leonardo (cahier V5, section 3) : asset protégé, fond visuel
@@ -380,7 +413,14 @@ function drawTowerShape(ctx, tower, familyDef) {
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = "#241f19";
     ctx.beginPath();
-    ctx.arc(x, y - 32, 4, 0, Math.PI * 2);
+    // Décalage dynamique (cahier V6, section 4) : avec des tours agrandies,
+    // un décalage FIXE (l'ancien -32, calé sur la seule taille V5) se
+    // retrouverait à l'intérieur même de la nouvelle silhouette au lieu
+    // d'être au-dessus. getTowerVisualTop() calcule la véritable extension
+    // haute de CE rendu précis (sprite chargé ou repli Canvas, taille réelle
+    // affichée), pour que l'indicateur reste toujours visible au-dessus de
+    // la tour, quelle que soit sa famille.
+    ctx.arc(x, y - getTowerVisualTop(tower) - 6, 4, 0, Math.PI * 2);
     if (isMaxTier) {
       ctx.fillStyle = "#f4f1de";
       ctx.fill();
@@ -393,8 +433,44 @@ function drawTowerShape(ctx, tower, familyDef) {
   }
 }
 
+// Extension haute (distance de "y" au sommet visuel) de chaque silhouette
+// de repli Canvas, mesurée AVANT mise à l'échelle -- rapide : encoche du
+// carreau à y-10 ; canon : bouche du canon à y-21 ; longue_portée : pointe
+// de la flèche à y-24. Sert à positionner dynamiquement l'indicateur de
+// palier (voir getTowerVisualTop) sans dépendre d'un décalage fixe qui se
+// retrouverait sous la silhouette une fois celle-ci agrandie.
+const FALLBACK_VISUAL_TOP = { rapide: 10, canon: 21, longue_portee: 24 };
+// Facteur d'agrandissement V6 des silhouettes de repli Canvas (cahier V6,
+// section 4) -- cohérent avec l'agrandissement des sprites Leonardo
+// ci-dessus (~1.25-1.29x), pour que rapide/canon restent visuellement de
+// la même taille que leur sprite chargé QUAND le repli s'active (échec de
+// chargement), et pour que longue_portée (toujours en Canvas, aucun sprite
+// prévu cette mission) profite de la même lisibilité accrue sur téléphone.
+const FALLBACK_SCALE = 1.28;
+
+// Extension visuelle haute RÉELLE de ce rendu précis (sprite chargé à sa
+// taille configurée, ou repli Canvas à son échelle) -- utilisée pour
+// positionner l'indicateur de palier toujours au-dessus de la silhouette
+// affichée, quelle que soit la famille ou l'état de chargement de l'asset.
+function getTowerVisualTop(tower) {
+  const spriteEntry = towerSprites[tower.family];
+  if (spriteEntry && spriteEntry.sprite.status === "loaded") {
+    return spriteEntry.h - spriteEntry.bottomOffset;
+  }
+  return (FALLBACK_VISUAL_TOP[tower.family] ?? 24) * FALLBACK_SCALE;
+}
+
 function drawTowerFallbackShape(ctx, tower, familyDef) {
   const { x, y } = tower;
+  // Un seul point d'agrandissement (cahier V6, section 4 : "les autres
+  // tours" aussi) : mettre à l'échelle AUTOUR du centre logique de la tour,
+  // jamais réécrire chaque coordonnée à la main -- garantit que les trois
+  // silhouettes restent proportionnellement identiques à la V5, simplement
+  // plus grandes, sans risque d'erreur d'arithmétique par forme.
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(FALLBACK_SCALE, FALLBACK_SCALE);
+  ctx.translate(-x, -y);
   const c = familyDef.color;
   ctx.fillStyle = c;
   ctx.strokeStyle = "#241f19";
@@ -553,6 +629,7 @@ function drawTowerFallbackShape(ctx, tower, familyDef) {
       break;
     }
   }
+  ctx.restore();
 }
 
 function drawRange(ctx, tower, tierStats) {
@@ -563,11 +640,41 @@ function drawRange(ctx, tower, tierStats) {
   ctx.stroke();
 }
 
+function drawEnemy(ctx, enemy, elapsedMs) {
+  // Même registre "sprite ou repli" que les tours (voir ENEMY_SPRITE_CONFIG
+  // plus haut) : vide aujourd'hui, donc toujours le repli Canvas existant
+  // ci-dessous -- prêt à accueillir un futur asset par enemy.kind sans
+  // toucher cette fonction.
+  const spriteEntry = enemySprites[enemy.kind];
+  if (spriteEntry && spriteEntry.sprite.status === "loaded") {
+    ctx.drawImage(
+      spriteEntry.sprite.image,
+      enemy.x - spriteEntry.w / 2,
+      enemy.y + spriteEntry.bottomOffset - spriteEntry.h,
+      spriteEntry.w,
+      spriteEntry.h
+    );
+  } else {
+    drawEnemyFallbackShape(ctx, enemy, elapsedMs);
+  }
+
+  // Barre de vie compacte (inchangée -- déjà lisible et testée), toujours
+  // au-dessus de l'ennemi qu'il soit rendu en sprite ou en repli Canvas.
+  const { x, y } = enemy;
+  const w = ENEMY_R * 2.2;
+  const ratio = Math.max(0, enemy.hp / enemy.maxHp);
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(x - w / 2, y - ENEMY_R - 8, w, 4);
+  ctx.fillStyle = ratio > 0.4 ? "#7fb069" : "#e63946";
+  ctx.fillRect(x - w / 2, y - ENEMY_R - 8, w * ratio, 4);
+}
+
 // 4 silhouettes d'ennemis reconnaissables (cahier V1, tableau 4.1) --
 // jamais de simple rond de couleur : standard = "grognard" à 2 cercles,
 // rapide = flèche effilée, blindé = bloc anguleux riveté, essaim = grappe
-// de petits corps.
-function drawEnemy(ctx, enemy, elapsedMs) {
+// de petits corps. Repli Canvas utilisé tant qu'aucun sprite Leonardo n'est
+// configuré pour ce enemy.kind (voir ENEMY_SPRITE_CONFIG).
+function drawEnemyFallbackShape(ctx, enemy, elapsedMs) {
   const kindDef = ENEMY_KINDS[enemy.kind];
   const slowed = enemy.slowUntilMs > elapsedMs;
   const color = slowed ? "#8ecae6" : kindDef.color;
@@ -639,14 +746,6 @@ function drawEnemy(ctx, enemy, elapsedMs) {
       break;
     }
   }
-
-  // Barre de vie compacte (inchangée -- déjà lisible et testée).
-  const w = ENEMY_R * 2.2;
-  const ratio = Math.max(0, enemy.hp / enemy.maxHp);
-  ctx.fillStyle = "rgba(0,0,0,0.5)";
-  ctx.fillRect(x - w / 2, y - ENEMY_R - 8, w, 4);
-  ctx.fillStyle = ratio > 0.4 ? "#7fb069" : "#e63946";
-  ctx.fillRect(x - w / 2, y - ENEMY_R - 8, w * ratio, 4);
 }
 
 // Projectiles distincts par famille -- forme, pas seulement couleur.
@@ -669,11 +768,29 @@ function drawProjectile(ctx, proj) {
   }
 }
 
+// Même registre "sprite ou repli" que les tours/ennemis (voir
+// PROJECTILE_SPRITE_CONFIG plus haut) : vide aujourd'hui, donc toujours le
+// repli Canvas ci-dessous -- prêt à accueillir un futur asset de flèche
+// Leonardo (par famille de tour) sans toucher cette fonction ni drawProjectile.
+function drawArrowProjectile(ctx, proj) {
+  const spriteEntry = projectileSprites[proj.family];
+  if (spriteEntry && spriteEntry.sprite.status === "loaded") {
+    const angle = Math.atan2(proj.vy, proj.vx);
+    ctx.save();
+    ctx.translate(proj.x, proj.y);
+    ctx.rotate(angle);
+    ctx.drawImage(spriteEntry.sprite.image, -spriteEntry.w / 2, -spriteEntry.h / 2, spriteEntry.w, spriteEntry.h);
+    ctx.restore();
+    return;
+  }
+  drawArrowProjectileFallback(ctx, proj);
+}
+
 // Flèche d'archer clairement lisible (cahier V3, section 2 : "les archers
 // doivent tirer des flèches clairement lisibles, et non des billes/points
 // jaunes"). Hampe + pointe + empennage, orientée le long du vecteur de
 // déplacement réel du projectile -- jamais un simple disque de couleur.
-function drawArrowProjectile(ctx, proj) {
+function drawArrowProjectileFallback(ctx, proj) {
   const angle = Math.atan2(proj.vy, proj.vx);
   const len = 15;
   const headLen = 5;

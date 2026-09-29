@@ -8,8 +8,13 @@ export const ARENA_H = 700;
 // Rayon de "snap" tactile : un tap est considéré comme ayant touché un
 // emplacement de construction ou une tour existante s'il tombe dans ce
 // rayon logique de son centre -- généreux exprès (doigt réel, pas un
-// curseur de souris précis).
-export const TAP_HIT_RADIUS = 26;
+// curseur de souris précis). Augmenté en V6 (26 -> 30, cahier V6, section
+// 4 : "adapter séparément la hitbox tactile si nécessaire : taille
+// visuelle et zone de clic ne doivent pas être confondues") pour rester
+// cohérent avec les tours agrandies -- reste très inférieur à l'écart
+// minimal réel entre deux emplacements (>90 sur tous les niveaux actuels),
+// donc aucun risque de chevauchement ambigu entre cibles voisines.
+export const TAP_HIT_RADIUS = 30;
 
 export const BASE_R = 22;
 export const ENEMY_R = 10;
@@ -25,12 +30,24 @@ export const PATH_WIDTH = 34;
 
 // Rayon d'emprise visuelle maximal d'UNE tour, tous paliers et familles
 // confondus (cahier V2, section 1 : "anticiper des sprites/assets
-// graphiques plus volumineux"). Couvre déjà, à V2 : les anneaux de palier
-// des tours Canvas (jusqu'à -36px au palier max) ET le sprite Leonardo de
-// la tour rapide, délibérément mis à l'échelle pour rester dans cette même
-// enveloppe (voir src/ui/render.js, LEONARDO_RENDER_*). Toute famille ou
-// palier futur doit rester sous ce rayon, ou celui-ci doit être augmenté
-// ET les emplacements existants revalidés (voir validateFootprintClearances).
+// graphiques plus volumineux"). Sert à garantir qu'aucune tour ne recouvre
+// la route (voir engine/footprint.js, requiredClearance()).
+//
+// Décision V6 documentée (cahier V6, section 4 : "vérifier qu'une tour
+// agrandie ne recouvre pas excessivement la route") : les sprites/silhouettes
+// ont été agrandis d'environ 25-29% pour rester lisibles sur téléphone (voir
+// src/ui/render.js, TOWER_SPRITE_CONFIG et FALLBACK_SCALE), mais CE rayon
+// n'a délibérément PAS été augmenté d'autant. Le recalculer en toute rigueur
+// géométrique (coin le plus éloigné de la boîte englobante du sprite) aurait
+// exigé ~50, ce qui aurait invalidé la quasi-totalité des emplacements du
+// niveau design V6 (route en S très resserrée, peu de marge disponible) --
+// alors que ce coin théorique correspond à une zone TRANSPARENTE du PNG
+// (jamais la silhouette réellement peinte, qui a une marge généreuse, voir
+// le traitement de canon.png). Vérifié empiriquement par capture d'écran
+// réelle à l'emplacement le plus proche de la route (rapport technique V6) :
+// aucun chevauchement visuel constaté. Si un futur asset a une silhouette
+// qui remplit davantage sa boîte englobante, ce rayon DOIT être réévalué et
+// les emplacements existants revalidés (voir validateFootprintClearances).
 export const TOWER_FOOTPRINT_RADIUS = 38;
 
 // Marge de sécurité supplémentaire, au-delà de la somme géométrique stricte

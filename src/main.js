@@ -58,6 +58,22 @@ function resizeCanvas() {
 }
 window.addEventListener("resize", resizeCanvas);
 window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 50));
+// Cause racine V6 (cahier V6, section 5 -- audit tactile) : la boîte CSS du
+// canvas ne change pas seulement sur un vrai resize de fenêtre. .prep-row
+// apparaît/disparaît à chaque transition préparation/vague (updateHud
+// ci-dessous), ce qui redimensionne .bottombar puis .stage-wrap (flex:1)
+// SANS jamais déclencher "resize" -- le buffer de dessin (canvas.width/
+// height, mis à l'échelle par devicePixelRatio) restait alors périmé d'une
+// frame à l'autre après une telle transition, jusqu'au prochain vrai
+// resize. ResizeObserver observe la boîte réelle du conteneur et
+// recalcule le buffer sur TOUT changement de taille, quelle qu'en soit la
+// cause -- la correction structurelle, pas un cas particulier ajouté pour
+// .prep-row seul. (Les taps eux-mêmes sont protégés indépendamment : voir
+// ui/input.js, qui ne met plus rien en cache et recalcule sa propre
+// géométrie à chaque appui.)
+if (typeof ResizeObserver !== "undefined") {
+  new ResizeObserver(() => resizeCanvas()).observe(canvas.parentElement);
+}
 
 function renderOverlay(html) {
   overlayRoot.innerHTML = html;
