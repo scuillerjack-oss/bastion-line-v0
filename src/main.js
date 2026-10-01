@@ -478,6 +478,12 @@ function handleEvents(events) {
   }
 }
 
+// Dernier alpha de rendu calculé (voir ci-dessous) -- exposé en lecture
+// seule pour le hook de debug __bastionDebugRenderAlpha, utilisé par le test
+// mobile dédié à la non-régression de l'interpolation (cahier V7, section
+// 10), jamais par l'UI du jeu elle-même.
+let lastRenderAlpha = 1;
+
 let lastTime = null;
 function frame(now) {
   requestAnimationFrame(frame);
@@ -501,7 +507,18 @@ function frame(now) {
   effects = effects.filter((fx) => nowMs - fx.createdAt < fx.durationMs);
 
   if (state) {
-    drawFrame(ctx, canvas.width, canvas.height, state, effects, nowMs);
+    // Correction V7 (cahier V7, section 3 -- voir engine/simulation.js,
+    // stepEnemies, pour le diagnostic complet) : state.accMs restant après
+    // la boucle de ticks ci-dessus est exactement la fraction de temps du
+    // PROCHAIN pas de simulation déjà écoulée mais pas encore simulée --
+    // utilisée par drawFrame pour interpoler la position affichée des
+    // ennemis/projectiles entre leur dernier et leur prochain tick, plutôt
+    // que de figer l'affichage sur la dernière position simulée jusqu'au
+    // prochain tick complet (seule source réelle des sauts rapportés en
+    // bêta, sur les écrans à fréquence de rafraîchissement > 60Hz).
+    const renderAlpha = Math.max(0, Math.min(1, (state.accMs || 0) / FIXED_DT));
+    lastRenderAlpha = renderAlpha;
+    drawFrame(ctx, canvas.width, canvas.height, state, effects, nowMs, renderAlpha);
   }
 }
 
@@ -517,6 +534,7 @@ window.__bastionDebugState = () => state;
 window.__bastionDebugStartLevel = (index) => startLevel(index);
 window.__bastionDebugAudioState = getAudioDebugState;
 window.__bastionDebugInstallState = () => installCtl.getState();
+window.__bastionDebugRenderAlpha = () => lastRenderAlpha;
 
 // Resynchronisation défensive de la progression au retour au premier plan
 // (cahier V4, section 5 -- voir engine/save.js pour la cause racine

@@ -32,6 +32,14 @@ function spawnEnemy(state, spawn) {
     speed: kind.speed,
     x: entry.x,
     y: entry.y,
+    // prevX/prevY : position au tick PRÉCÉDENT, utilisée uniquement par le
+    // rendu pour interpoler entre deux ticks (voir ui/render.js et le
+    // commentaire détaillé dans stepEnemies ci-dessous) -- jamais lue par la
+    // simulation/collision elle-même. Initialisées au point d'entrée pour
+    // qu'un ennemi tout juste apparu ne semble jamais "glisser" depuis une
+    // position antérieure inexistante.
+    prevX: entry.x,
+    prevY: entry.y,
     slowFactor: 1,
     slowUntilMs: 0,
     alive: true,
@@ -39,10 +47,41 @@ function spawnEnemy(state, spawn) {
   state.events.push({ type: "enemy_spawned", kind: kind.id });
 }
 
+// Correction V7 à la cause (cahier V7, section 3) : la bêta réelle montrait
+// des "sauts" visibles près de certains virages. Cause réelle identifiée :
+// AUCUN bug de trajectoire -- stepEnemies() avançait déjà `traveled` de façon
+// strictement continue (voir engine/path.js, pointAtDistance), et le test
+// géométrique de corridor (tests/pathing.test.js, V6) le confirme toujours.
+// Le vrai défaut est entre la simulation et l'AFFICHAGE : main.js fait
+// avancer la simulation par pas FIXE (FIXED_DT = 1000/60) via un
+// accumulateur piloté par requestAnimationFrame, mais ne dessinait QUE la
+// dernière position simulée, sans jamais interpoler la fraction de temps
+// encore non simulée (state.accMs restant). Sur un écran à fréquence de
+// rafraîchissement supérieure à 60Hz (90/120Hz, très répandu sur téléphone
+// réel -- jamais reproduit par la suite Playwright, qui tourne à un rythme
+// de rendu différent), certaines frames tombent SANS tick du tout puis une
+// frame suivante en effectue un ou plusieurs d'un coup : le delta de
+// position affiché d'une frame à l'autre devient irrégulier. Sur une ligne
+// droite cette irrégularité est peu visible (juste une vitesse qui semble
+// légèrement saccadée) ; DANS un virage, où la direction du déplacement
+// change, cette même irrégularité se lit comme un repositionnement brusque
+// -- exactement le symptôme rapporté, et exactement pourquoi il est "plus
+// visible près de certains virages" sans jamais être spécifique à UN virage
+// en particulier (cause systémique, pas un défaut de tracé -- aucune
+// coordonnée de PATH_MAP n'a été modifiée pour ce correctif).
+//
+// Remède structurel : stepEnemies() mémorise désormais, à CHAQUE tick, la
+// position juste avant de la faire avancer (prevX/prevY). ui/render.js
+// recevra un facteur alpha = fraction du prochain tick déjà écoulée
+// (state.accMs / FIXED_DT, voir main.js) et dessinera l'ennemi à la position
+// interpolée entre prevX/prevY et x/y -- jamais la simulation elle-même, qui
+// reste strictement inchangée (déterministe, testée par tick fixe).
 function stepEnemies(state, dtMs) {
   const dt = dtMs / 1000;
   for (const enemy of state.enemies) {
     if (!enemy.alive) continue;
+    enemy.prevX = enemy.x;
+    enemy.prevY = enemy.y;
     const slowActive = enemy.slowUntilMs > state.elapsedMs;
     const speedFactor = slowActive ? enemy.slowFactor : 1;
     enemy.traveled += enemy.speed * speedFactor * dt;
@@ -90,6 +129,10 @@ function fireProjectile(state, tower, tierStats, target) {
     family: tower.family,
     x: tower.x,
     y: tower.y,
+    // prevX/prevY : même rôle que pour les ennemis (voir stepEnemies) --
+    // interpolation de RENDU uniquement, jamais lu par la simulation.
+    prevX: tower.x,
+    prevY: tower.y,
     vx: (dx / len) * speed,
     vy: (dy / len) * speed,
     speed,
@@ -173,6 +216,8 @@ function stepProjectiles(state, dtMs) {
   const dt = dtMs / 1000;
   for (const proj of state.projectiles) {
     if (!proj.alive) continue;
+    proj.prevX = proj.x;
+    proj.prevY = proj.y;
     const target = state.enemies.find((e) => e.id === proj.targetId);
     if (target && target.alive) {
       // Poursuite (homing) : réoriente vers la position ACTUELLE de la

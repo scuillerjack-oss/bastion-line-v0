@@ -3,6 +3,7 @@ import { ARENA_W, ARENA_H, BASE_R, ENEMY_R, TOWER_R, PATH_WIDTH } from "../engin
 import { TOWER_FAMILIES, getMaxTier } from "../engine/towers.js";
 import { ENEMY_KINDS } from "../engine/enemies.js";
 import { loadSprite } from "./sprites.js";
+import { interpolateRenderPos } from "../engine/interpolate.js";
 
 // Registre d'intégration graphique Leonardo (né en V2 comme pilote sur la
 // seule tour "rapide", généralisé en V3 -- cahier V3, section 6 :
@@ -846,7 +847,7 @@ function drawEffects(ctx, effects, nowMs) {
   }
 }
 
-export function drawFrame(ctx, canvasW, canvasH, state, effects, nowMs) {
+export function drawFrame(ctx, canvasW, canvasH, state, effects, nowMs, renderAlpha = 1) {
   const viewport = computeViewport(canvasW, canvasH);
   ctx.save();
   ctx.clearRect(0, 0, canvasW, canvasH);
@@ -881,8 +882,8 @@ export function drawFrame(ctx, canvasW, canvasH, state, effects, nowMs) {
     if (tower) drawRange(ctx, tower, TOWER_FAMILIES[tower.family].tiers[tower.tier]);
   }
 
-  for (const enemy of state.enemies) drawEnemy(ctx, enemy, state.elapsedMs);
-  for (const proj of state.projectiles) drawProjectile(ctx, proj);
+  for (const enemy of state.enemies) drawEnemy(ctx, interpolateRenderPos(enemy, renderAlpha), state.elapsedMs);
+  for (const proj of state.projectiles) drawProjectile(ctx, interpolateRenderPos(proj, renderAlpha));
   drawEffects(ctx, effects, nowMs);
 
   ctx.restore();

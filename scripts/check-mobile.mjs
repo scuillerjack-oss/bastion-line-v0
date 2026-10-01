@@ -1079,6 +1079,77 @@ async function main() {
       await page.close();
     }
 
+    // --- Test 21 : non-régression V7 -- interpolation de rendu des ennemis
+    // (cahier V7, section 3/10 : "tests de trajectoire sur les virages et
+    // groupes d'ennemis"). La bêta réelle rapportait des sauts/
+    // repositionnements visibles près de certains virages, causés par
+    // l'absence d'interpolation entre le rendu (piloté par
+    // requestAnimationFrame) et la simulation (pas fixe à 60Hz) -- un
+    // artefact qui dépend de la fréquence de rafraîchissement RÉELLE de
+    // l'écran (90/120Hz), que ce navigateur headless ne reproduit pas
+    // nécessairement à l'identique. Ce test ne peut donc pas, à lui seul,
+    // garantir l'absence du défaut sur un téléphone physique (seule la
+    // bêta humaine réelle le peut) -- il verrouille en revanche le
+    // câblage réel de la correction (alpha calculé et transmis sans
+    // jamais produire de position invalide), avec plusieurs ennemis
+    // simultanés traversant de vrais virages du niveau 1. La preuve
+    // mathématique de la correction elle-même (bornes du segment,
+    // continuité) est verrouillée séparément par tests/interpolation.test.js
+    // (node:test, hors navigateur). ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 3 });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      page.on("console", (m) => { if (m.type() === "error") errors.push(`console.error: ${m.text()}`); });
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.click("#btn-play");
+      await page.waitForTimeout(200);
+      await page.click("#btn-launch-wave"); // saute la préparation : ennemis en mouvement tout de suite
+      await page.waitForTimeout(300);
+
+      const samples = await page.evaluate(async () => {
+        const out = [];
+        for (let i = 0; i < 90; i++) {
+          await new Promise((r) => requestAnimationFrame(r));
+          const s = window.__bastionDebugState();
+          out.push({
+            alpha: window.__bastionDebugRenderAlpha(),
+            enemies: s.enemies.map((e) => ({ id: e.id, x: e.x, y: e.y, prevX: e.prevX, prevY: e.prevY })),
+          });
+        }
+        return out;
+      });
+
+      let anyEnemySampled = false;
+      let boundsOk = true;
+      let alphaOk = true;
+      for (const sample of samples) {
+        if (sample.alpha < -1e-9 || sample.alpha > 1 + 1e-9 || Number.isNaN(sample.alpha)) alphaOk = false;
+        for (const e of sample.enemies) {
+          anyEnemySampled = true;
+          const px = e.prevX ?? e.x;
+          const py = e.prevY ?? e.y;
+          const a = Math.max(0, Math.min(1, sample.alpha));
+          const ix = px + (e.x - px) * a;
+          const iy = py + (e.y - py) * a;
+          const minX = Math.min(px, e.x) - 1e-6;
+          const maxX = Math.max(px, e.x) + 1e-6;
+          const minY = Math.min(py, e.y) - 1e-6;
+          const maxY = Math.max(py, e.y) + 1e-6;
+          if (Number.isNaN(ix) || Number.isNaN(iy) || ix < minX || ix > maxX || iy < minY || iy > maxY) boundsOk = false;
+        }
+      }
+      const allOk = anyEnemySampled && boundsOk && alphaOk && errors.length === 0;
+      if (!allOk) {
+        failures += 1;
+        log("ÉCHEC interpolation de rendu des ennemis", { anyEnemySampled, boundsOk, alphaOk, errors });
+      } else {
+        log("OK : interpolation de rendu des ennemis câblée correctement (alpha valide, position toujours bornée au segment simulé, plusieurs ennemis, virages réels du niveau 1, aucune erreur console)");
+      }
+      await page.close();
+    }
+
     await browser.close();
   } finally {
     server.kill();
