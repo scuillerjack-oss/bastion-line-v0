@@ -3,7 +3,7 @@ import { BASE_R } from "./engine/constants.js";
 import { tick, buildTower, upgradeTower, sellTower, requestEarlyWave } from "./engine/simulation.js";
 import { LEVELS } from "./engine/levels.js";
 import { TOWER_FAMILIES, getMaxTier, getTowerSellRefund } from "./engine/towers.js";
-import { loadSave, writeSave, markLevelUnlocked } from "./engine/save.js";
+import { loadSave, writeSave, markLevelCompleted, getUnlockedUpToIndex, isLevelCompleted } from "./engine/save.js";
 import { createTapController, hitTestTower, hitTestEmptySlot } from "./ui/input.js";
 import { drawFrame } from "./ui/render.js";
 import { createTutorialController } from "./ui/tutorial.js";
@@ -187,7 +187,12 @@ function showMenu() {
   appPhase = "menu";
   clearOverlay();
   closePanel();
-  const unlocked = save.unlockedLevelIndex;
+  // Lecture TOUJOURS fraîche de la progression (cahier V7, section 8 :
+  // "définir une source de vérité unique et robuste") -- jamais une copie
+  // en mémoire potentiellement périmée (voir resyncProgressionFromStorage
+  // plus bas, simplifié par ce même principe : plus rien à resynchroniser
+  // manuellement puisque rien n'est jamais mis en cache ici).
+  const unlocked = getUnlockedUpToIndex(loadSave());
   renderOverlay(`
     <div class="overlay">
       <h1>BASTION LINE</h1>
@@ -255,7 +260,12 @@ function showLevelResult(won) {
   if (won) {
     sfx.win();
     const isLast = levelIndex >= LEVELS.length - 1;
-    markLevelUnlocked(save, Math.min(LEVELS.length - 1, levelIndex + 1));
+    // Marque CE niveau comme réellement terminé (source de vérité unique,
+    // cahier V7, section 8) -- jamais un index "débloqué" séparé. Rejouer un
+    // niveau déjà terminé et le regagner est un no-op sûr par construction
+    // (union d'ensemble, voir markLevelCompleted) : la progression maximale
+    // ne peut jamais régresser.
+    markLevelCompleted(save, levelIndex);
     renderOverlay(`
       <div class="overlay">
         <h1>Niveau réussi !</h1>
@@ -536,22 +546,18 @@ window.__bastionDebugAudioState = getAudioDebugState;
 window.__bastionDebugInstallState = () => installCtl.getState();
 window.__bastionDebugRenderAlpha = () => lastRenderAlpha;
 
-// Resynchronisation défensive de la progression au retour au premier plan
-// (cahier V4, section 5 -- voir engine/save.js pour la cause racine
-// complète). markLevelUnlocked() rend désormais toute ÉCRITURE
-// concurrente sans risque de régression, mais une instance restée en
-// mémoire (page restaurée depuis le bfcache du navigateur, ou PWA relancée
-// sur une tâche Android déjà existante) peut encore, un court instant,
-// AFFICHER une progression périmée si elle ne relit jamais le disque. On
-// se protège donc aussi côté LECTURE : à chaque retour au premier plan (ou
-// restauration bfcache explicite via pageshow/persisted), on relit l'état
-// réellement persisté et on rafraîchit le menu s'il est actuellement affiché.
+// Resynchronisation défensive de l'affichage au retour au premier plan
+// (cahier V4, section 5 ; cahier V7, section 8 -- voir engine/save.js pour
+// la cause racine complète et le nouveau modèle à source de vérité unique).
+// showMenu() relit désormais TOUJOURS la progression fraîche depuis le
+// stockage (plus aucune copie mise en cache à désynchroniser) -- il ne
+// reste donc plus qu'à redéclencher un RE-RENDU du menu s'il est
+// actuellement affiché, pour qu'une progression changée pendant que l'app
+// était en arrière-plan (autre onglet, autre instance Android) se reflète
+// immédiatement, sans comparaison manuelle de champs qui pourrait elle-même
+// être une source d'oubli.
 function resyncProgressionFromStorage() {
-  const fresh = loadSave();
-  if (fresh.unlockedLevelIndex !== save.unlockedLevelIndex) {
-    save.unlockedLevelIndex = fresh.unlockedLevelIndex;
-    if (appPhase === "menu") showMenu();
-  }
+  if (appPhase === "menu") showMenu();
 }
 window.addEventListener("pageshow", (ev) => {
   if (ev.persisted) resyncProgressionFromStorage();
