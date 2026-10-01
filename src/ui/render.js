@@ -26,9 +26,26 @@ import { interpolateRenderPos } from "../engine/interpolate.js";
 // modifiée par ce changement : seule la taille RENDUE change. Voir
 // getTowerVisualTop() plus bas pour l'indicateur de palier, qui doit
 // rester au-dessus de la silhouette agrandie plutôt qu'à un décalage fixe.
+//
+// Agrandissement V7 (cahier V7, section 4 : "agrandir légèrement la tour
+// d'Archer actuelle -- sa nouvelle taille devient le gabarit visuel de
+// référence" + "agrandir le Canon afin d'obtenir une présence visuelle
+// comparable au nouvel Archer"). Nouvelle hausse MODESTE par rapport à la
+// V6 (~8-10%, "légèrement", jamais un nouveau saut de 25-29%) : 44x62->
+// 48x68 pour l'archer. Le Canon est monté un peu plus (50x58->58x66, un
+// facteur plus généreux) car sa silhouette (tourelle ronde + base) occupe
+// visuellement moins sa propre boîte englobante que la silhouette plus
+// élancée de l'archer -- à taille de BOÎTE identique, le Canon se
+// percevait plus petit à l'écran (vérifié par capture d'écran, voir le
+// rapport technique V7) ; c'est la PRÉSENCE VISUELLE comparée qui sert de
+// critère (cahier V7, section 4 : "le critère est la présence visuelle en
+// jeu, pas l'égalité stricte des dimensions de fichiers"), jamais l'égalité
+// des w/h. La Catapulte (ex-Longue portée, placeholder Canvas triangulaire
+// encore en attente de son asset définitif) n'est PAS concernée par cet
+// agrandissement cette mission -- voir FALLBACK_SCALE_BY_FAMILY plus bas.
 const TOWER_SPRITE_CONFIG = {
-  rapide: { src: "./assets/towers/tour_rapide_arbalete.png", w: 44, h: 62, bottomOffset: 18 },
-  canon: { src: "./assets/towers/canon.png", w: 50, h: 58, bottomOffset: 15 },
+  rapide: { src: "./assets/towers/tour_rapide_arbalete.png", w: 48, h: 68, bottomOffset: 20 },
+  canon: { src: "./assets/towers/canon.png", w: 58, h: 66, bottomOffset: 18 },
 };
 const towerSprites = Object.fromEntries(
   Object.entries(TOWER_SPRITE_CONFIG).map(([family, cfg]) => [family, { ...cfg, sprite: loadSprite(cfg.src) }])
@@ -441,13 +458,17 @@ function drawTowerShape(ctx, tower, familyDef) {
 // palier (voir getTowerVisualTop) sans dépendre d'un décalage fixe qui se
 // retrouverait sous la silhouette une fois celle-ci agrandie.
 const FALLBACK_VISUAL_TOP = { rapide: 10, canon: 21, longue_portee: 24 };
-// Facteur d'agrandissement V6 des silhouettes de repli Canvas (cahier V6,
-// section 4) -- cohérent avec l'agrandissement des sprites Leonardo
-// ci-dessus (~1.25-1.29x), pour que rapide/canon restent visuellement de
-// la même taille que leur sprite chargé QUAND le repli s'active (échec de
-// chargement), et pour que longue_portée (toujours en Canvas, aucun sprite
-// prévu cette mission) profite de la même lisibilité accrue sur téléphone.
-const FALLBACK_SCALE = 1.28;
+// Facteur d'agrandissement des silhouettes de repli Canvas, PAR FAMILLE
+// (cahier V7, section 4 -- avant V7, un seul facteur partagé FALLBACK_SCALE
+// =1.28 s'appliquait identiquement aux trois familles). Rendu PAR FAMILLE
+// en V7 car le cahier demande d'agrandir archer/canon tout en laissant le
+// placeholder Catapulte (ex-longue_portee) strictement inchangé tant que
+// son asset définitif n'est pas fourni ("conserver temporairement le
+// placeholder graphique actuel... ne pas modifier le placeholder par un
+// autre visuel"). rapide/canon suivent la même hausse "légère" que leurs
+// sprites Leonardo ci-dessus ; longue_portee garde EXACTEMENT la valeur V6
+// (1.28) -- aucun changement visuel pour la Catapulte cette mission.
+const FALLBACK_SCALE_BY_FAMILY = { rapide: 1.4, canon: 1.52, longue_portee: 1.28 };
 
 // Extension visuelle haute RÉELLE de ce rendu précis (sprite chargé à sa
 // taille configurée, ou repli Canvas à son échelle) -- utilisée pour
@@ -458,7 +479,8 @@ function getTowerVisualTop(tower) {
   if (spriteEntry && spriteEntry.sprite.status === "loaded") {
     return spriteEntry.h - spriteEntry.bottomOffset;
   }
-  return (FALLBACK_VISUAL_TOP[tower.family] ?? 24) * FALLBACK_SCALE;
+  const scale = FALLBACK_SCALE_BY_FAMILY[tower.family] ?? 1.28;
+  return (FALLBACK_VISUAL_TOP[tower.family] ?? 24) * scale;
 }
 
 function drawTowerFallbackShape(ctx, tower, familyDef) {
@@ -468,9 +490,10 @@ function drawTowerFallbackShape(ctx, tower, familyDef) {
   // jamais réécrire chaque coordonnée à la main -- garantit que les trois
   // silhouettes restent proportionnellement identiques à la V5, simplement
   // plus grandes, sans risque d'erreur d'arithmétique par forme.
+  const fallbackScale = FALLBACK_SCALE_BY_FAMILY[tower.family] ?? 1.28;
   ctx.save();
   ctx.translate(x, y);
-  ctx.scale(FALLBACK_SCALE, FALLBACK_SCALE);
+  ctx.scale(fallbackScale, fallbackScale);
   ctx.translate(-x, -y);
   const c = familyDef.color;
   ctx.fillStyle = c;
