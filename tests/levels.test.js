@@ -7,8 +7,10 @@ import { TOWER_ORDER } from "../src/engine/towers.js";
 
 const DT = 1000 / 60;
 
-test("3 à 5 niveaux réellement présents (cahier des charges V0)", () => {
-  assert.ok(LEVELS.length >= 3 && LEVELS.length <= 5, `${LEVELS.length} niveaux (attendu 3 à 5)`);
+// Cahier V7, section 7 : "passage de 5 à 50 niveaux réellement jouables".
+test("50 niveaux réellement présents (cahier V7, section 7)", () => {
+  assert.equal(LEVELS.length, 50);
+  assert.deepEqual(LEVELS.map((l) => l.id), Array.from({ length: 50 }, (_, i) => i + 1));
 });
 
 test("aucun niveau ne déclenche d'alerte de validation structurelle", () => {
@@ -48,19 +50,27 @@ test("la Tour de contrôle a bien été retirée : aucun niveau ne la débloque,
 // Non-régression V3 (cahier, section 3) : la Longue portée doit apparaître
 // nettement avant le dernier niveau (choix documenté : niveau 3, voir
 // levels.js et le rapport technique V3), jamais réservée au niveau final.
-test("la Longue portée est débloquée sensiblement plus tôt que le dernier niveau (V3)", () => {
+test("la Longue portée (Catapulte) est débloquée sensiblement plus tôt que le dernier niveau (V3)", () => {
   const firstLevelWithLonguePortee = LEVELS.find((l) => l.unlockedTowers.includes("longue_portee"));
   assert.ok(firstLevelWithLonguePortee, "aucun niveau ne débloque la longue portée");
   assert.ok(
-    firstLevelWithLonguePortee.id <= LEVELS.length - 2,
+    firstLevelWithLonguePortee.id <= 5,
     `longue portée débloquée trop tard (niveau ${firstLevelWithLonguePortee.id})`
   );
 });
 
-test("seul le dernier niveau peut avoir plusieurs chemins (les autres : un chemin unique au départ)", () => {
-  for (const level of LEVELS.slice(0, -1)) {
+// Mis à jour V7 (cahier V7, section 7 : "privilégier... la variété") :
+// les niveaux 1-4 (hand-conçus) restent à chemin unique ; le niveau 5
+// (hand-conçu) ET certains niveaux générés (6-50, variété occasionnelle,
+// voir engine/levels.js, generateLevel) peuvent avoir deux chemins
+// convergents -- jamais systématique, jamais la majorité des niveaux.
+test("les 4 premiers niveaux hand-conçus restent à chemin unique ; la double voie reste une variante minoritaire sur l'ensemble de la campagne", () => {
+  for (const level of LEVELS.slice(0, 4)) {
     assert.equal(level.paths.length, 1, `niveau ${level.id} a plus d'un chemin`);
   }
+  const dualPathCount = LEVELS.filter((l) => l.paths.length > 1).length;
+  assert.ok(dualPathCount >= 1, "aucun niveau à double voie -- le mécanisme ne serait plus jamais exercé");
+  assert.ok(dualPathCount < LEVELS.length / 2, "la double voie est devenue majoritaire, ce n'est plus une variante occasionnelle");
 });
 
 test("chaque niveau a plusieurs vagues", () => {

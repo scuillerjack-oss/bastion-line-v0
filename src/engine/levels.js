@@ -339,7 +339,133 @@ const LEVEL_5 = {
   ],
 };
 
-export const LEVELS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5];
+// --- Niveaux 6 à 50 : campagne étendue (cahier V7, section 7) -------------
+// Les niveaux 1-5 restent les niveaux originaux, intégralement
+// hand-conçus (chemin + emplacements + vagues), inchangés par cette
+// extension. Concevoir à la main 45 niveaux supplémentaires avec le même
+// niveau de détail aurait démultiplié le risque d'erreur humaine sans
+// réel bénéfice : un seul asset de carte existe (une seule géométrie de
+// route), donc les emplacements constructibles ne peuvent de toute façon
+// pas varier davantage que les 10 positions déjà validées (zéro violation
+// d'emprise) au niveau 5 -- les réutiliser pour tous les niveaux generés
+// est la solution honnête, pas un raccourci. Le VRAI espace de variation
+// disponible est donc la composition des vagues (quels archétypes, en
+// quelle proportion, à quel rythme) : un générateur PARAMÉTRIQUE construit
+// cette composition selon les 4 paliers du cahier, puis CHAQUE niveau
+// généré est vérifié par la même batterie de faisabilité multi-stratégies
+// que les niveaux 1-5 (scripts/simulate_feasibility_v6.mjs, tests/
+// feasibility.test.js) -- jamais livré sans cette vérification réelle.
+//
+// Palier (cahier V7, section 7) :
+//  - 6-10   : prise en main, montée progressive (prolonge 1-5)
+//  - 11-25  : compositions plus exigeantes (mélanges simultanés plus tôt)
+//  - 26-40  : optimisation croissante (plus de vagues, rythme plus dense)
+//  - 41-50  : difficulté significative mais humainement réalisable
+// Marge délibérément conservée (baseHp/startCoins plafonnés, densité
+// jamais poussée au maximum théorique) pour une extension future jusqu'au
+// niveau 100 (cahier V7, section 7).
+function tierOf(n) {
+  if (n <= 10) return 0;
+  if (n <= 25) return 1;
+  if (n <= 40) return 2;
+  return 3;
+}
+
+const TIER_NAMES = ["Prise en main", "Compositions exigeantes", "Optimisation croissante", "Difficulté significative"];
+
+// Proportions d'archétypes par palier (standard/rapide/blinde/essaim),
+// jamais 100% d'un seul archétype passé le palier 0 -- "privilégier la
+// composition... plutôt qu'une inflation brutale des PV" (cahier V7,
+// section 7) : la variété elle-même EST le levier de difficulté.
+const TIER_MIX = [
+  { standard: 0.55, rapide: 0.15, blinde: 0.18, essaim: 0.12 },
+  { standard: 0.4, rapide: 0.22, blinde: 0.19, essaim: 0.19 },
+  { standard: 0.34, rapide: 0.24, blinde: 0.2, essaim: 0.22 },
+  { standard: 0.3, rapide: 0.24, blinde: 0.21, essaim: 0.25 },
+];
+
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+// Mulberry32 déterministe (même choix que ui/render.js pour le décor) :
+// une composition de vagues stable d'une exécution à l'autre, jamais
+// aléatoire à chaque chargement -- indispensable pour que la batterie de
+// faisabilité reste reproductible.
+function mulberry32(seed) {
+  let a = seed;
+  return function () {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function generateWave(n, waveIndex, waveCount, pathIndex, rnd) {
+  const tier = tierOf(n);
+  const mix = TIER_MIX[tier];
+  // Progression DANS le niveau (vague 1 plus légère que la dernière),
+  // superposée à la progression ENTRE niveaux -- jamais une seule vague
+  // plate répétée telle quelle. Échelle calée sur la densité RÉELLE déjà
+  // observée dans les niveaux 1-5 hand-conçus (ex. niveau 4, dernière
+  // vague : ~31 ennemis cumulés sur un seul chemin) -- jamais une densité
+  // arbitraire plus faible qui rendrait la "suite" de la campagne plus
+  // facile que son propre point de départ.
+  const waveProgress = waveIndex / Math.max(1, waveCount - 1);
+  const levelProgress = clamp((n - 6) / 44, 0, 1);
+  const countBase = 24 + Math.round(levelProgress * 52) + Math.round(waveProgress * 10);
+  const intervalBase = clamp(560 - levelProgress * 270 - waveProgress * 70, 220, 560);
+  const spawns = [];
+  let cursor = 0;
+  for (const [kind, ratio] of Object.entries(mix)) {
+    const count = Math.max(0, Math.round(countBase * ratio));
+    if (count === 0) continue;
+    const jitter = 1 + (rnd() - 0.5) * 0.15;
+    const startDelay = cursor;
+    for (let i = 0; i < count; i++) {
+      spawns.push({ kind, pathIndex, delayMs: Math.round(startDelay + i * intervalBase * jitter) });
+    }
+    cursor += count * intervalBase * jitter * 0.45; // vagues d'archétypes qui se chevauchent partiellement, jamais strictement séquentielles
+  }
+  return spawns.sort((a, b) => a.delayMs - b.delayMs);
+}
+
+function generateLevel(n) {
+  const tier = tierOf(n);
+  const rnd = mulberry32(1000 + n); // seed stable par niveau -- reproductible, jamais Math.random()
+  const waveCount = [5, 6, 7, 8][tier];
+  const dualPath = n % 7 === 0; // variété occasionnelle (cahier V7, section 7), jamais systématique
+  const levelProgress = clamp((n - 6) / 44, 0, 1);
+  const baseHp = Math.round(clamp(24 + levelProgress * 12, 24, 36));
+  const startCoins = Math.round(clamp(180 + levelProgress * 160, 180, 340));
+  const waves = [];
+  for (let w = 0; w < waveCount; w++) {
+    const prepMs = 14000 + tier * 1000;
+    const spawnsA = generateWave(n, w, waveCount, 0, rnd);
+    const spawns = dualPath ? [...spawnsA, ...generateWave(n, w, waveCount, 1, rnd)] : spawnsA;
+    waves.push({ prepMs, spawns });
+  }
+  return {
+    id: n,
+    name: `Niveau ${n} — ${TIER_NAMES[tier]}`,
+    baseHp,
+    startCoins,
+    paths: dualPath ? [PATH_5A_FULL, PATH_5B_FULL] : [PATH_MAP],
+    // Les 10 emplacements du niveau 5 restent l'unique disposition
+    // disponible (un seul asset de carte, voir commentaire plus haut) --
+    // réutilisés tels quels, jamais réinventés par niveau.
+    buildSlots: LEVEL_5.buildSlots.map((s) => ({ ...s })),
+    unlockedTowers: ["rapide", "canon", "longue_portee"],
+    waves,
+  };
+}
+
+const GENERATED_LEVELS = [];
+for (let n = 6; n <= 50; n++) GENERATED_LEVELS.push(generateLevel(n));
+
+export const LEVELS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5, ...GENERATED_LEVELS];
 
 export function validateLevel(level) {
   const errors = [];

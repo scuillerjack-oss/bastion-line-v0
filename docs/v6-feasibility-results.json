@@ -148,5 +148,1355 @@
       }
     },
     "feasible": true
+  },
+  "6": {
+    "name": "Niveau 6 — Prise en main",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 44,
+        "ticks": 12836,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 64,
+        "ticks": 11606,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 44,
+        "ticks": 12836,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "7": {
+    "name": "Niveau 7 — Prise en main",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.875,
+        "minHpRatio": 0.875,
+        "coinsLeft": 674,
+        "ticks": 15066,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 488,
+        "ticks": 14250,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.875,
+        "minHpRatio": 0.875,
+        "coinsLeft": 674,
+        "ticks": 15066,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "8": {
+    "name": "Niveau 8 — Prise en main",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 46,
+        "ticks": 13061,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 96,
+        "ticks": 12278,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 46,
+        "ticks": 13061,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "9": {
+    "name": "Niveau 9 — Prise en main",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 122,
+        "ticks": 13044,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 72,
+        "ticks": 12465,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 122,
+        "ticks": 13044,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "10": {
+    "name": "Niveau 10 — Prise en main",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 93,
+        "ticks": 12825,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 53,
+        "ticks": 11764,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 93,
+        "ticks": 12825,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "11": {
+    "name": "Niveau 11 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 92,
+        "ticks": 15271,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 42,
+        "ticks": 14510,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 92,
+        "ticks": 15271,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "12": {
+    "name": "Niveau 12 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 64,
+        "ticks": 15377,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 84,
+        "ticks": 14984,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 64,
+        "ticks": 15377,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "13": {
+    "name": "Niveau 13 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 101,
+        "ticks": 15400,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 56,
+        "ticks": 14095,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 101,
+        "ticks": 15400,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "14": {
+    "name": "Niveau 14 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.5384615384615384,
+        "minHpRatio": 0.5384615384615384,
+        "coinsLeft": 1571,
+        "ticks": 18755,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1062,
+        "ticks": 14703,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.5384615384615384,
+        "minHpRatio": 0.5384615384615384,
+        "coinsLeft": 1571,
+        "ticks": 18755,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "15": {
+    "name": "Niveau 15 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 240,
+        "ticks": 15887,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 50,
+        "ticks": 14636,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 240,
+        "ticks": 15887,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "16": {
+    "name": "Niveau 16 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 276,
+        "ticks": 16046,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 86,
+        "ticks": 14205,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 276,
+        "ticks": 16046,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "17": {
+    "name": "Niveau 17 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 319,
+        "ticks": 16151,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 129,
+        "ticks": 14242,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 319,
+        "ticks": 16151,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "18": {
+    "name": "Niveau 18 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 361,
+        "ticks": 16331,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 106,
+        "ticks": 15111,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 361,
+        "ticks": 16331,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "19": {
+    "name": "Niveau 19 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 403,
+        "ticks": 16119,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 103,
+        "ticks": 14302,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 403,
+        "ticks": 16119,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "20": {
+    "name": "Niveau 20 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 489,
+        "ticks": 16397,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 189,
+        "ticks": 14771,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 489,
+        "ticks": 16397,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "21": {
+    "name": "Niveau 21 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.14285714285714285,
+        "minHpRatio": 0.14285714285714285,
+        "coinsLeft": 2277,
+        "ticks": 20229,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1924,
+        "ticks": 17771,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.14285714285714285,
+        "minHpRatio": 0.14285714285714285,
+        "coinsLeft": 2277,
+        "ticks": 20229,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "22": {
+    "name": "Niveau 22 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 573,
+        "ticks": 16255,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 208,
+        "ticks": 14874,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 573,
+        "ticks": 16255,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "23": {
+    "name": "Niveau 23 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 621,
+        "ticks": 16376,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 191,
+        "ticks": 15080,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 621,
+        "ticks": 16376,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "24": {
+    "name": "Niveau 24 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 657,
+        "ticks": 16422,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 357,
+        "ticks": 15280,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 657,
+        "ticks": 16422,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "25": {
+    "name": "Niveau 25 — Compositions exigeantes",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 710,
+        "ticks": 16602,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 410,
+        "ticks": 15590,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 710,
+        "ticks": 16602,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "26": {
+    "name": "Niveau 26 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1118,
+        "ticks": 19528,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 753,
+        "ticks": 18194,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1118,
+        "ticks": 19528,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "27": {
+    "name": "Niveau 27 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1140,
+        "ticks": 19789,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 840,
+        "ticks": 18320,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1140,
+        "ticks": 19789,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "28": {
+    "name": "Niveau 28 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.6,
+        "minHpRatio": 0.6,
+        "coinsLeft": 3642,
+        "ticks": 24350,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 3233,
+        "ticks": 22293,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.6,
+        "minHpRatio": 0.6,
+        "coinsLeft": 3642,
+        "ticks": 24350,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "29": {
+    "name": "Niveau 29 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1260,
+        "ticks": 19791,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 895,
+        "ticks": 18466,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1260,
+        "ticks": 19791,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "30": {
+    "name": "Niveau 30 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1284,
+        "ticks": 19906,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 884,
+        "ticks": 18142,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1284,
+        "ticks": 19906,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "31": {
+    "name": "Niveau 31 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1386,
+        "ticks": 20169,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1086,
+        "ticks": 18499,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1386,
+        "ticks": 20169,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "32": {
+    "name": "Niveau 32 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1444,
+        "ticks": 20357,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1079,
+        "ticks": 17548,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1444,
+        "ticks": 20357,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "33": {
+    "name": "Niveau 33 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1500,
+        "ticks": 20364,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1070,
+        "ticks": 16936,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1500,
+        "ticks": 20364,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "34": {
+    "name": "Niveau 34 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1530,
+        "ticks": 20314,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 900,
+        "ticks": 18523,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1530,
+        "ticks": 20314,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "35": {
+    "name": "Niveau 35 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.625,
+        "minHpRatio": 0.625,
+        "coinsLeft": 4407,
+        "ticks": 25233,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 3863,
+        "ticks": 22360,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.625,
+        "minHpRatio": 0.625,
+        "coinsLeft": 4407,
+        "ticks": 25233,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "36": {
+    "name": "Niveau 36 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1635,
+        "ticks": 20667,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1170,
+        "ticks": 19038,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1635,
+        "ticks": 20667,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "37": {
+    "name": "Niveau 37 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.8125,
+        "minHpRatio": 0.8125,
+        "coinsLeft": 1712,
+        "ticks": 20783,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1340,
+        "ticks": 18362,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.8125,
+        "minHpRatio": 0.8125,
+        "coinsLeft": 1712,
+        "ticks": 20783,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "38": {
+    "name": "Niveau 38 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.9090909090909091,
+        "minHpRatio": 0.9090909090909091,
+        "coinsLeft": 1759,
+        "ticks": 20953,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1373,
+        "ticks": 18855,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.9090909090909091,
+        "minHpRatio": 0.9090909090909091,
+        "coinsLeft": 1759,
+        "ticks": 20953,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "39": {
+    "name": "Niveau 39 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.7272727272727273,
+        "minHpRatio": 0.7272727272727273,
+        "coinsLeft": 1803,
+        "ticks": 21164,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1380,
+        "ticks": 18967,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.7272727272727273,
+        "minHpRatio": 0.7272727272727273,
+        "coinsLeft": 1803,
+        "ticks": 21164,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "40": {
+    "name": "Niveau 40 — Optimisation croissante",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.7272727272727273,
+        "minHpRatio": 0.7272727272727273,
+        "coinsLeft": 1828,
+        "ticks": 21097,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1370,
+        "ticks": 17903,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.7272727272727273,
+        "minHpRatio": 0.7272727272727273,
+        "coinsLeft": 1828,
+        "ticks": 21097,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "41": {
+    "name": "Niveau 41 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.6470588235294118,
+        "minHpRatio": 0.6470588235294118,
+        "coinsLeft": 2324,
+        "ticks": 24448,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1980,
+        "ticks": 22107,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.6470588235294118,
+        "minHpRatio": 0.6470588235294118,
+        "coinsLeft": 2324,
+        "ticks": 24448,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "42": {
+    "name": "Niveau 42 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.2647058823529412,
+        "minHpRatio": 0.2647058823529412,
+        "coinsLeft": 6055,
+        "ticks": 30735,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 5343,
+        "ticks": 24649,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.2647058823529412,
+        "minHpRatio": 0.2647058823529412,
+        "coinsLeft": 6055,
+        "ticks": 30735,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "43": {
+    "name": "Niveau 43 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.7352941176470589,
+        "minHpRatio": 0.7352941176470589,
+        "coinsLeft": 2475,
+        "ticks": 24842,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2052,
+        "ticks": 21752,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.7352941176470589,
+        "minHpRatio": 0.7352941176470589,
+        "coinsLeft": 2475,
+        "ticks": 24842,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "44": {
+    "name": "Niveau 44 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.5588235294117647,
+        "minHpRatio": 0.5588235294117647,
+        "coinsLeft": 2521,
+        "ticks": 25220,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1961,
+        "ticks": 20931,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.5588235294117647,
+        "minHpRatio": 0.5588235294117647,
+        "coinsLeft": 2521,
+        "ticks": 25220,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "45": {
+    "name": "Niveau 45 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.5714285714285714,
+        "minHpRatio": 0.5714285714285714,
+        "coinsLeft": 2582,
+        "ticks": 25343,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2252,
+        "ticks": 22366,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.5714285714285714,
+        "minHpRatio": 0.5714285714285714,
+        "coinsLeft": 2582,
+        "ticks": 25343,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "46": {
+    "name": "Niveau 46 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.6571428571428571,
+        "minHpRatio": 0.6571428571428571,
+        "coinsLeft": 2634,
+        "ticks": 25503,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2190,
+        "ticks": 23094,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.6571428571428571,
+        "minHpRatio": 0.6571428571428571,
+        "coinsLeft": 2634,
+        "ticks": 25503,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "47": {
+    "name": "Niveau 47 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.8285714285714286,
+        "minHpRatio": 0.8285714285714286,
+        "coinsLeft": 2723,
+        "ticks": 25467,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2351,
+        "ticks": 23111,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.8285714285714286,
+        "minHpRatio": 0.8285714285714286,
+        "coinsLeft": 2723,
+        "ticks": 25467,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "48": {
+    "name": "Niveau 48 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 0.9142857142857143,
+        "minHpRatio": 0.9142857142857143,
+        "coinsLeft": 2838,
+        "ticks": 25486,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2452,
+        "ticks": 22150,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 0.9142857142857143,
+        "minHpRatio": 0.9142857142857143,
+        "coinsLeft": 2838,
+        "ticks": 25486,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "49": {
+    "name": "Niveau 49 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "lost",
+        "finalHpRatio": 0,
+        "minHpRatio": 0,
+        "coinsLeft": 66,
+        "ticks": 4872,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 6591,
+        "ticks": 29481,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "lost",
+        "finalHpRatio": 0,
+        "minHpRatio": 0,
+        "coinsLeft": 66,
+        "ticks": 4872,
+        "hitCap": false
+      }
+    },
+    "feasible": true
+  },
+  "50": {
+    "name": "Niveau 50 — Difficulté significative",
+    "strategies": {
+      "équilibrée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2971,
+        "ticks": 25703,
+        "hitCap": false
+      },
+      "priorité dégâts": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2571,
+        "ticks": 23314,
+        "hitCap": false
+      },
+      "priorité cadence/portée": {
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2971,
+        "ticks": 25703,
+        "hitCap": false
+      }
+    },
+    "feasible": true
   }
 }
