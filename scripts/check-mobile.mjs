@@ -1150,6 +1150,66 @@ async function main() {
       await page.close();
     }
 
+    // --- Test 22 : écran de sélection des niveaux (cahier V7, section 9) --
+    // 3 états visuellement non ambigus (terminé/doré, accessible non
+    // terminé/gris, verrouillé), rejeu d'un niveau terminé en un seul
+    // toucher réel, et un niveau verrouillé reste réellement inerte (pas
+    // seulement visuellement grisé). ---
+    {
+      const context = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, deviceScaleFactor: 2 });
+      const page = await context.newPage();
+      const errors = [];
+      page.on("pageerror", (e) => errors.push(`pageerror: ${e.message}`));
+      await page.goto(BASE_URL, { waitUntil: "networkidle" });
+      await page.evaluate(() => {
+        localStorage.setItem(
+          "bastion-line-v0-save",
+          JSON.stringify({ version: 2, completedLevels: [0, 1, 2], tutorialsSeen: {}, settings: { music: true, sfx: true } })
+        );
+      });
+      await page.reload({ waitUntil: "networkidle" });
+      await page.click("#btn-levels");
+      await page.waitForTimeout(200);
+
+      const counts = await page.evaluate(() => ({
+        completed: document.querySelectorAll(".level-cell.completed").length,
+        accessible: document.querySelectorAll(".level-cell.accessible").length,
+        locked: document.querySelectorAll(".level-cell.locked").length,
+        lockedDisabled: document.querySelectorAll(".level-cell.locked:disabled").length,
+        total: document.querySelectorAll(".level-cell").length,
+      }));
+      const statesOk =
+        counts.total === 50 && counts.completed === 3 && counts.accessible === 1 && counts.locked === 46 && counts.lockedDisabled === 46;
+
+      // Rejeu d'un niveau déjà terminé (niveau 2, index 1) en UN SEUL tap réel.
+      await page.locator('.level-cell.completed[data-index="1"]').click();
+      await page.waitForTimeout(200);
+      const replayedLevelId = await page.evaluate(() => window.__bastionDebugState()?.levelId);
+      const replayOk = replayedLevelId === 2;
+
+      // Un niveau verrouillé (index 10, le 11e) reste réellement inerte --
+      // pas seulement visuellement grisé : forcer le clic via JS (contourne
+      // l'attribut disabled du navigateur, qui bloquerait déjà un vrai tap)
+      // ne doit déclencher aucun démarrage de niveau.
+      await page.evaluate(() => window.__bastionDebugStartLevel(0)); // revient à un état connu
+      await page.click("#pause-btn");
+      await page.click("#btn-menu");
+      await page.click("#btn-levels");
+      await page.waitForTimeout(150);
+      await page.evaluate(() => document.querySelector('.level-cell.locked[data-index="10"]')?.click());
+      await page.waitForTimeout(150);
+      const stillOnLevelSelect = await page.evaluate(() => document.querySelectorAll(".level-cell").length === 50);
+
+      const allOk = statesOk && replayOk && stillOnLevelSelect && errors.length === 0;
+      if (!allOk) {
+        failures += 1;
+        log("ÉCHEC écran de sélection des niveaux", { counts, replayedLevelId, stillOnLevelSelect, errors });
+      } else {
+        log("OK : écran de sélection des niveaux (3 états corrects sur 50, rejeu en un tap, niveau verrouillé réellement inerte)");
+      }
+      await page.close();
+    }
+
     await browser.close();
   } finally {
     server.kill();

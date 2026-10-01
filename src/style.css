@@ -230,6 +230,50 @@ html, body {
 .overlay-btn.small { padding: 8px 18px; font-size: 0.9rem; min-width: 0; }
 .overlay-btn.secondary { background: #22331f; color: var(--text); }
 
+/* Écran de sélection des niveaux (cahier V7, section 9) -- grille compacte
+   mobile, 3 états non ambigus : terminé (doré), accessible non terminé
+   (gris distinct, aussi le niveau à poursuivre -- voir main.js), verrouillé
+   (troisième état, cadenas). */
+.level-select-overlay { justify-content: flex-start; padding-top: 48px; }
+.level-grid-scroll {
+  width: 100%;
+  max-width: 340px;
+  max-height: 58vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  padding: 2px;
+}
+.level-cell {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  font-weight: 700;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.level-cell.completed {
+  background: var(--accent);
+  color: #14210f;
+  border-color: var(--accent);
+}
+.level-cell.accessible {
+  background: #3a4238;
+  color: var(--text);
+  border-color: rgba(233, 196, 106, 0.6);
+}
+.level-cell.locked {
+  background: #1a221a;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
 .install-banner {
   display: flex;
   flex-direction: column;

@@ -198,6 +198,7 @@ function showMenu() {
       <h1>BASTION LINE</h1>
       <p>Construis, défends, prépare la vague suivante.</p>
       <button class="overlay-btn" id="btn-play">${unlocked > 0 ? "Continuer" : "Jouer"}</button>
+      <button class="overlay-btn secondary" id="btn-levels">Niveaux</button>
       <button class="overlay-btn secondary" id="btn-settings">Réglages</button>
       ${renderInstallBanner()}
     </div>
@@ -206,8 +207,47 @@ function showMenu() {
     startMusic();
     startLevel(unlocked);
   });
+  document.getElementById("btn-levels").addEventListener("click", showLevelSelect);
   document.getElementById("btn-settings").addEventListener("click", showSettings);
   wireInstallBanner();
+}
+
+// Écran de sélection des niveaux (cahier V7, section 9) : grille compacte
+// 1-50, 3 états visuellement non ambigus. Lecture TOUJOURS fraîche depuis
+// le stockage (même principe que showMenu -- jamais une copie en mémoire,
+// cahier V7, section 8). La progression étant strictement séquentielle
+// (terminer N débloque N+1, aucun saut possible), il existe À TOUT INSTANT
+// EXACTEMENT UN SEUL niveau "accessible mais non terminé" : le style "gris
+// distinct" suffit donc, à lui seul, à identifier immédiatement le niveau
+// à poursuivre (cahier V7 : "niveau à poursuivre immédiatement
+// identifiable") -- aucun indicateur redondant à maintenir séparément.
+function showLevelSelect() {
+  appPhase = "menu";
+  clearOverlay();
+  closePanel();
+  const freshSave = loadSave();
+  const unlockedUpTo = getUnlockedUpToIndex(freshSave);
+  const cells = LEVELS.map((level, i) => {
+    const completed = isLevelCompleted(freshSave, i);
+    const accessible = i <= unlockedUpTo;
+    const state = completed ? "completed" : accessible ? "accessible" : "locked";
+    const label = state === "locked" ? "&#128274;" : String(level.id);
+    return `<button type="button" class="level-cell ${state}" data-index="${i}" ${accessible ? "" : "disabled"} aria-label="Niveau ${level.id}${completed ? ", terminé" : accessible ? ", à poursuivre" : ", verrouillé"}">${label}</button>`;
+  }).join("");
+  renderOverlay(`
+    <div class="overlay level-select-overlay">
+      <h1>Niveaux</h1>
+      <div class="level-grid-scroll"><div class="level-grid">${cells}</div></div>
+      <button class="overlay-btn secondary" id="btn-back-levels">Retour</button>
+    </div>
+  `);
+  document.querySelectorAll(".level-cell.completed, .level-cell.accessible").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      startMusic();
+      startLevel(Number(btn.getAttribute("data-index")));
+    });
+  });
+  document.getElementById("btn-back-levels").addEventListener("click", showMenu);
 }
 
 function showSettings() {
