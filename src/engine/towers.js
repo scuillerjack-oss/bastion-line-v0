@@ -49,7 +49,16 @@ export const TOWER_FAMILIES = {
   },
   longue_portee: {
     id: "longue_portee",
-    name: "Longue portée",
+    // Renommage V7 (cahier V7, section 5) : le choix graphique "Baliste"
+    // envisagé était trop proche visuellement de la tour d'Archer -- cette
+    // défense très longue portée est désormais officiellement nommée
+    // "Catapulte". Seul ce nom AFFICHÉ change ; l'identifiant interne
+    // "longue_portee" reste inchangé (sauvegardes, tests, simulation,
+    // TOWER_SPRITE_CONFIG/PROJECTILE_SPEED/bonusVsArmored -- aucune
+    // référence par nom ailleurs dans le code) pour ne rien reconstruire.
+    // La mécanique (portée/dégâts/cadence/bonus anti-blindé) n'est PAS
+    // modifiée par ce seul changement de nom.
+    name: "Catapulte",
     shortDesc: "Très grande portée, dégâts ciblés élevés. Utile contre les ennemis résistants.",
     color: "#264653",
     buildCost: 70,

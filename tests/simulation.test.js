@@ -187,6 +187,24 @@ test("le canon inflige des dégâts à TOUS les ennemis dans son rayon d'effet, 
   assert.equal(outOfRadius.alive, true, "un ennemi hors du rayon d'effet ne doit jamais être touché par CE tir");
 });
 
+// --- Renommage Catapulte (cahier V7, section 5) ----------------------------
+
+test("la défense longue portée s'affiche désormais sous le nom \"Catapulte\" (jamais \"Baliste\" ni l'ancien \"Longue portée\")", () => {
+  assert.equal(TOWER_FAMILIES.longue_portee.name, "Catapulte");
+  assert.ok(!/baliste/i.test(TOWER_FAMILIES.longue_portee.name));
+  assert.ok(!/longue portée/i.test(TOWER_FAMILIES.longue_portee.name));
+});
+
+test("le renommage Catapulte ne change ni la mécanique ni l'identifiant interne (continuité des sauvegardes/tests)", () => {
+  // L'identifiant interne reste "longue_portee" -- seul le nom AFFICHÉ change
+  // (cahier V7, section 5 : "ne pas modifier la mécanique longue portée
+  // existante uniquement à cause de ce changement de nom").
+  assert.equal(TOWER_FAMILIES.longue_portee.id, "longue_portee");
+  assert.equal(TOWER_FAMILIES.longue_portee.buildCost, 70);
+  assert.equal(TOWER_FAMILIES.longue_portee.tiers[0].range, 180);
+  assert.equal(TOWER_FAMILIES.longue_portee.tiers[1].bonusVsArmored, 1.6);
+});
+
 // --- Bonus longue portée vs blindé -----------------------------------------
 
 test("la tour longue portée au palier 2+ inflige un bonus de dégâts aux ennemis blindés", () => {

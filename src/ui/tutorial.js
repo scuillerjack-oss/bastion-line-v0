@@ -8,7 +8,10 @@ export const TUTORIAL_TEXTS = {
   first_build_slot: "Touche un emplacement vide pour construire une tour.",
   first_tower_rapide: "Tour d'archers : cadence élevée, efficace contre les ennemis fragiles ou rapides.",
   first_tower_canon: "Canon : explosion de zone, idéal contre les groupes d'ennemis.",
-  first_tower_longue_portee: "Longue portée : dégâts ciblés élevés, utile contre les ennemis résistants.",
+  // Texte mis à jour V7 (cahier V7, section 5) : renommage affiché
+  // "Longue portée" -> "Catapulte" -- la clé interne first_tower_longue_portee
+  // reste inchangée (déclenchée par enemy.family === "longue_portee").
+  first_tower_longue_portee: "Catapulte : dégâts ciblés élevés, utile contre les ennemis résistants.",
   first_upgrade: "Touche une tour existante pour l'améliorer : plus puissante, coûte des pièces.",
   first_wave: "La vague avance automatiquement. Prépare tes défenses avant qu'elle n'arrive.",
   first_early_launch: "Tu peux lancer la vague suivante immédiatement sans attendre le minuteur.",
