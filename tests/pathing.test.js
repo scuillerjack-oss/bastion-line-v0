@@ -57,18 +57,30 @@ for (const level of LEVELS) {
     test(`niveau ${level.id} ("${level.name}"), chemin ${pathIndex} : reste dans le corridor de la route réelle (jamais de virage coupé)`, () => {
       const pathData = buildPathData(points);
       const stepMs = 2; // échantillonnage fin : une position tous les 2 unités logiques parcourues
-      // Zone de départ exclue = exactement le PREMIER segment du chemin
-      // (jamais un nombre choisi au hasard) : sur les niveaux à voie unique,
-      // ce premier segment fait déjà partie du tracé réel (l'exclure ne
-      // retire donc presque rien à la couverture du test) ; sur le niveau 5
-      // (cahier V5, limite documentée), c'est PRÉCISÉMENT le segment
-      // synthétique qui relie l'entrée décalée à la route réelle -- il ne
-      // PEUT pas être proche de l'axe mesuré par construction, sans que
-      // cela révèle un défaut de trajectoire.
-      const skipStartDistance = pathData.segLengths[0] ?? 0;
+      // Zones de départ/fin exclues = les ancrages manuels aux deux bouts du
+      // chemin (jamais un nombre de segments choisi au hasard) : un waypoint
+      // de départ/fin posé à la main (entrée décalée du niveau 5/multiples de
+      // 7, portail, porte de la forteresse -- voir engine/levels.js et
+      // PATH_5A_FULL/PATH_5B_FULL) est par construction hors du tracé
+      // automatique (assets/leonardo/trace_road.py), donc jamais proche de la
+      // référence, sans que cela révèle un défaut de trajectoire. On détecte
+      // ces ancrages par leur distance réelle à la référence plutôt que de
+      // supposer un nombre fixe de segments : certains chemins (niveaux à
+      // double voie) empilent DEUX ancrages manuels consécutifs au départ
+      // (l'entrée décalée, puis le premier point de PATH_MAP lui-même).
+      let startIdx = 0;
+      while (startIdx < points.length - 1 && minDistToReference(points[startIdx].x, points[startIdx].y) > MAX_DEVIATION) {
+        startIdx++;
+      }
+      const skipStartDistance = pathData.segLengths.slice(0, startIdx).reduce((a, b) => a + b, 0);
+      let endIdx = points.length - 1;
+      while (endIdx > 0 && minDistToReference(points[endIdx].x, points[endIdx].y) > MAX_DEVIATION) {
+        endIdx--;
+      }
+      const skipEndDistance = pathData.segLengths.slice(endIdx).reduce((a, b) => a + b, 0);
       let maxDeviation = 0;
       let worstAt = null;
-      for (let d = skipStartDistance; d <= pathData.totalLength; d += stepMs) {
+      for (let d = skipStartDistance; d <= pathData.totalLength - skipEndDistance; d += stepMs) {
         const p = pointAtDistance(pathData, d);
         const dev = minDistToReference(p.x, p.y);
         if (dev > maxDeviation) {

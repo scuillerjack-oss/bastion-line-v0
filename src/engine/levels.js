@@ -53,35 +53,63 @@ function spawnBurst(kind, count, pathIndex, startDelayMs, intervalMs) {
 // verticalement) est repris, puis simplifié par Douglas-Peucker (tolérance
 // 1,5 unité logique -- très inférieure à la demi-largeur de route, 17) pour
 // ne garder que les points nécessaires à rester à moins de 1,5 unité du
-// tracé réel en tout point. Résultat : 82 points au lieu de 11, un mouvement
-// qui épouse visuellement chaque virage, sans jamais dépendre d'un point
-// spécial ajouté à la main pour UN niveau -- puisque tous les niveaux à
-// chemin unique partagent ce même PATH_MAP, la correction s'applique
-// automatiquement partout. Voir tests/levels.test.js pour la vérification
-// géométrique permanente (aucun point du chemin ne s'éloigne du tracé réel
-// au-delà de cette même tolérance).
+// tracé réel en tout point.
+//
+// Correction V7 à LA CAUSE (cahier V7, section 2 : "les ennemis avancent,
+// puis peuvent effectuer un petit retour arrière avant de repartir, surtout
+// dans les virages"). Diagnostic établi par simulation ET par mesure
+// géométrique (voir le rapport technique V7) : le moteur de déplacement
+// lui-même (traveled, strictement croissant, engine/simulation.js) et
+// l'interpolation de rendu (V7 précédente, engine/interpolate.js) sont
+// mathématiquement incapables de reculer -- vérifié par simulation sous
+// gigue de frame réaliste (60/90/120Hz, accrocs, fréquence adaptative,
+// 0 recul observé sur des milliers de frames). La cause réelle était en
+// amont, dans les DONNÉES du PATH_MAP V6 lui-même : l'algorithme de tracé
+// (assets/leonardo/trace_road.py) retient UNE SEULE coordonnée x par ligne
+// d'image -- une méthode structurellement fragile là où la route devient
+// proche de l'horizontale, c'est-à-dire précisément DANS un virage. Mesure
+// directe sur l'ancien PATH_MAP : plusieurs points formaient un angle de
+// virage proche de 180° sur un segment très court (pire cas mesuré :
+// 175,9°, deux points consécutifs à seulement 1 pixel d'écart en y mais 14
+// unités en arrière en x) -- Douglas-Peucker, qui préserve par construction
+// tout point qui s'écarte de la ligne simplifiée, conservait fidèlement ces
+// pics de bruit comme des points de virage réels. Un ennemi traversant un
+// tel point avance bien selon sa distance parcourue, mais sa position
+// (x,y) RECULE visuellement avant de repartir -- exactement le symptôme
+// rapporté, confirmé visuellement par superposition de l'ancien tracé sur
+// l'image source (un véritable "V" pointant vers l'arrière).
+//
+// Remède, jamais une correction manuelle point par point : un filtre
+// médian glissant (fenêtre 9 lignes) appliqué à la séquence x(y) du tracé
+// AVANT la simplification Douglas-Peucker (voir scripts/retrace_path_v7.py)
+// -- élimine par construction un échantillon isolé aberrant (1-2 lignes,
+// signature mesurée du bruit) sans déformer un virage réel, qui évolue sur
+// des dizaines de lignes. Résultat vérifié : angle de virage maximal
+// 50,3° (contre 175,9° avant), 0 point à angle proche de 180°, superposition
+// visuelle propre sur l'intégralité de la route (voir le rapport
+// technique V7). La RÉFÉRENCE de mesure elle-même (tests/fixtures/
+// road_centerline_reference.json, utilisée par tests/pathing.test.js) est
+// régénérée depuis ce même tracé nettoyé -- jamais comparée à son propre
+// bruit. Comme tous les niveaux à chemin unique (1-4 et 6-50 générés)
+// partagent ce même PATH_MAP, la correction s'applique automatiquement à
+// toute la campagne, jamais à un seul niveau.
 const PATH_MAP = [
-  { x: 185, y: 60 }, { x: 178, y: 66 }, { x: 178, y: 68 }, { x: 179, y: 89 },
-  { x: 184, y: 93 }, { x: 222, y: 100 }, { x: 238, y: 108 }, { x: 262, y: 131 },
-  { x: 265, y: 131 }, { x: 251, y: 132 }, { x: 322, y: 136 }, { x: 344, y: 145 },
-  { x: 355, y: 155 }, { x: 354, y: 159 }, { x: 358, y: 165 }, { x: 359, y: 174 },
-  { x: 357, y: 176 }, { x: 360, y: 181 }, { x: 358, y: 186 }, { x: 359, y: 187 },
-  { x: 351, y: 202 }, { x: 331, y: 210 }, { x: 272, y: 217 }, { x: 236, y: 235 },
-  { x: 200, y: 248 }, { x: 168, y: 251 }, { x: 167, y: 253 }, { x: 176, y: 255 },
-  { x: 75, y: 258 }, { x: 64, y: 260 }, { x: 56, y: 269 }, { x: 59, y: 276 },
-  { x: 56, y: 280 }, { x: 57, y: 302 }, { x: 63, y: 308 }, { x: 63, y: 314 },
-  { x: 73, y: 319 }, { x: 124, y: 323 }, { x: 143, y: 327 }, { x: 158, y: 337 },
-  { x: 164, y: 343 }, { x: 189, y: 356 }, { x: 214, y: 359 }, { x: 255, y: 360 },
-  { x: 247, y: 361 }, { x: 252, y: 363 }, { x: 237, y: 364 }, { x: 263, y: 366 },
-  { x: 245, y: 368 }, { x: 331, y: 370 }, { x: 322, y: 371 }, { x: 347, y: 373 },
-  { x: 355, y: 381 }, { x: 359, y: 394 }, { x: 356, y: 400 }, { x: 359, y: 404 },
-  { x: 355, y: 417 }, { x: 350, y: 424 }, { x: 335, y: 431 }, { x: 272, y: 438 },
-  { x: 242, y: 458 }, { x: 226, y: 465 }, { x: 187, y: 469 }, { x: 210, y: 473 },
-  { x: 86, y: 476 }, { x: 70, y: 481 }, { x: 63, y: 487 }, { x: 57, y: 498 },
-  { x: 58, y: 508 }, { x: 55, y: 512 }, { x: 63, y: 532 }, { x: 68, y: 537 },
-  { x: 80, y: 541 }, { x: 128, y: 546 }, { x: 138, y: 550 }, { x: 141, y: 558 },
-  { x: 163, y: 574 }, { x: 186, y: 575 }, { x: 207, y: 580 }, { x: 214, y: 588 },
-  { x: 214, y: 593 }, { x: 200, y: 615 }, // porte de la forteresse dessinée sur la carte
+  { x: 185, y: 60 }, { x: 178, y: 63 }, { x: 179, y: 89 }, { x: 184, y: 93 },
+  { x: 203, y: 95 }, { x: 227, y: 102 }, { x: 249, y: 116 }, { x: 262, y: 131 },
+  { x: 322, y: 136 }, { x: 344, y: 145 }, { x: 355, y: 155 }, { x: 359, y: 181 },
+  { x: 356, y: 193 }, { x: 351, y: 202 }, { x: 331, y: 210 }, { x: 272, y: 217 },
+  { x: 219, y: 241 }, { x: 200, y: 248 }, { x: 170, y: 250 }, { x: 167, y: 255 },
+  { x: 75, y: 258 }, { x: 64, y: 260 }, { x: 57, y: 269 }, { x: 57, y: 301 },
+  { x: 63, y: 315 }, { x: 73, y: 319 }, { x: 124, y: 323 }, { x: 143, y: 327 },
+  { x: 158, y: 337 }, { x: 164, y: 343 }, { x: 189, y: 356 }, { x: 247, y: 360 },
+  { x: 251, y: 365 }, { x: 263, y: 368 }, { x: 313, y: 369 }, { x: 343, y: 373 },
+  { x: 350, y: 375 }, { x: 355, y: 381 }, { x: 358, y: 391 }, { x: 356, y: 413 },
+  { x: 350, y: 424 }, { x: 335, y: 431 }, { x: 272, y: 438 }, { x: 241, y: 459 },
+  { x: 224, y: 466 }, { x: 197, y: 469 }, { x: 194, y: 472 }, { x: 79, y: 477 },
+  { x: 69, y: 481 }, { x: 63, y: 487 }, { x: 57, y: 498 }, { x: 56, y: 513 },
+  { x: 59, y: 524 }, { x: 68, y: 537 }, { x: 80, y: 541 }, { x: 128, y: 546 },
+  { x: 138, y: 550 }, { x: 141, y: 558 }, { x: 163, y: 574 }, { x: 186, y: 575 },
+  { x: 207, y: 580 }, { x: 213, y: 588 }, { x: 212, y: 598 }, { x: 200, y: 615 }, // porte de la forteresse dessinée sur la carte
 ];
 
 // --- Niveau 1 : chemin calé sur la carte Leonardo -------------------------
