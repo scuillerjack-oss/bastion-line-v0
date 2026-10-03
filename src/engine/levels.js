@@ -93,23 +93,61 @@ function spawnBurst(kind, count, pathIndex, startDelayMs, intervalMs) {
 // bruit. Comme tous les niveaux à chemin unique (1-4 et 6-50 générés)
 // partagent ce même PATH_MAP, la correction s'applique automatiquement à
 // toute la campagne, jamais à un seul niveau.
+//
+// Correction V7-polish (cahier V7-polish, section 3 : "les ennemis ne sont
+// toujours pas bien centrés sur la route, ils semblent parfois marcher sur
+// le bord"). Diagnostic établi par mesure géométrique directe sur l'image
+// source : le tracé V7 ci-dessus (comme assets/leonardo/trace_road.py dont
+// il hérite l'algorithme) mesure le centre de la route en scannant chaque
+// ligne HORIZONTALE de l'image -- un axe de mesure FIXE, jamais l'axe
+// réellement perpendiculaire à la route à cet endroit. Cette approximation
+// est correcte tant que la route est localement proche de la verticale,
+// mais se dégrade précisément là où elle devient plus horizontale (les
+// virages et portions qui serpentent à plat) : la coupe mesurée devient
+// oblique au lieu de transversale, et le point tracé dérive vers un bord.
+// Mesure directe sur le PATH_MAP V7 : le pire point se trouvait à 22,9
+// unités arène du vrai centre perpendiculaire, sur une route locale large de
+// seulement 45,8 unités -- littéralement sur le bord.
+//
+// Remède, jamais une correction manuelle par virage (scripts/center_path_v7.
+// py) : pour chaque point du tracé
+// déjà nettoyé, on mesure le vrai centre de la coupe PERPENDICULAIRE à la
+// tangente locale (voisins écartés de ±5 échantillons) dans le masque
+// couleur de la route. Accrocher directement chaque point à cette mesure a
+// été essayé et REJETÉ : la détection de bord sur une texture peinte est
+// bruitée au pixel près, et appliquée brute à 783 mesures indépendantes,
+// elle recréait le même défaut d'angles proches de 180° corrigé par la
+// tâche précédente (mesuré : 175,4°). Le signal de correction (centre réel
+// moins point tracé) est donc fortement lissé (moyenne glissante, fenêtre
+// 45 échantillons) avant d'être appliqué : le biais qu'on corrige varie
+// lentement avec l'orientation locale de la route, le bruit de détection de
+// bord est un artefact pixel à pixel -- un lissage large préserve le
+// premier et élimine le second. Résultat vérifié : déviation moyenne au
+// centre réel 7,8 -> 5,3 unités arène, déviation maximale 22,9 -> 17,1
+// (sur une route large de 45-50 unités, donc nettement à l'intérieur du
+// corridor, jamais plus sur le bord), angle de virage maximal 63,2° (aucune
+// réapparition du défaut de recul), confirmé visuellement par superposition
+// sur l'image source : l'ancien tracé coupe nettement l'intérieur de
+// plusieurs virages, le nouveau reste centré sur toute la route.
 const PATH_MAP = [
-  { x: 185, y: 60 }, { x: 178, y: 63 }, { x: 179, y: 89 }, { x: 184, y: 93 },
-  { x: 203, y: 95 }, { x: 227, y: 102 }, { x: 249, y: 116 }, { x: 262, y: 131 },
-  { x: 322, y: 136 }, { x: 344, y: 145 }, { x: 355, y: 155 }, { x: 359, y: 181 },
-  { x: 356, y: 193 }, { x: 351, y: 202 }, { x: 331, y: 210 }, { x: 272, y: 217 },
-  { x: 219, y: 241 }, { x: 200, y: 248 }, { x: 170, y: 250 }, { x: 167, y: 255 },
-  { x: 75, y: 258 }, { x: 64, y: 260 }, { x: 57, y: 269 }, { x: 57, y: 301 },
-  { x: 63, y: 315 }, { x: 73, y: 319 }, { x: 124, y: 323 }, { x: 143, y: 327 },
-  { x: 158, y: 337 }, { x: 164, y: 343 }, { x: 189, y: 356 }, { x: 247, y: 360 },
-  { x: 251, y: 365 }, { x: 263, y: 368 }, { x: 313, y: 369 }, { x: 343, y: 373 },
-  { x: 350, y: 375 }, { x: 355, y: 381 }, { x: 358, y: 391 }, { x: 356, y: 413 },
-  { x: 350, y: 424 }, { x: 335, y: 431 }, { x: 272, y: 438 }, { x: 241, y: 459 },
-  { x: 224, y: 466 }, { x: 197, y: 469 }, { x: 194, y: 472 }, { x: 79, y: 477 },
-  { x: 69, y: 481 }, { x: 63, y: 487 }, { x: 57, y: 498 }, { x: 56, y: 513 },
-  { x: 59, y: 524 }, { x: 68, y: 537 }, { x: 80, y: 541 }, { x: 128, y: 546 },
-  { x: 138, y: 550 }, { x: 141, y: 558 }, { x: 163, y: 574 }, { x: 186, y: 575 },
-  { x: 207, y: 580 }, { x: 213, y: 588 }, { x: 212, y: 598 }, { x: 200, y: 615 }, // porte de la forteresse dessinée sur la carte
+  { x: 185, y: 60 }, { x: 178, y: 63 }, { x: 178, y: 93 }, { x: 182, y: 98 },
+  { x: 207, y: 102 }, { x: 239, y: 113 }, { x: 255, y: 115 }, { x: 269, y: 125 },
+  { x: 320, y: 129 }, { x: 336, y: 134 }, { x: 348, y: 144 }, { x: 355, y: 154 },
+  { x: 359, y: 180 }, { x: 350, y: 204 }, { x: 332, y: 214 }, { x: 276, y: 222 },
+  { x: 254, y: 231 }, { x: 222, y: 233 }, { x: 199, y: 241 }, { x: 169, y: 244 },
+  { x: 166, y: 249 }, { x: 75, y: 253 }, { x: 65, y: 256 }, { x: 60, y: 261 },
+  { x: 57, y: 269 }, { x: 57, y: 301 }, { x: 62, y: 309 }, { x: 62, y: 318 },
+  { x: 71, y: 323 }, { x: 131, y: 330 }, { x: 145, y: 334 }, { x: 155, y: 340 },
+  { x: 176, y: 340 }, { x: 210, y: 348 }, { x: 250, y: 351 }, { x: 252, y: 357 },
+  { x: 264, y: 361 }, { x: 314, y: 363 }, { x: 343, y: 368 }, { x: 350, y: 371 },
+  { x: 354, y: 380 }, { x: 358, y: 391 }, { x: 358, y: 408 }, { x: 351, y: 426 },
+  { x: 337, y: 436 }, { x: 276, y: 442 }, { x: 258, y: 451 }, { x: 232, y: 453 },
+  { x: 222, y: 458 }, { x: 195, y: 461 }, { x: 192, y: 465 }, { x: 77, y: 471 },
+  { x: 64, y: 480 }, { x: 60, y: 493 }, { x: 56, y: 498 }, { x: 56, y: 512 },
+  { x: 58, y: 525 }, { x: 61, y: 526 }, { x: 66, y: 541 }, { x: 78, y: 546 },
+  { x: 125, y: 550 }, { x: 137, y: 555 }, { x: 139, y: 559 }, { x: 148, y: 560 },
+  { x: 166, y: 568 }, { x: 189, y: 569 }, { x: 209, y: 575 }, { x: 211, y: 578 },
+  { x: 209, y: 585 }, { x: 202, y: 592 }, { x: 200, y: 615 }, // porte de la forteresse dessinée sur la carte
 ];
 
 // --- Niveau 1 : chemin calé sur la carte Leonardo -------------------------
@@ -130,12 +168,12 @@ const LEVEL_1 = {
   // hasard dans une zone d'herbe vide. Voir le rapport technique V6 pour la
   // carte annotée et le raisonnement complet par emplacement.
   buildSlots: [
-    { id: "s1", x: 296, y: 74 }, // virage haut (couvre l'entrée + le 1er virage droit)
+    { id: "s1", x: 297, y: 67 }, // virage haut (couvre l'entrée + le 1er virage droit) -- repoussé de 7u (V7-polish : recentrage du chemin, voir PATH_MAP)
     { id: "s2", x: 201, y: 162 }, // virage serré haut
-    { id: "s3", x: 105, y: 196 }, // longue ligne droite haute (gauche)
+    { id: "s3", x: 105, y: 191 }, // longue ligne droite haute (gauche) -- repoussé de 4u (V7-polish)
     { id: "s4", x: 155, y: 408 }, // virage central gauche
     { id: "s5", x: 240, y: 523 }, // virage bas
-    { id: "s6", x: 104, y: 603 }, // ligne droite finale, avant la porte
+    { id: "s6", x: 104, y: 608 }, // ligne droite finale, avant la porte -- repoussé de 5u (V7-polish)
   ],
   unlockedTowers: ["rapide"],
   waves: [
@@ -158,13 +196,13 @@ const LEVEL_2 = {
   startCoins: 140,
   paths: [PATH_2],
   buildSlots: [
-    { id: "s1", x: 296, y: 74 },
+    { id: "s1", x: 297, y: 67 },
     { id: "s2", x: 201, y: 162 },
-    { id: "s3", x: 105, y: 196 },
-    { id: "s4", x: 246, y: 295 }, // virage central haut
+    { id: "s3", x: 105, y: 191 },
+    { id: "s4", x: 246, y: 291 }, // virage central haut -- repoussé de 5u (V7-polish)
     { id: "s5", x: 155, y: 408 },
     { id: "s6", x: 240, y: 523 },
-    { id: "s7", x: 104, y: 603 },
+    { id: "s7", x: 104, y: 608 },
   ],
   unlockedTowers: ["rapide", "canon"],
   // Rééquilibrage V3 (cahier, section 4) : l'audit par simulation
@@ -202,14 +240,14 @@ const LEVEL_3 = {
   startCoins: 150,
   paths: [PATH_3],
   buildSlots: [
-    { id: "s1", x: 296, y: 74 },
+    { id: "s1", x: 297, y: 67 },
     { id: "s2", x: 201, y: 162 },
-    { id: "s3", x: 105, y: 196 },
-    { id: "s4", x: 246, y: 295 },
+    { id: "s3", x: 105, y: 191 },
+    { id: "s4", x: 246, y: 291 },
     { id: "s5", x: 57, y: 415 }, // longue ligne droite basse (gauche)
     { id: "s6", x: 155, y: 408 },
     { id: "s7", x: 240, y: 523 },
-    { id: "s8", x: 104, y: 603 },
+    { id: "s8", x: 104, y: 608 },
   ],
   // Longue portée avancée du niveau 4 au niveau 3 (cahier V3, section 3 :
   // "la faire apparaître/débloquer sensiblement plus tôt... pas
@@ -245,15 +283,15 @@ const LEVEL_4 = {
   startCoins: 160,
   paths: [PATH_4],
   buildSlots: [
-    { id: "s1", x: 296, y: 74 },
+    { id: "s1", x: 297, y: 67 },
     { id: "s2", x: 201, y: 162 },
-    { id: "s3", x: 105, y: 196 },
-    { id: "s4", x: 246, y: 295 },
-    { id: "s5", x: 341, y: 310 }, // virage central droit
+    { id: "s3", x: 105, y: 191 },
+    { id: "s4", x: 246, y: 291 },
+    { id: "s5", x: 342, y: 307 }, // virage central droit -- repoussé de 3u (V7-polish)
     { id: "s6", x: 57, y: 415 },
     { id: "s7", x: 155, y: 408 },
     { id: "s8", x: 240, y: 523 },
-    { id: "s9", x: 104, y: 603 },
+    { id: "s9", x: 104, y: 608 },
   ],
   unlockedTowers: ["rapide", "canon", "longue_portee"],
   // Rééquilibrage V3 (cahier, section 4) -- même constat et même remède
@@ -302,16 +340,16 @@ const LEVEL_5 = {
   startCoins: 180,
   paths: [PATH_5A_FULL, PATH_5B_FULL],
   buildSlots: [
-    { id: "s1", x: 296, y: 74 },
+    { id: "s1", x: 297, y: 67 },
     { id: "s2", x: 201, y: 162 },
-    { id: "s3", x: 105, y: 196 },
-    { id: "s4", x: 246, y: 295 },
-    { id: "s5", x: 341, y: 310 },
+    { id: "s3", x: 105, y: 191 },
+    { id: "s4", x: 246, y: 291 },
+    { id: "s5", x: 342, y: 307 },
     { id: "s6", x: 57, y: 415 },
     { id: "s7", x: 155, y: 408 },
-    { id: "s8", x: 347, y: 489 }, // longue ligne droite basse (droite)
+    { id: "s8", x: 348, y: 495 }, // longue ligne droite basse (droite) -- repoussé de 6u (V7-polish)
     { id: "s9", x: 240, y: 523 },
-    { id: "s10", x: 104, y: 603 },
+    { id: "s10", x: 104, y: 608 },
   ],
   unlockedTowers: ["rapide", "canon", "longue_portee"],
   // Rééquilibrage V3 (cahier, section 4) -- même constat et même remède
