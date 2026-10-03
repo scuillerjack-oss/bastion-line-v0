@@ -212,6 +212,17 @@ html, body {
   gap: 14px;
   padding: 24px;
   text-align: center;
+  /* Transition d'apparition (cahier V7-polish, section 6 : "une transition/
+     apparition plus propre") -- partagée par TOUS les écrans de résultat
+     (victoire, défaite, pause, sélection de niveau), jamais un traitement
+     spécial réservé à un seul écran. Fondu + léger zoom avant, volontairement
+     bref (220ms) pour rester "simple, rapide" -- jamais une animation qui
+     retarde la lecture du résultat. */
+  animation: overlay-in 220ms ease-out;
+}
+@keyframes overlay-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .overlay h1 { font-size: 1.4rem; margin: 0; }
@@ -229,6 +240,71 @@ html, body {
 }
 .overlay-btn.small { padding: 8px 18px; font-size: 0.9rem; min-width: 0; }
 .overlay-btn.secondary { background: #22331f; color: var(--text); }
+
+/* Polish léger de l'écran "Niveau réussi" (cahier V7-polish, section 6) --
+   structure validée (fond assombri, titre, PV, boutons) strictement
+   conservée ; seuls ajouts : un badge/coche pour renforcer la hiérarchie
+   visuelle, la statistique PV présentée en "puce" plutôt qu'en phrase
+   brute, et un petit effet de victoire discret (anneau qui s'étend et
+   s'efface une seule fois, pur CSS -- jamais de confettis/particules
+   envahissants qui retarderaient la lecture de l'écran, "reste simple,
+   rapide, lisible"). */
+.victory-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  position: relative;
+  flex-shrink: 0;
+  animation: victory-badge-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.victory-badge::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 22px;
+  height: 12px;
+  border-left: 4px solid #14210f;
+  border-bottom: 4px solid #14210f;
+  transform: rotate(-45deg) translateY(-2px);
+}
+.victory-badge::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0;
+  animation: victory-ring 700ms ease-out 150ms;
+}
+@keyframes victory-badge-pop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+@keyframes victory-ring {
+  from { opacity: 0.6; transform: scale(0.8); }
+  to { opacity: 0; transform: scale(1.6); }
+}
+
+.overlay-stat {
+  background: rgba(233, 196, 106, 0.1);
+  border: 1px solid rgba(233, 196, 106, 0.3);
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+.overlay-stat strong { color: var(--accent); }
+
+.overlay-unlock {
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .victory-badge, .victory-badge::after { animation: none; }
+}
 
 /* Écran de sélection des niveaux (cahier V7, section 9) -- grille compacte
    mobile, 3 états non ambigus : terminé (doré), accessible non terminé

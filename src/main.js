@@ -306,10 +306,29 @@ function showLevelResult(won) {
     // (union d'ensemble, voir markLevelCompleted) : la progression maximale
     // ne peut jamais régresser.
     markLevelCompleted(save, levelIndex);
+    // Polish léger V7-polish (cahier, section 6) : structure VALIDÉE
+    // inchangée (fond assombri, titre, PV restants, boutons Niveau suivant/
+    // Menu) -- aucun de ces éléments n'est retiré ni réorganisé. Seuls
+    // ajouts : un badge de victoire (cercle + coche, pur CSS, voir
+    // style.css .victory-badge) pour renforcer la hiérarchie visuelle avant
+    // même de lire le titre, la statistique PV présentée comme une "puce"
+    // plutôt qu'une phrase brute, et -- UNIQUEMENT si cela correspond à une
+    // vraie progression du système (unlockedTowers par niveau, pas une
+    // valeur inventée) -- la mention de la famille de tour nouvellement
+    // débloquée à CE niveau. L'effet d'apparition (fondu + léger zoom,
+    // .overlay) est partagé par tous les écrans de résultat, pas un
+    // traitement spécial réservé à la victoire.
+    const prevLevel = levelIndex > 0 ? LEVELS[levelIndex - 1] : null;
+    const newlyUnlocked = (LEVELS[levelIndex].unlockedTowers || []).filter((f) => !prevLevel || !prevLevel.unlockedTowers.includes(f));
+    const unlockLine = newlyUnlocked.length
+      ? `<p class="overlay-unlock">Nouvelle défense débloquée : ${newlyUnlocked.map((f) => TOWER_FAMILIES[f].name).join(", ")}</p>`
+      : "";
     renderOverlay(`
-      <div class="overlay">
+      <div class="overlay overlay-victory">
+        <div class="victory-badge" aria-hidden="true"></div>
         <h1>Niveau réussi !</h1>
-        <p>Base à ${Math.max(0, state.baseHp)}/${state.baseMaxHp} points de vie.</p>
+        <p class="overlay-stat">Base à <strong>${Math.max(0, state.baseHp)}/${state.baseMaxHp}</strong> points de vie</p>
+        ${unlockLine}
         <button class="overlay-btn" id="btn-next">${isLast ? "Rejouer depuis le début" : "Niveau suivant"}</button>
         <button class="overlay-btn secondary" id="btn-menu2">Menu</button>
       </div>
