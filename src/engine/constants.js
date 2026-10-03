@@ -17,7 +17,18 @@ export const ARENA_H = 700;
 export const TAP_HIT_RADIUS = 30;
 
 export const BASE_R = 22;
-export const ENEMY_R = 10;
+// Taille V7-polish (cahier V7-polish, section 5 : "les ennemis restent
+// légèrement trop petits sur téléphone"). Choisie empiriquement par capture
+// d'écran réelle (plusieurs valeurs testées : 10, 11, 12, 13, 14) : 10 -> 12
+// (+20%), nettement plus lisible pour un seul ennemi (silhouette/barre de
+// vie proportionnelle, route toujours bien visible) ; 14 (+40%) a été
+// écarté car le groupe "essaim" (plusieurs ennemis rapprochés, cahier V1
+// tableau 4.1) commence à fusionner en un seul amas indistinct à cette
+// taille -- exactement la régression de lisibilité de groupe que le cahier
+// demande d'éviter. ENEMY_R reste la SEULE source (silhouette Canvas, barre
+// de vie = ENEMY_R*2.2) : aucune collision/statistique de jeu n'y est liée
+// (HIT_RADIUS, engine/simulation.js, reste indépendant et inchangé).
+export const ENEMY_R = 12;
 export const TOWER_R = 16;
 
 // Largeur du tracé du chemin (rendu ET validation d'emprise doivent
