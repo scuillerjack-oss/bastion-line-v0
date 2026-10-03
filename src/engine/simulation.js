@@ -6,6 +6,7 @@
 import { ENEMY_KINDS } from "./enemies.js";
 import { TOWER_FAMILIES, getMaxTier, getTowerSellRefund } from "./towers.js";
 import { entryPointFor, positionAtProgress, freshId } from "./state.js";
+import { TOWER_AIM_TURN_RATE } from "./constants.js";
 
 const PROJECTILE_SPEED = { rapide: 520, canon: 260, longue_portee: 900 };
 const HIT_RADIUS = 12;
@@ -148,14 +149,42 @@ function fireProjectile(state, tower, tierStats, target) {
   state.events.push({ type: "tower_fired", family: tower.family, towerId: tower.id });
 }
 
+// Pas angulaire le plus court de `from` vers `to` (normalisé dans ]-π, π]),
+// jamais la différence brute qui pourrait franchir la discontinuité à ±π.
+function shortestAngleDelta(from, to) {
+  let delta = (to - from) % (Math.PI * 2);
+  if (delta > Math.PI) delta -= Math.PI * 2;
+  if (delta < -Math.PI) delta += Math.PI * 2;
+  return delta;
+}
+
+function stepTowerAim(tower, dtMs) {
+  if (tower.aimAngle === undefined) tower.aimAngle = -Math.PI / 2; // neutre : vers le haut
+  if (tower.aimTargetAngle === undefined) return;
+  const delta = shortestAngleDelta(tower.aimAngle, tower.aimTargetAngle);
+  const maxStep = TOWER_AIM_TURN_RATE * (dtMs / 1000);
+  tower.aimAngle += Math.max(-maxStep, Math.min(maxStep, delta));
+}
+
 function stepTowers(state, dtMs) {
   for (const tower of state.towers) {
     tower.cooldownRemainingMs = Math.max(0, (tower.cooldownRemainingMs || 0) - dtMs);
     const tierStats = TOWER_FAMILIES[tower.family].tiers[tower.tier];
+    // Cible RÉELLEMENT visée pour le rendu (cahier V7-polish, section 4) :
+    // recalculée à CHAQUE pas, jamais seulement au moment du tir, pour
+    // qu'une tour en rechargement suive déjà visuellement la cible qu'elle
+    // tirera au prochain tir, plutôt que de rester figée sur son dernier
+    // angle de tir. N'influence JAMAIS la trajectoire réelle d'un
+    // projectile (fireProjectile vise toujours la position exacte de la
+    // cible choisie au moment du tir) -- purement cosmétique.
+    const liveTarget = findTarget(state, tower, tierStats);
+    if (liveTarget) {
+      tower.aimTargetAngle = Math.atan2(liveTarget.y - tower.y, liveTarget.x - tower.x);
+    }
+    stepTowerAim(tower, dtMs);
     if (tower.cooldownRemainingMs > 0) continue;
-    const target = findTarget(state, tower, tierStats);
-    if (!target) continue;
-    fireProjectile(state, tower, tierStats, target);
+    if (!liveTarget) continue;
+    fireProjectile(state, tower, tierStats, liveTarget);
     tower.cooldownRemainingMs = tierStats.fireIntervalMs;
   }
 }

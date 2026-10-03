@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createLevelState } from "../src/engine/state.js";
 import { tick, buildTower, upgradeTower, requestEarlyWave, sellTower } from "../src/engine/simulation.js";
 import { TOWER_FAMILIES, getTowerInvestedValue, getTowerSellRefund } from "../src/engine/towers.js";
-import { TOWER_SELL_REFUND_RATE } from "../src/engine/constants.js";
+import { TOWER_SELL_REFUND_RATE, TOWER_AIM_TURN_RATE } from "../src/engine/constants.js";
 import { ENEMY_KINDS } from "../src/engine/enemies.js";
 
 const DT = 1000 / 60;
@@ -480,4 +480,80 @@ test("une simulation sans aucune tour ne bloque jamais : le niveau finit par se 
   }
   assert.ok(state.status === "won" || state.status === "lost", "le niveau doit toujours atteindre un statut terminal");
   assert.ok(ticks < maxTicks, "jamais de blocage permanent");
+});
+
+// --- Orientation des défenses (cahier V7-polish, section 4) ---------------
+// Non-régression purement structurelle : la rotation VISUELLE (tower.
+// aimAngle) ne doit jamais être instantanée (cahier : "aucune rotation
+// brutale/aberrante lors d'un changement de cible"), et ne doit JAMAIS
+// influencer la trajectoire RÉELLE d'un projectile, qui reste calculée
+// depuis la position exacte de la cible (voir engine/simulation.js,
+// fireProjectile). Le rendu lui-même (symétrie des sprites, inclinaison
+// plafonnée des silhouettes de repli) n'est pas testable ici -- Canvas --
+// et a été vérifié visuellement dans un vrai navigateur (rapport V7-polish).
+
+test("tower.aimAngle n'atteint jamais sa cible instantanément : le premier pas reste borné par TOWER_AIM_TURN_RATE", () => {
+  const state = createLevelState(makeTestLevel());
+  enterWave(state);
+  buildTower(state, "a", "rapide"); // slot "a" = (100, 350)
+  // Cible loin sur la droite du chemin de test (0,350)->(400,350) : angle
+  // réel vers la cible = 0 (vers la droite), très loin du neutre -π/2 (vers
+  // le haut) qu'une tour fraîchement construite adopte par défaut.
+  pushEnemy(state, "standard", 170, 0, 0); // traveled=170 -> x proche de 170, à droite du slot "a" (x=100), dans la portée (95) de la tour "rapide"
+  tick(state, DT);
+  const tower = state.towers[0];
+  assert.ok(tower, "la tour doit exister après construction");
+  const maxStep = TOWER_AIM_TURN_RATE * (DT / 1000) + 1e-9;
+  // Angle de départ (neutre) = -π/2 ; même si la cible réelle est à l'angle
+  // 0, un seul pas de simulation ne peut rapprocher aimAngle que d'au plus
+  // maxStep -- jamais un alignement direct sur la cible.
+  const traveledFromNeutral = Math.abs(tower.aimAngle - -Math.PI / 2);
+  assert.ok(traveledFromNeutral <= maxStep, `aimAngle a avancé de ${traveledFromNeutral.toFixed(4)} rad en un seul pas (max autorisé ${maxStep.toFixed(4)})`);
+  assert.ok(traveledFromNeutral > 0, "aimAngle doit tout de même commencer à se rapprocher de la cible dès ce pas");
+});
+
+test("tower.aimAngle converge vers l'angle réel de la cible après plusieurs pas, sans jamais dépasser le pas maximal autorisé à un seul tick", () => {
+  const state = createLevelState(makeTestLevel());
+  enterWave(state);
+  buildTower(state, "a", "rapide");
+  pushEnemy(state, "standard", 170, 0, 0);
+  const maxStep = TOWER_AIM_TURN_RATE * (DT / 1000) + 1e-6;
+  let prevAngle = state.towers[0].aimAngle ?? -Math.PI / 2;
+  for (let i = 0; i < 60; i++) {
+    tick(state, DT);
+    const tower = state.towers[0];
+    const delta = Math.abs(tower.aimAngle - prevAngle);
+    // Le pas réel peut être mesuré sur un cercle (±π) : on prend le plus court.
+    const wrapped = Math.min(delta, Math.PI * 2 - delta);
+    assert.ok(wrapped <= maxStep, `pas d'angle ${wrapped.toFixed(4)} au tick ${i} dépasse le maximum autorisé ${maxStep.toFixed(4)}`);
+    prevAngle = tower.aimAngle;
+  }
+  // La cible est quasiment plein est (angle réel ~0) : après 60 ticks (1s,
+  // largement plus que le temps nécessaire pour parcourir moins d'un
+  // demi-tour à TOWER_AIM_TURN_RATE), l'angle doit avoir convergé.
+  assert.ok(Math.abs(state.towers[0].aimAngle) < 0.1, `aimAngle final ${state.towers[0].aimAngle.toFixed(3)} n'a pas convergé vers 0`);
+});
+
+test("la rotation visuelle d'une tour n'influence jamais la direction réelle de ses projectiles", () => {
+  const state = createLevelState(makeTestLevel());
+  enterWave(state);
+  buildTower(state, "a", "rapide");
+  pushEnemy(state, "standard", 170, 0, 0);
+  // Tire dès que possible : capture le tout premier projectile, au moment
+  // précis où tower.aimAngle est encore très loin (quasi au neutre -π/2)
+  // de l'angle réel vers la cible -- le cas le plus exigeant pour prouver
+  // la décorrélation entre le cosmétique (aimAngle) et le réel (vx,vy).
+  let proj = null;
+  let tower = null;
+  for (let i = 0; i < 300 && !proj; i++) {
+    tick(state, DT);
+    tower = state.towers[0];
+    proj = state.projectiles[0];
+  }
+  assert.ok(proj, "un projectile doit avoir été tiré");
+  const enemy = state.enemies[0];
+  const expectedAngle = Math.atan2(enemy.y - tower.y, enemy.x - tower.x);
+  const actualAngle = Math.atan2(proj.vy, proj.vx);
+  const diff = Math.min(Math.abs(expectedAngle - actualAngle), Math.PI * 2 - Math.abs(expectedAngle - actualAngle));
+  assert.ok(diff < 1e-6, `direction réelle du projectile (${actualAngle.toFixed(4)}) diverge de la direction exacte vers la cible (${expectedAngle.toFixed(4)})`);
 });

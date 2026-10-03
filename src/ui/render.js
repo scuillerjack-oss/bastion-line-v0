@@ -408,7 +408,34 @@ function drawTowerShape(ctx, tower, familyDef) {
   // Canvas -- jamais d'écran cassé ni de tour invisible en attendant.
   const spriteEntry = towerSprites[tower.family];
   if (spriteEntry && spriteEntry.sprite.status === "loaded") {
+    // Orientation (cahier V7-polish, section 4) : les PNG Leonardo (archer,
+    // canon) sont des rendus en perspective/isométrique d'une tour EN PIERRE
+    // posée au sol -- les faire pivoter d'un angle quelconque ferait
+    // visuellement "basculer" la base (coin qui semble se détacher du sol),
+    // exactement la "rotation aberrante" que le cahier interdit. Seule une
+    // SYMÉTRIE HORIZONTALE préserve la cohérence de la perspective (la base
+    // reste au sol, verticale inchangée) : l'arme (arbalète/canon), dessinée
+    // pointant naturellement vers le HAUT-GAUCHE sur l'asset source, est donc
+    // retournée côté droit dès que la cible réelle se trouve du côté droit
+    // de la tour (voir tower.aimAngle, mis à jour en continu par
+    // engine/simulation.js). cos(aimAngle) > 0 <=> la cible est à droite.
+    // Seuil non nul (jamais une comparaison stricte à 0) : Math.cos(-Math.PI/2)
+    // ne vaut PAS exactement 0 en arithmétique flottante (~6.12e-17, un bruit
+    // positif) -- une comparaison "> 0" faisait donc basculer À TORT une tour
+    // tout juste construite (angle neutre par défaut, cible jamais encore
+    // acquise) en orientation retournée dès la toute première image rendue,
+    // avant même tout ciblage réel. Bug trouvé par vérification visuelle
+    // directe dans un vrai navigateur (capture d'écran comparée pixel à
+    // pixel, jamais seulement en lisant le code).
+    const flip = Math.cos(tower.aimAngle ?? -Math.PI / 2) > 1e-6;
+    ctx.save();
+    if (flip) {
+      ctx.translate(x, y);
+      ctx.scale(-1, 1);
+      ctx.translate(-x, -y);
+    }
     ctx.drawImage(spriteEntry.sprite.image, x - spriteEntry.w / 2, y + spriteEntry.bottomOffset - spriteEntry.h, spriteEntry.w, spriteEntry.h);
+    ctx.restore();
   } else {
     drawTowerFallbackShape(ctx, tower, familyDef);
   }
@@ -483,6 +510,28 @@ function getTowerVisualTop(tower) {
   return (FALLBACK_VISUAL_TOP[tower.family] ?? 24) * scale;
 }
 
+// Amplitude maximale d'inclinaison des silhouettes de repli Canvas vers leur
+// cible (cahier V7-polish, section 4). Contrairement aux sprites Leonardo
+// (symétrie horizontale uniquement, voir drawTowerShape), ces silhouettes
+// sont de simples icônes vectorielles SANS perspective figée -- une rotation
+// leur est donc possible -- mais `longue_portee` (flèche/pointe) n'est pas
+// symétrique verticalement autour de (x,y) : une rotation complète la
+// ferait pointer sous son propre socle pour une cible "derrière", un résultat
+// structurellement absurde, exactement la "rotation aberrante" interdite par
+// le cahier. Une amplitude plafonnée (jamais un alignement total sur la
+// cible) donne un signal directionnel clairement visible tout en garantissant
+// que la silhouette reste toujours structurellement plausible, quelle que
+// soit la position réelle de la cible.
+const FALLBACK_MAX_TILT = (50 * Math.PI) / 180;
+const FALLBACK_NEUTRAL_ANGLE = -Math.PI / 2; // "vers le haut", orientation de dessin d'origine
+
+function clampAngleDelta(delta, max) {
+  let d = delta % (Math.PI * 2);
+  if (d > Math.PI) d -= Math.PI * 2;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return Math.max(-max, Math.min(max, d));
+}
+
 function drawTowerFallbackShape(ctx, tower, familyDef) {
   const { x, y } = tower;
   // Un seul point d'agrandissement (cahier V6, section 4 : "les autres
@@ -491,8 +540,10 @@ function drawTowerFallbackShape(ctx, tower, familyDef) {
   // silhouettes restent proportionnellement identiques à la V5, simplement
   // plus grandes, sans risque d'erreur d'arithmétique par forme.
   const fallbackScale = FALLBACK_SCALE_BY_FAMILY[tower.family] ?? 1.28;
+  const tilt = clampAngleDelta((tower.aimAngle ?? FALLBACK_NEUTRAL_ANGLE) - FALLBACK_NEUTRAL_ANGLE, FALLBACK_MAX_TILT);
   ctx.save();
   ctx.translate(x, y);
+  ctx.rotate(tilt);
   ctx.scale(fallbackScale, fallbackScale);
   ctx.translate(-x, -y);
   const c = familyDef.color;

@@ -69,3 +69,19 @@ export const MAX_SUBSTEPS_PER_TICK = 8;
 // coût de base, pour qu'une tour améliorée se revende toujours plus cher
 // qu'une tour brute, sans jamais rembourser 100% de l'investissement.
 export const TOWER_SELL_REFUND_RATE = 0.6;
+
+// Orientation des défenses (cahier V7-polish, section 4 : "certaines tours
+// semblaient pointer dans la direction opposée à leur attaque réelle
+// pendant la bêta"). Vitesse de rotation VISUELLE maximale d'une tour vers
+// sa cible actuelle -- jamais un alignement instantané (cahier : "aucune
+// rotation brutale/aberrante lors d'un changement de cible"). Un demi-tour
+// complet (π radians) prend ici un peu plus d'un demi-seconde : assez
+// réactif pour suivre une cible qui se déplace normalement le long de la
+// route, assez lent pour qu'un changement de cible se voie comme un
+// pivotement fluide, jamais un saut. N'affecte JAMAIS la trajectoire réelle
+// d'un projectile (engine/simulation.js, fireProjectile calcule toujours sa
+// direction depuis la position RÉELLE de la cible) : c'est une donnée
+// purement cosmétique, lue uniquement par le rendu (engine/interpolate.js
+// n'interpole pas cet angle -- le pas de simulation fixe, 60 Hz, suffit
+// déjà à produire un mouvement visuellement continu).
+export const TOWER_AIM_TURN_RATE = Math.PI * 1.8; // radians / seconde
