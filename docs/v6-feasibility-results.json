@@ -36,8 +36,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 15,
-        "ticks": 10565,
+        "coinsLeft": 35,
+        "ticks": 9353,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -66,8 +66,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 15,
-        "ticks": 9770,
+        "coinsLeft": 35,
+        "ticks": 9020,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -96,8 +96,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 18,
-        "ticks": 12643,
+        "coinsLeft": 48,
+        "ticks": 11415,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -126,8 +126,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 39,
-        "ticks": 12889,
+        "coinsLeft": 84,
+        "ticks": 9223,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -156,8 +156,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 44,
-        "ticks": 11948,
+        "coinsLeft": 89,
+        "ticks": 9046,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -184,10 +184,10 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.875,
-        "minHpRatio": 0.875,
-        "coinsLeft": 674,
-        "ticks": 14205,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 293,
+        "ticks": 8858,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -216,8 +216,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 46,
-        "ticks": 12187,
+        "coinsLeft": 121,
+        "ticks": 8929,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -246,8 +246,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 52,
-        "ticks": 12209,
+        "coinsLeft": 127,
+        "ticks": 8976,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -276,8 +276,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 93,
-        "ticks": 12139,
+        "coinsLeft": 68,
+        "ticks": 9117,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -306,8 +306,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 92,
-        "ticks": 14372,
+        "coinsLeft": 102,
+        "ticks": 11165,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -336,8 +336,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 64,
-        "ticks": 14438,
+        "coinsLeft": 49,
+        "ticks": 10966,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -366,8 +366,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 101,
-        "ticks": 14389,
+        "coinsLeft": 116,
+        "ticks": 11330,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -394,10 +394,10 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.6538461538461539,
-        "minHpRatio": 0.6538461538461539,
-        "coinsLeft": 1585,
-        "ticks": 18313,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1132,
+        "ticks": 10753,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -426,8 +426,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 240,
-        "ticks": 14949,
+        "coinsLeft": 75,
+        "ticks": 11253,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -456,8 +456,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 276,
-        "ticks": 15009,
+        "coinsLeft": 46,
+        "ticks": 11116,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -486,8 +486,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 319,
-        "ticks": 15111,
+        "coinsLeft": 144,
+        "ticks": 11261,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -516,8 +516,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 361,
-        "ticks": 15289,
+        "coinsLeft": 31,
+        "ticks": 11415,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -546,8 +546,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 403,
-        "ticks": 15046,
+        "coinsLeft": 173,
+        "ticks": 11276,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -576,8 +576,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 489,
-        "ticks": 15228,
+        "coinsLeft": 29,
+        "ticks": 11326,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -604,10 +604,10 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.35714285714285715,
-        "minHpRatio": 0.35714285714285715,
-        "coinsLeft": 2305,
-        "ticks": 19269,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 1894,
+        "ticks": 10859,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -636,8 +636,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 573,
-        "ticks": 15361,
+        "coinsLeft": 243,
+        "ticks": 11230,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -666,8 +666,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 621,
-        "ticks": 15494,
+        "coinsLeft": 391,
+        "ticks": 11083,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -696,8 +696,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 657,
-        "ticks": 15512,
+        "coinsLeft": 327,
+        "ticks": 11152,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -726,8 +726,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 710,
-        "ticks": 15650,
+        "coinsLeft": 315,
+        "ticks": 11444,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -756,8 +756,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1118,
-        "ticks": 18392,
+        "coinsLeft": 888,
+        "ticks": 13384,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -786,8 +786,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1140,
-        "ticks": 18507,
+        "coinsLeft": 810,
+        "ticks": 13272,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -814,10 +814,10 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.6,
-        "minHpRatio": 0.6,
-        "coinsLeft": 3642,
-        "ticks": 23292,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 3203,
+        "ticks": 13403,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -846,8 +846,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1260,
-        "ticks": 18609,
+        "coinsLeft": 1030,
+        "ticks": 13285,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -876,8 +876,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1284,
-        "ticks": 18607,
+        "coinsLeft": 1119,
+        "ticks": 13917,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -906,8 +906,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1386,
-        "ticks": 18989,
+        "coinsLeft": 1221,
+        "ticks": 13348,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -936,8 +936,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1444,
-        "ticks": 19169,
+        "coinsLeft": 1114,
+        "ticks": 13537,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -966,8 +966,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1500,
-        "ticks": 18961,
+        "coinsLeft": 1105,
+        "ticks": 13366,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -996,8 +996,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1530,
-        "ticks": 19115,
+        "coinsLeft": 1300,
+        "ticks": 13265,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1024,10 +1024,10 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.53125,
-        "minHpRatio": 0.53125,
-        "coinsLeft": 4393,
-        "ticks": 24440,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 3968,
+        "ticks": 13271,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1056,8 +1056,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1635,
-        "ticks": 19494,
+        "coinsLeft": 1305,
+        "ticks": 13335,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1086,8 +1086,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1740,
-        "ticks": 19750,
+        "coinsLeft": 1280,
+        "ticks": 13445,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1116,8 +1116,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1773,
-        "ticks": 19606,
+        "coinsLeft": 1278,
+        "ticks": 13427,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1146,8 +1146,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1845,
-        "ticks": 19849,
+        "coinsLeft": 1450,
+        "ticks": 13342,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1176,8 +1176,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1870,
-        "ticks": 19931,
+        "coinsLeft": 1375,
+        "ticks": 12983,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1206,8 +1206,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2380,
-        "ticks": 23203,
+        "coinsLeft": 1885,
+        "ticks": 15209,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1234,10 +1234,10 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.5588235294117647,
-        "minHpRatio": 0.5588235294117647,
-        "coinsLeft": 6103,
-        "ticks": 29883,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 5678,
+        "ticks": 15542,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1266,8 +1266,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2517,
-        "ticks": 23351,
+        "coinsLeft": 2122,
+        "ticks": 15356,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1296,8 +1296,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2591,
-        "ticks": 23781,
+        "coinsLeft": 2096,
+        "ticks": 15141,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1324,10 +1324,10 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.9142857142857143,
-        "minHpRatio": 0.9142857142857143,
-        "coinsLeft": 2638,
-        "ticks": 24173,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2157,
+        "ticks": 15422,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1354,10 +1354,10 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.9142857142857143,
-        "minHpRatio": 0.9142857142857143,
-        "coinsLeft": 2676,
-        "ticks": 24259,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2230,
+        "ticks": 15118,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1386,8 +1386,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2751,
-        "ticks": 24278,
+        "coinsLeft": 2256,
+        "ticks": 15622,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1416,8 +1416,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2852,
-        "ticks": 24351,
+        "coinsLeft": 2357,
+        "ticks": 15557,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1443,11 +1443,11 @@
     "name": "Niveau 49 — Difficulté significative",
     "strategies": {
       "équilibrée": {
-        "status": "lost",
-        "finalHpRatio": 0,
-        "minHpRatio": 0,
-        "coinsLeft": 65,
-        "ticks": 4500,
+        "status": "won",
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 6561,
+        "ticks": 15327,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1476,8 +1476,8 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2971,
-        "ticks": 24850,
+        "coinsLeft": 2476,
+        "ticks": 15228,
         "hitCap": false
       },
       "priorité dégâts": {

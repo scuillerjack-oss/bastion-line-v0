@@ -28,13 +28,30 @@ function pickAffordable(state) {
   return state.unlockedTowers.map((f) => TOWER_FAMILIES[f]).filter((f) => f.buildCost <= state.coins);
 }
 
-// Stratégie ÉQUILIBRÉE : construit la famille abordable la MOINS CHÈRE sur
-// un emplacement vide (maximise la couverture du plateau) ; sinon améliore
-// la tour dont l'amélioration est la moins chère.
+// Stratégie ÉQUILIBRÉE : construit en priorité la famille abordable la
+// MOINS REPRÉSENTÉE parmi les tours déjà construites (diversité réelle de
+// composition), cheapest en départage ; sinon améliore la tour dont
+// l'amélioration est la moins chère.
+//
+// Correctif V8 (cahier V8, section 11 : "ne pas considérer un niveau
+// faisable uniquement parce qu'une stratégie automatisée parfaite peut le
+// terminer -- l'objectif est une difficulté cohérente pour un joueur
+// humain", et l'en-tête de ce fichier : "plusieurs profils distincts,
+// jamais un seul joueur parfait"). Audit : l'ancienne règle ("la moins
+// chère") choisissait TOUJOURS l'archer (40, le moins cher des 3), exactement
+// comme la stratégie PRIORITÉ CADENCE/PORTÉE (qui construit aussi l'archer
+// en premier) -- les deux stratégies construisaient donc rigoureusement la
+// MÊME composition (que des archers) sur les 50 niveaux, produisant des
+// résultats identiques à chaque fois et ne testant en réalité que 2 profils
+// distincts (dégâts vs "tout-archer"), jamais une vraie composition mixte.
+// La nouvelle règle diversifie réellement la composition construite.
 function stepBalanced(state) {
   const emptySlots = state.buildSlots.filter((s) => !s.towerId);
-  const affordable = pickAffordable(state).sort((a, b) => a.buildCost - b.buildCost);
+  const affordable = pickAffordable(state);
   if (emptySlots.length > 0 && affordable.length > 0) {
+    const builtCounts = {};
+    for (const t of state.towers) builtCounts[t.family] = (builtCounts[t.family] || 0) + 1;
+    affordable.sort((a, b) => (builtCounts[a.id] || 0) - (builtCounts[b.id] || 0) || a.buildCost - b.buildCost);
     buildTower(state, emptySlots[0].id, affordable[0].id);
     return;
   }
