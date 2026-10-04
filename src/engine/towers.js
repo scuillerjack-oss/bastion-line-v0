@@ -52,14 +52,31 @@ export const TOWER_FAMILIES = {
     // Renommage V7 (cahier V7, section 5) : le choix graphique "Baliste"
     // envisagé était trop proche visuellement de la tour d'Archer -- cette
     // défense très longue portée est désormais officiellement nommée
-    // "Catapulte". Seul ce nom AFFICHÉ change ; l'identifiant interne
+    // "Catapulte". Seul ce nom AFFICHÉ a changé en V7 ; l'identifiant interne
     // "longue_portee" reste inchangé (sauvegardes, tests, simulation,
     // TOWER_SPRITE_CONFIG/PROJECTILE_SPEED/bonusVsArmored -- aucune
     // référence par nom ailleurs dans le code) pour ne rien reconstruire.
-    // La mécanique (portée/dégâts/cadence/bonus anti-blindé) n'est PAS
-    // modifiée par ce seul changement de nom.
+    //
+    // Correction V8 (cahier V8, section 3 -- "audite d'abord les statistiques
+    // réellement présentes avant tout équilibrage") : l'audit de reprise a
+    // trouvé cette tour avec AUCUNE zone d'effet (aoeRadius: 0 à tous les
+    // paliers), la cadence la PLUS RAPIDE des 3 familles (900->780ms, plus
+    // rapide que le canon) et le projectile le PLUS RAPIDE
+    // (PROJECTILE_SPEED.longue_portee=900, voir simulation.js) -- l'exact
+    // inverse de l'identité "artillerie lourde : très longue portée, gros
+    // impact de zone, projectile lent, mauvaise réponse aux cibles rapides"
+    // voulue. Correctif : ajout d'une vraie zone d'effet (plus large que
+    // celle du canon, cohérent avec "gros impact"), cadence désormais la PLUS
+    // LENTE des 3 (toujours strictement au-dessus de celle du canon à palier
+    // équivalent) et projectile ralenti à la vitesse la plus faible des 3
+    // (voir PROJECTILE_SPEED dans simulation.js) -- combiné à la poursuite
+    // (homing) déjà existante, un projectile plus lent que les ennemis
+    // rapides/éclaireurs ne les rattrape jamais avant qu'ils sortent de
+    // portée, ce qui matérialise naturellement la "mauvaise réponse aux
+    // cibles rapides" sans règle spéciale. Portée et bonus anti-"blindé"
+    // (renommage d'affichage prévu en Lourd, voir enemies.js) inchangés.
     name: "Catapulte",
-    shortDesc: "Très grande portée, dégâts ciblés élevés. Utile contre les ennemis résistants.",
+    shortDesc: "Portée extrême, impact de zone lourd. Très lente à recharger et à tirer -- redoutable contre les groupes et les cibles résistantes, inefficace contre les cibles rapides.",
     color: "#264653",
     buildCost: 70,
     // bonusVsArmored : multiplicateur de dégâts appliqué UNIQUEMENT contre
@@ -67,9 +84,9 @@ export const TOWER_FAMILIES = {
     // palier 1, pour que l'amélioration soit ce qui débloque réellement le
     // rôle "anti-blindé" plutôt qu'un simple bonus de dégâts plat.
     tiers: [
-      { range: 180, damage: 22, fireIntervalMs: 900, aoeRadius: 0, slowFactor: 0, slowDurationMs: 0, bonusVsArmored: 1, upgradeCost: 0 },
-      { range: 190, damage: 26, fireIntervalMs: 850, aoeRadius: 0, slowFactor: 0, slowDurationMs: 0, bonusVsArmored: 1.6, upgradeCost: 75 },
-      { range: 200, damage: 32, fireIntervalMs: 780, aoeRadius: 0, slowFactor: 0, slowDurationMs: 0, bonusVsArmored: 2.1, upgradeCost: 110 },
+      { range: 180, damage: 34, fireIntervalMs: 1900, aoeRadius: 58, slowFactor: 0, slowDurationMs: 0, bonusVsArmored: 1, upgradeCost: 0 },
+      { range: 190, damage: 42, fireIntervalMs: 1700, aoeRadius: 72, slowFactor: 0, slowDurationMs: 0, bonusVsArmored: 1.6, upgradeCost: 75 },
+      { range: 200, damage: 52, fireIntervalMs: 1500, aoeRadius: 88, slowFactor: 0, slowDurationMs: 0, bonusVsArmored: 2.1, upgradeCost: 110 },
     ],
   },
 };

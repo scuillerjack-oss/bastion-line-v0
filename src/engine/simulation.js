@@ -8,7 +8,15 @@ import { TOWER_FAMILIES, getMaxTier, getTowerSellRefund } from "./towers.js";
 import { entryPointFor, positionAtProgress, freshId } from "./state.js";
 import { TOWER_AIM_TURN_RATE } from "./constants.js";
 
-const PROJECTILE_SPEED = { rapide: 520, canon: 260, longue_portee: 900 };
+// Correction V8 (cahier V8, section 3) : la catapulte ("longue_portee") doit
+// être la plus LENTE des 3 projectiles -- avant ce correctif elle avait
+// paradoxalement la vitesse la plus élevée (900). Combiné à la poursuite
+// (homing, voir stepProjectiles) qui réoriente en continu vers la position
+// courante de la cible, un projectile plus lent que la vitesse des ennemis
+// rapides/éclaireurs ne les rattrape jamais tant qu'ils s'éloignent -- c'est
+// ce qui matérialise "mauvaise réponse aux cibles rapides" sans règle
+// spéciale de ciblage.
+const PROJECTILE_SPEED = { rapide: 520, canon: 260, longue_portee: 130 };
 const HIT_RADIUS = 12;
 
 function startWave(state) {
@@ -222,7 +230,7 @@ function resolveProjectileImpact(state, proj, impactX, impactY) {
         applySlow(state, enemy, proj.slowFactor, proj.slowDurationMs);
       }
     }
-    state.events.push({ type: "impact_aoe", x: impactX, y: impactY, radius: proj.aoeRadius });
+    state.events.push({ type: "impact_aoe", x: impactX, y: impactY, radius: proj.aoeRadius, family: proj.family });
     return;
   }
   const target = state.enemies.find((e) => e.id === proj.targetId);
@@ -238,7 +246,7 @@ function resolveProjectileImpact(state, proj, impactX, impactY) {
       }
     }
   }
-  state.events.push({ type: "impact_single", x: impactX, y: impactY });
+  state.events.push({ type: "impact_single", x: impactX, y: impactY, family: proj.family });
 }
 
 function stepProjectiles(state, dtMs) {

@@ -215,7 +215,12 @@ test("la tour longue portée au palier 2+ inflige un bonus de dégâts aux ennem
   enterWave(state);
   const armored = pushEnemy(state, "blinde", 100);
   const hpBefore = armored.hp;
-  tickN(state, 30); // laisse le projectile (très rapide) arriver
+  // Tour et cible placées à la même position par construction du niveau de
+  // test (traveled=100 -> (100,350), identique au slot "a") : la distance à
+  // parcourir est quasi nulle, donc même la vitesse de projectile volontairement
+  // ralentie de la catapulte en V8 (voir PROJECTILE_SPEED) n'empêche pas
+  // l'impact de survenir largement avant le 30e tick.
+  tickN(state, 30);
   const tierStats = TOWER_FAMILIES.longue_portee.tiers[tower.tier];
   const expectedDamage = tierStats.damage * tierStats.bonusVsArmored;
   assert.ok(hpBefore - armored.hp >= expectedDamage - 0.01, "le dégât réellement infligé doit inclure le bonus anti-blindé");

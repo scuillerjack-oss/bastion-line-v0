@@ -830,12 +830,27 @@ function drawProjectile(ctx, proj) {
   if (proj.family === "rapide") {
     drawArrowProjectile(ctx, proj);
   } else if (proj.family === "longue_portee") {
-    ctx.strokeStyle = familyDef.color;
-    ctx.lineWidth = 2.5;
+    // Boulet lourd et lisible (cahier V8, section 5 : "sentiment de masse").
+    // Traînée de longueur FIXE, jamais proportionnelle à proj.vx/vy brut --
+    // la vitesse réelle de ce projectile a été volontairement rendue très
+    // faible en V8 (voir PROJECTILE_SPEED dans simulation.js), une traînée
+    // proportionnelle serait donc devenue un trait quasi invisible.
+    const angle = Math.atan2(proj.vy, proj.vx);
+    ctx.save();
+    ctx.translate(proj.x, proj.y);
+    ctx.rotate(angle);
+    ctx.strokeStyle = "#1a2f38";
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(proj.x - proj.vx * 0.025, proj.y - proj.vy * 0.025);
-    ctx.lineTo(proj.x, proj.y);
+    ctx.moveTo(-15, 0);
+    ctx.lineTo(-6, 0);
     ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(0, 0, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
   } else {
     ctx.beginPath();
     ctx.arc(proj.x, proj.y, proj.family === "canon" ? 6 : 4, 0, Math.PI * 2);
