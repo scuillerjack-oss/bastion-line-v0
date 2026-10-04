@@ -68,17 +68,44 @@ function noiseBurst({ duration, gain = 0.2, highpass = 1800 }) {
   src.stop(c.currentTime + duration + 0.02);
 }
 
+// Légère variation de hauteur (cahier V8, section 5 : "polish audio
+// supplémentaire -- variation") -- UNIQUEMENT cosmétique (jamais dans la
+// simulation déterministe), pour que les sons les plus répétés (tir
+// archer, ennemi tué) ne sonnent pas comme un simple bip mécanique identique
+// à chaque occurrence. Amplitude volontairement petite (+/-4%) : assez pour
+// casser la monotonie, jamais assez pour sonner faux ou désaccordé.
+function jitterFreq(freq, amount = 0.04) {
+  return freq * (1 + (Math.random() * 2 - 1) * amount);
+}
+
+// Anti-cacophonie (cahier V8, section 5 : "prévoir des limites de mixage
+// audio pour éviter la cacophonie") -- un même effet redéclenché plus tôt
+// que son propre délai minimal est simplement ignoré, jamais mis en file ni
+// coupé en plein milieu. Ne s'applique qu'aux sons les plus répétitifs
+// (tir archer, impact archer, ennemi tué) : les tirs canon/catapulte sont
+// déjà naturellement espacés par leur cadence très lente (>=1200ms), sans
+// risque réel de superposition.
+const lastPlayedAtMs = {};
+function throttle(key, minGapMs, play) {
+  return (...args) => {
+    const now = (typeof performance !== "undefined" ? performance.now() : Date.now());
+    if (lastPlayedAtMs[key] !== undefined && now - lastPlayedAtMs[key] < minGapMs) return;
+    lastPlayedAtMs[key] = now;
+    play(...args);
+  };
+}
+
 export const sfx = {
   build: () => tone({ freq: 300, duration: 0.1, type: "triangle", gain: 0.18, glideTo: 480 }),
   upgrade: () => tone({ freq: 420, duration: 0.16, type: "triangle", gain: 0.2, glideTo: 720 }),
   sell: () => tone({ freq: 500, duration: 0.14, type: "triangle", gain: 0.18, glideTo: 260 }), // glissade descendante -- distincte de build/upgrade (montantes)
-  shootRapide: () => tone({ freq: 700, duration: 0.04, type: "square", gain: 0.08 }),
+  shootRapide: throttle("shootRapide", 40, () => tone({ freq: jitterFreq(700), duration: 0.04, type: "square", gain: 0.08 })),
   shootCanon: () => noiseBurst({ duration: 0.14, gain: 0.24, highpass: 200 }),
   shootLongue: () => tone({ freq: 1400, duration: 0.05, type: "sine", gain: 0.14 }),
   // Impacts distincts par famille (cahier V8, section 5 : "le joueur doit
   // pouvoir reconnaître une tour par son impact seul, même sans regarder").
   // Archer : impact léger et net, pas d'explosion -- une flèche qui touche.
-  impactRapide: () => tone({ freq: 900, duration: 0.05, type: "triangle", gain: 0.1, glideTo: 500 }),
+  impactRapide: throttle("impactRapide", 40, () => tone({ freq: jitterFreq(900), duration: 0.05, type: "triangle", gain: 0.1, glideTo: 500 })),
   // Canon : courte explosion franche, plus grave et plus forte que l'archer.
   impactCanon: () => noiseBurst({ duration: 0.18, gain: 0.26, highpass: 90 }),
   // Catapulte : impact lourd -- bruit de souffle plus long/grave que le
@@ -88,7 +115,7 @@ export const sfx = {
     noiseBurst({ duration: 0.3, gain: 0.22, highpass: 40 });
     tone({ freq: 140, duration: 0.3, type: "sawtooth", gain: 0.18, glideTo: 45 });
   },
-  enemyKilled: () => tone({ freq: 520, duration: 0.09, type: "sine", gain: 0.16, glideTo: 220 }),
+  enemyKilled: throttle("enemyKilled", 25, () => tone({ freq: jitterFreq(520), duration: 0.09, type: "sine", gain: 0.16, glideTo: 220 })),
   baseHit: () => tone({ freq: 180, duration: 0.28, type: "sawtooth", gain: 0.2, glideTo: 60 }),
   waveStart: () => tone({ freq: 330, duration: 0.22, type: "triangle", gain: 0.2, glideTo: 440 }),
   waveCleared: () => tone({ freq: 440, duration: 0.24, type: "triangle", gain: 0.2, glideTo: 660 }),
