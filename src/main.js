@@ -1,8 +1,8 @@
 import { createLevelState } from "./engine/state.js";
 import { BASE_R } from "./engine/constants.js";
 import { tick, buildTower, upgradeTower, sellTower, requestEarlyWave } from "./engine/simulation.js";
-import { LEVELS, getWaveComposition } from "./engine/levels.js";
-import { TOWER_FAMILIES, getMaxTier, getTowerSellRefund } from "./engine/towers.js";
+import { LEVELS, getWaveComposition, getFirstUnlockLevelNumber } from "./engine/levels.js";
+import { TOWER_FAMILIES, TOWER_ORDER, getMaxTier, getTowerSellRefund } from "./engine/towers.js";
 import { ENEMY_KINDS } from "./engine/enemies.js";
 import { loadSave, writeSave, markLevelCompleted, getUnlockedUpToIndex, isLevelCompleted } from "./engine/save.js";
 import { createTapController, hitTestTower, hitTestEmptySlot } from "./ui/input.js";
@@ -424,13 +424,32 @@ function familyDescRow(familyId, cost, disabled, onClick) {
   </button>`;
 }
 
+// Clarté de progression (cahier V8, section 9) : avant ce correctif, une
+// famille non encore débloquée n'apparaissait PAS DU TOUT dans le
+// sélecteur -- le joueur n'avait aucune idée qu'une 2e/3e défense existait
+// ni de ce qui la débloquerait. Affichée ici verrouillée, avec le niveau
+// réel de déblocage (dérivé de LEVELS, jamais une valeur à maintenir à la
+// main) -- distincte visuellement d'une tour simplement trop chère (cadenas
+// + "Niveau N" au lieu d'un coût en pièces) pour ne jamais laisser croire au
+// joueur qu'il manque seulement d'argent.
+function lockedFamilyRow(familyId) {
+  const f = TOWER_FAMILIES[familyId];
+  const unlockLevel = getFirstUnlockLevelNumber(familyId);
+  return `<button class="tower-option" data-family="${familyId}" disabled>
+    <span><span class="name">&#128274; ${f.name}</span><br/><span class="desc">${f.shortDesc}</span></span>
+    <span class="cost" style="color:var(--text-dim);">Niveau ${unlockLevel}</span>
+  </button>`;
+}
+
 function openBuildPanel(slot, pointerId) {
   if (!state || appPhase !== "playing") return;
   tutorial.show("first_build_slot");
   armPanelGate(pointerId);
-  const rows = state.unlockedTowers
-    .map((familyId) => familyDescRow(familyId, TOWER_FAMILIES[familyId].buildCost, state.coins < TOWER_FAMILIES[familyId].buildCost, null))
-    .join("");
+  const rows = TOWER_ORDER.map((familyId) =>
+    state.unlockedTowers.includes(familyId)
+      ? familyDescRow(familyId, TOWER_FAMILIES[familyId].buildCost, state.coins < TOWER_FAMILIES[familyId].buildCost, null)
+      : lockedFamilyRow(familyId)
+  ).join("");
   renderPanel(`
     <div class="build-panel">
       <h2>Construire</h2>

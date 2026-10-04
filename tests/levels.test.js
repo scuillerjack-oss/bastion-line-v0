@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { LEVELS, validateAllLevels, getWaveComposition } from "../src/engine/levels.js";
+import { LEVELS, validateAllLevels, getWaveComposition, getFirstUnlockLevelNumber } from "../src/engine/levels.js";
 import { createLevelState } from "../src/engine/state.js";
 import { tick, buildTower, upgradeTower, requestEarlyWave } from "../src/engine/simulation.js";
 import { TOWER_ORDER } from "../src/engine/towers.js";
@@ -51,6 +51,21 @@ test("chaque vague de chaque niveau réel a une composition non vide (l'aperçu 
       assert.ok(composition.length > 0, `niveau ${level.id}, vague ${w + 1} : composition vide`);
       const totalFromComposition = composition.reduce((sum, c) => sum + c.count, 0);
       assert.equal(totalFromComposition, level.waves[w].spawns.length, `niveau ${level.id}, vague ${w + 1} : effectif total incohérent`);
+    }
+  }
+});
+
+// --- Clarté de progression (cahier V8, section 9) --------------------------
+
+test("getFirstUnlockLevelNumber retrouve le niveau réel de déblocage de chaque famille de tour", () => {
+  for (const familyId of TOWER_ORDER) {
+    const unlockLevel = getFirstUnlockLevelNumber(familyId);
+    assert.ok(Number.isInteger(unlockLevel), `aucun niveau ne débloque ${familyId}`);
+    const level = LEVELS.find((l) => l.id === unlockLevel);
+    assert.ok(level.unlockedTowers.includes(familyId), `le niveau ${unlockLevel} rapporté ne débloque pas réellement ${familyId}`);
+    const earlierLevel = LEVELS.find((l) => l.id === unlockLevel - 1);
+    if (earlierLevel) {
+      assert.ok(!earlierLevel.unlockedTowers.includes(familyId), `${familyId} était déjà débloqué avant le niveau ${unlockLevel} rapporté`);
     }
   }
 });

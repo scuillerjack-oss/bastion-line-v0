@@ -533,6 +533,17 @@ for (let n = 6; n <= 50; n++) GENERATED_LEVELS.push(generateLevel(n));
 
 export const LEVELS = [LEVEL_1, LEVEL_2, LEVEL_3, LEVEL_4, LEVEL_5, ...GENERATED_LEVELS];
 
+// Clarté de progression (cahier V8, section 9 : "progression, déblocages")
+// -- à quel niveau une famille de tour encore verrouillée deviendra
+// disponible. Dérivé de la seule source de vérité réelle (LEVELS[*]
+// .unlockedTowers), jamais une valeur dupliquée/à maintenir à la main :
+// un niveau redessiné qui changerait l'ordre de déblocage reste
+// automatiquement juste.
+export function getFirstUnlockLevelNumber(familyId, levels = LEVELS) {
+  const level = levels.find((l) => l.unlockedTowers.includes(familyId));
+  return level ? level.id : null;
+}
+
 export function validateLevel(level) {
   const errors = [];
   if (!level.paths || level.paths.length === 0) errors.push("aucun chemin défini");
