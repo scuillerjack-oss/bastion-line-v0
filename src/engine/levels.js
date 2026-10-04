@@ -562,6 +562,27 @@ export function validateLevel(level) {
   return errors;
 }
 
+// Aperçu de la prochaine vague (cahier V8, section 8 : "afficher clairement
+// la composition de la prochaine vague pour que le joueur puisse se
+// préparer"). Comptage par archétype, dans l'ordre de PREMIÈRE apparition
+// dans wave.spawns -- jamais trié par force brute, pour rester lisible et
+// stable visuellement d'une vague à l'autre plutôt que de réordonner les
+// puces à chaque fois.
+export function getWaveComposition(level, waveIndex) {
+  const wave = level.waves[waveIndex];
+  if (!wave) return [];
+  const order = [];
+  const counts = new Map();
+  for (const spawn of wave.spawns) {
+    if (!counts.has(spawn.kind)) {
+      counts.set(spawn.kind, 0);
+      order.push(spawn.kind);
+    }
+    counts.set(spawn.kind, counts.get(spawn.kind) + 1);
+  }
+  return order.map((kind) => ({ kind, count: counts.get(kind) }));
+}
+
 export function validateAllLevels(levels = LEVELS) {
   const report = {};
   for (const level of levels) {

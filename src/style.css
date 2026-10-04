@@ -126,6 +126,36 @@ html, body {
 }
 .prep-row[hidden] { display: none; }
 
+/* Aperçu de la composition de la prochaine vague (cahier V8, section 8) --
+   une puce compacte par archétype présent (pastille couleur + effectif),
+   jamais un texte long qui déborderait sur mobile. */
+.wave-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+.wave-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #1d2e1c;
+  border-radius: 999px;
+  padding: 3px 8px 3px 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.wave-chip-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .prep-timer {
   font-variant-numeric: tabular-nums;
   font-weight: 700;

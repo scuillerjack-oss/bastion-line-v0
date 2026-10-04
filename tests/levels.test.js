@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { LEVELS, validateAllLevels } from "../src/engine/levels.js";
+import { LEVELS, validateAllLevels, getWaveComposition } from "../src/engine/levels.js";
 import { createLevelState } from "../src/engine/state.js";
 import { tick, buildTower, upgradeTower, requestEarlyWave } from "../src/engine/simulation.js";
 import { TOWER_ORDER } from "../src/engine/towers.js";
@@ -16,6 +16,43 @@ test("50 niveaux réellement présents (cahier V7, section 7)", () => {
 test("aucun niveau ne déclenche d'alerte de validation structurelle", () => {
   const report = validateAllLevels();
   assert.deepEqual(report, {}, `niveaux problématiques: ${JSON.stringify(report, null, 2)}`);
+});
+
+// --- Aperçu de la composition de vague (cahier V8, section 8) -------------
+
+test("getWaveComposition compte correctement chaque archétype d'une vague, dans l'ordre de première apparition", () => {
+  const level = {
+    waves: [
+      {
+        spawns: [
+          { kind: "standard", pathIndex: 0, delayMs: 0 },
+          { kind: "rapide", pathIndex: 0, delayMs: 500 },
+          { kind: "standard", pathIndex: 0, delayMs: 1000 },
+          { kind: "standard", pathIndex: 0, delayMs: 1500 },
+        ],
+      },
+    ],
+  };
+  assert.deepEqual(getWaveComposition(level, 0), [
+    { kind: "standard", count: 3 },
+    { kind: "rapide", count: 1 },
+  ]);
+});
+
+test("getWaveComposition renvoie un tableau vide pour un index de vague inexistant", () => {
+  const level = { waves: [{ spawns: [{ kind: "standard", pathIndex: 0, delayMs: 0 }] }] };
+  assert.deepEqual(getWaveComposition(level, 5), []);
+});
+
+test("chaque vague de chaque niveau réel a une composition non vide (l'aperçu n'est jamais affiché vide)", () => {
+  for (const level of LEVELS) {
+    for (let w = 0; w < level.waves.length; w++) {
+      const composition = getWaveComposition(level, w);
+      assert.ok(composition.length > 0, `niveau ${level.id}, vague ${w + 1} : composition vide`);
+      const totalFromComposition = composition.reduce((sum, c) => sum + c.count, 0);
+      assert.equal(totalFromComposition, level.waves[w].spawns.length, `niveau ${level.id}, vague ${w + 1} : effectif total incohérent`);
+    }
+  }
 });
 
 test("le niveau 1 est une démonstration simple : une seule famille de tour débloquée", () => {

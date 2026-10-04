@@ -1,8 +1,9 @@
 import { createLevelState } from "./engine/state.js";
 import { BASE_R } from "./engine/constants.js";
 import { tick, buildTower, upgradeTower, sellTower, requestEarlyWave } from "./engine/simulation.js";
-import { LEVELS } from "./engine/levels.js";
+import { LEVELS, getWaveComposition } from "./engine/levels.js";
 import { TOWER_FAMILIES, getMaxTier, getTowerSellRefund } from "./engine/towers.js";
+import { ENEMY_KINDS } from "./engine/enemies.js";
 import { loadSave, writeSave, markLevelCompleted, getUnlockedUpToIndex, isLevelCompleted } from "./engine/save.js";
 import { createTapController, hitTestTower, hitTestEmptySlot } from "./ui/input.js";
 import { drawFrame } from "./ui/render.js";
@@ -24,6 +25,7 @@ const waveEl = document.getElementById("wave-value");
 const levelLabelEl = document.getElementById("level-label");
 const pauseBtn = document.getElementById("pause-btn");
 const prepRow = document.getElementById("prep-row");
+const wavePreviewEl = document.getElementById("wave-preview");
 const prepTimerEl = document.getElementById("prep-timer");
 const launchWaveBtn = document.getElementById("btn-launch-wave");
 
@@ -138,6 +140,12 @@ function releasePanelGate(ev) {
 window.addEventListener("pointerup", releasePanelGate);
 window.addEventListener("pointercancel", releasePanelGate);
 
+// Aperçu de la prochaine vague (cahier V8, section 8) : reconstruit
+// seulement quand la vague à venir change, jamais à chaque frame (updateHud
+// est appelée à chaque tick pendant toute la préparation) -- un contenu
+// statique ne justifie pas de réécrire le DOM 60 fois par seconde.
+let lastPreviewWaveIndex = -2;
+
 function updateHud() {
   if (!state) return;
   baseHpEl.textContent = String(Math.max(0, state.baseHp));
@@ -147,6 +155,17 @@ function updateHud() {
   prepRow.hidden = !inPrep || appPhase !== "playing";
   if (inPrep) {
     prepTimerEl.textContent = `${Math.max(0, Math.ceil(state.prepRemainingMs / 1000))}s`;
+    const nextWaveIndex = state.waveIndex + 1;
+    if (nextWaveIndex !== lastPreviewWaveIndex) {
+      lastPreviewWaveIndex = nextWaveIndex;
+      const composition = getWaveComposition(state.level, nextWaveIndex);
+      wavePreviewEl.innerHTML = composition
+        .map(({ kind, count }) => {
+          const kindDef = ENEMY_KINDS[kind];
+          return `<span class="wave-chip" aria-label="${count} ${kindDef.name}"><span class="wave-chip-dot" style="background:${kindDef.color}"></span>${count}</span>`;
+        })
+        .join("");
+    }
   }
 }
 
@@ -294,6 +313,7 @@ function startLevel(index) {
   state.selectedTowerId = null;
   effects = [];
   seenEnemyKindsThisLevel.clear();
+  lastPreviewWaveIndex = -2; // force la reconstruction de l'aperçu de vague pour ce nouveau niveau
   clearOverlay();
   closePanel();
   appPhase = "playing";
