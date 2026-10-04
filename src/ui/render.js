@@ -912,15 +912,65 @@ function drawArrowProjectileFallback(ctx, proj) {
   ctx.restore();
 }
 
-function drawEffects(ctx, effects, nowMs) {
+// Impacts visuellement distincts par famille (cahier V8, section 5 : "le
+// joueur doit pouvoir reconnaître une tour par son impact seul"). Avant ce
+// correctif, impact_aoe/impact_single produisaient tous le même anneau doré
+// générique quelle que soit la tour à l'origine du tir -- aucune
+// différenciation possible sans lire le HUD.
+function drawImpactEffect(ctx, fx, t, alpha, reducedEffects) {
+  const r = fx.radius || 10;
+  if (fx.family === "rapide") {
+    // Archer : léger et net, pas d'explosion -- une flèche qui touche.
+    ctx.strokeStyle = `rgba(233, 196, 106, ${alpha})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(fx.x, fx.y, r * (0.5 + t * 0.6), 0, Math.PI * 2);
+    ctx.stroke();
+    return;
+  }
+  if (fx.family === "longue_portee") {
+    // Catapulte : impact lourd -- anneau de poussière large et lent, plus
+    // un second anneau de choc intérieur (coupé en mode "effets réduits"
+    // pour ne jamais alourdir le rendu avec de nombreuses unités, cahier
+    // V8 section 5 : "ne jamais faire chuter les performances").
+    ctx.strokeStyle = `rgba(90, 74, 58, ${alpha})`;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(fx.x, fx.y, r * (0.35 + t * 0.85), 0, Math.PI * 2);
+    ctx.stroke();
+    if (!reducedEffects) {
+      ctx.strokeStyle = `rgba(38, 70, 83, ${alpha * 0.6})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(fx.x, fx.y, r * (0.15 + t * 0.55), 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    return;
+  }
+  // Canon (et repli générique) : courte explosion franche -- disque qui se
+  // dissipe PLUS l'anneau, jamais un simple trait fin.
+  if (!reducedEffects) {
+    ctx.fillStyle = `rgba(231, 111, 81, ${alpha * 0.5})`;
+    ctx.beginPath();
+    ctx.arc(fx.x, fx.y, r * (0.3 + t * 0.4), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.strokeStyle = `rgba(231, 111, 81, ${alpha})`;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(fx.x, fx.y, r * (0.5 + t * 0.7), 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawEffects(ctx, effects, nowMs, reducedEffects = false) {
   for (const fx of effects) {
     const t = (nowMs - fx.createdAt) / fx.durationMs;
     if (t >= 1) continue;
     const alpha = 1 - t;
-    // Flash rouge plein, distinct des anneaux dorés d'impact de tour --
-    // conséquence d'un coup porté à LA BASE, doit être impossible à manquer
-    // à l'écran même sans le son (retour bêta physique V0 : le seul HUD
-    // discret + un son optionnel n'étaient pas une "conséquence visible").
+    // Flash rouge plein, distinct des effets d'impact de tour -- conséquence
+    // d'un coup porté à LA BASE, doit être impossible à manquer à l'écran
+    // même sans le son (retour bêta physique V0 : le seul HUD discret + un
+    // son optionnel n'étaient pas une "conséquence visible").
     if (fx.kind === "base_hit") {
       ctx.fillStyle = `rgba(231, 111, 81, ${alpha * 0.75})`;
       ctx.beginPath();
@@ -928,15 +978,12 @@ function drawEffects(ctx, effects, nowMs) {
       ctx.fill();
       continue;
     }
-    ctx.strokeStyle = `rgba(233, 196, 106, ${alpha})`;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(fx.x, fx.y, (fx.radius || 14) * (0.5 + t * 0.6), 0, Math.PI * 2);
-    ctx.stroke();
+    drawImpactEffect(ctx, fx, t, alpha, reducedEffects);
   }
 }
 
-export function drawFrame(ctx, canvasW, canvasH, state, effects, nowMs, renderAlpha = 1) {
+export function drawFrame(ctx, canvasW, canvasH, state, effects, nowMs, renderAlpha = 1, options = {}) {
+  const { shake = { x: 0, y: 0 }, reducedEffects = false } = options;
   const viewport = computeViewport(canvasW, canvasH);
   ctx.save();
   ctx.clearRect(0, 0, canvasW, canvasH);
@@ -944,6 +991,11 @@ export function drawFrame(ctx, canvasW, canvasH, state, effects, nowMs, renderAl
   ctx.fillRect(0, 0, canvasW, canvasH);
   ctx.translate(viewport.offsetX, viewport.offsetY);
   ctx.scale(viewport.scale, viewport.scale);
+  // Micro-secousse (cahier V8, section 5) : décalage en unités logiques de
+  // l'arène (donc indépendant de la résolution réelle de l'écran),
+  // appliqué APRÈS le scale -- jamais avant, sinon son amplitude varierait
+  // avec le viewport. Bornée en amont (voir main.js) : jamais permanente.
+  if (shake.x || shake.y) ctx.translate(shake.x, shake.y);
 
   const mapLoaded = mapSprite.status === "loaded";
   if (mapLoaded) {
@@ -973,7 +1025,7 @@ export function drawFrame(ctx, canvasW, canvasH, state, effects, nowMs, renderAl
 
   for (const enemy of state.enemies) drawEnemy(ctx, interpolateRenderPos(enemy, renderAlpha), state.elapsedMs);
   for (const proj of state.projectiles) drawProjectile(ctx, interpolateRenderPos(proj, renderAlpha));
-  drawEffects(ctx, effects, nowMs);
+  drawEffects(ctx, effects, nowMs, reducedEffects);
 
   ctx.restore();
   return viewport;

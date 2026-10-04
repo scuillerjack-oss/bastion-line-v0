@@ -38,6 +38,13 @@ let levelIndex = 0;
 let appPhase = "menu"; // menu | playing | paused
 let effects = [];
 let nowMs = 0;
+// Micro-secousse bornée (cahier V8, section 5 : "autoriser une légère
+// vibration/micro-recul sur les impacts lourds, jamais un screen-shake
+// permanent") -- réservée au seul impact de zone de la catapulte, durée
+// fixe très courte (140ms), jamais ré-armée en continu par des tirs
+// rapprochés (un seul créneau actif à la fois, le plus récent écrase
+// simplement le précédent).
+let shakeUntilMs = 0;
 
 const tutorial = createTutorialController(save, tutorialToast);
 const tap = createTapController(canvas, onTap);
@@ -257,6 +264,7 @@ function showSettings() {
       <h1>Réglages</h1>
       <div class="settings-row"><span>Musique</span><input type="checkbox" id="opt-music" ${save.settings.music ? "checked" : ""}/></div>
       <div class="settings-row"><span>Effets sonores</span><input type="checkbox" id="opt-sfx" ${save.settings.sfx ? "checked" : ""}/></div>
+      <div class="settings-row"><span>Effets réduits</span><input type="checkbox" id="opt-reduced-fx" ${save.settings.reducedEffects ? "checked" : ""}/></div>
       <button class="overlay-btn" id="btn-back">Retour</button>
       <p class="build-id" id="build-id">${__BUILD_ID__}</p>
     </div>
@@ -270,6 +278,10 @@ function showSettings() {
   document.getElementById("opt-sfx").addEventListener("change", (e) => {
     save.settings.sfx = e.target.checked;
     setAudioEnabled(save.settings.sfx);
+    writeSave(save);
+  });
+  document.getElementById("opt-reduced-fx").addEventListener("change", (e) => {
+    save.settings.reducedEffects = e.target.checked;
     writeSave(save);
   });
   document.getElementById("btn-back").addEventListener("click", showMenu);
@@ -533,9 +545,29 @@ function handleEvents(events) {
     } else if (ev.type === "level_lost") {
       showLevelResult(false);
     } else if (ev.type === "impact_aoe") {
-      effects.push({ x: ev.x, y: ev.y, radius: ev.radius, createdAt: nowMs, durationMs: 260 });
+      // Feedback distinct par famille (cahier V8, section 5) : la catapulte
+      // (impact lourd, poussière, micro-secousse) doit se reconnaître sans
+      // ambiguïté du canon (explosion courte) au son ET à l'image, jamais
+      // un seul anneau générique partagé par les deux comme avant ce
+      // correctif.
+      if (ev.family === "longue_portee") {
+        sfx.impactLongue();
+        if (!save.settings.reducedEffects) shakeUntilMs = nowMs + 140;
+      } else {
+        sfx.impactCanon();
+      }
+      effects.push({
+        kind: "impact",
+        family: ev.family,
+        x: ev.x,
+        y: ev.y,
+        radius: ev.radius,
+        createdAt: nowMs,
+        durationMs: ev.family === "longue_portee" ? 420 : 260,
+      });
     } else if (ev.type === "impact_single") {
-      effects.push({ x: ev.x, y: ev.y, radius: 10, createdAt: nowMs, durationMs: 160 });
+      sfx.impactRapide();
+      effects.push({ kind: "impact", family: ev.family, x: ev.x, y: ev.y, radius: 10, createdAt: nowMs, durationMs: 150 });
     } else if (ev.type === "enemy_spawned") {
       if (!seenEnemyKindsThisLevel.has(ev.kind)) {
         seenEnemyKindsThisLevel.add(ev.kind);
@@ -587,7 +619,20 @@ function frame(now) {
     // bêta, sur les écrans à fréquence de rafraîchissement > 60Hz).
     const renderAlpha = Math.max(0, Math.min(1, (state.accMs || 0) / FIXED_DT));
     lastRenderAlpha = renderAlpha;
-    drawFrame(ctx, canvas.width, canvas.height, state, effects, nowMs, renderAlpha);
+    // Micro-secousse bornée : magnitude décroît linéairement sur les 140ms
+    // du créneau, jamais au-delà -- oscillation déterministe (sinus/cosinus
+    // sur nowMs), jamais Math.random(), pour un mouvement cohérent d'une
+    // frame à l'autre plutôt qu'un tremblement erratique.
+    let shake = { x: 0, y: 0 };
+    if (nowMs < shakeUntilMs) {
+      const remaining = shakeUntilMs - nowMs;
+      const magnitude = (remaining / 140) * 3;
+      shake = { x: Math.sin(nowMs * 0.09) * magnitude, y: Math.cos(nowMs * 0.12) * magnitude };
+    }
+    drawFrame(ctx, canvas.width, canvas.height, state, effects, nowMs, renderAlpha, {
+      shake,
+      reducedEffects: save.settings.reducedEffects,
+    });
   }
 }
 

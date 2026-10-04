@@ -75,6 +75,19 @@ export const sfx = {
   shootRapide: () => tone({ freq: 700, duration: 0.04, type: "square", gain: 0.08 }),
   shootCanon: () => noiseBurst({ duration: 0.14, gain: 0.24, highpass: 200 }),
   shootLongue: () => tone({ freq: 1400, duration: 0.05, type: "sine", gain: 0.14 }),
+  // Impacts distincts par famille (cahier V8, section 5 : "le joueur doit
+  // pouvoir reconnaître une tour par son impact seul, même sans regarder").
+  // Archer : impact léger et net, pas d'explosion -- une flèche qui touche.
+  impactRapide: () => tone({ freq: 900, duration: 0.05, type: "triangle", gain: 0.1, glideTo: 500 }),
+  // Canon : courte explosion franche, plus grave et plus forte que l'archer.
+  impactCanon: () => noiseBurst({ duration: 0.18, gain: 0.26, highpass: 90 }),
+  // Catapulte : impact lourd -- bruit de souffle plus long/grave que le
+  // canon (highpass plus bas = plus de basses, "sentiment de masse") suivi
+  // d'un choc sourd descendant.
+  impactLongue: () => {
+    noiseBurst({ duration: 0.3, gain: 0.22, highpass: 40 });
+    tone({ freq: 140, duration: 0.3, type: "sawtooth", gain: 0.18, glideTo: 45 });
+  },
   enemyKilled: () => tone({ freq: 520, duration: 0.09, type: "sine", gain: 0.16, glideTo: 220 }),
   baseHit: () => tone({ freq: 180, duration: 0.28, type: "sawtooth", gain: 0.2, glideTo: 60 }),
   waveStart: () => tone({ freq: 330, duration: 0.22, type: "triangle", gain: 0.2, glideTo: 440 }),

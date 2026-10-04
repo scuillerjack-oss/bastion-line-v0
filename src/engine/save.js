@@ -21,7 +21,11 @@ function defaults() {
     // puisse jamais se produire.
     completedLevels: [],
     tutorialsSeen: {},
-    settings: { music: true, sfx: true },
+    // reducedEffects (cahier V8, section 5 : "prévoir un réglage pour
+    // réduire/désactiver les effets coûteux") -- désactivé par défaut,
+    // n'enlève jamais le son ni la lisibilité de base, seulement les
+    // couches secondaires (anneau de poussière de la catapulte, micro-secousse).
+    settings: { music: true, sfx: true, reducedEffects: false },
   };
 }
 
