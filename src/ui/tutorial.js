@@ -11,13 +11,21 @@ export const TUTORIAL_TEXTS = {
   // Texte mis à jour V7 (cahier V7, section 5) : renommage affiché
   // "Longue portée" -> "Catapulte" -- la clé interne first_tower_longue_portee
   // reste inchangée (déclenchée par enemy.family === "longue_portee").
-  first_tower_longue_portee: "Catapulte : dégâts ciblés élevés, utile contre les ennemis résistants.",
+  // Contenu mis à jour V8 (cahier V8, section 3) : la Catapulte a désormais
+  // une vraie zone d'effet et une cadence volontairement très lente --
+  // l'ancien texte ("dégâts ciblés élevés") décrivait l'identité inverse.
+  first_tower_longue_portee: "Catapulte : très longue portée, gros impact de zone, mais très lente à recharger.",
   first_upgrade: "Touche une tour existante pour l'améliorer : plus puissante, coûte des pièces.",
   first_wave: "La vague avance automatiquement. Prépare tes défenses avant qu'elle n'arrive.",
   first_early_launch: "Tu peux lancer la vague suivante immédiatement sans attendre le minuteur.",
-  first_enemy_blinde: "Ennemi blindé : lent mais très résistant.",
-  first_enemy_essaim: "Essaim : de nombreux ennemis fragiles rapprochés.",
-  first_enemy_rapide: "Ennemi rapide : peu résistant mais avance vite.",
+  // Renommage + correctif d'identité V8 (cahier V8, section 6 -- voir
+  // engine/enemies.js pour le détail) : "blindé" -> "Lourd" (jamais un
+  // tank/véhicule), "essaim" -> "Éclaireur" (le texte décrivait un groupe
+  // de plusieurs ennemis, alors qu'il s'agit toujours d'une seule unité ;
+  // corrigé pour décrire sa vraie identité de scout véloce et fragile).
+  first_enemy_blinde: "Ennemi Lourd : soldat lourdement protégé, lent mais très résistant.",
+  first_enemy_essaim: "Éclaireur : très rapide, mais très fragile.",
+  first_enemy_rapide: "Cavalier : rapide mais peu résistant.",
   first_multi_path: "Ce niveau a deux chemins : répartis tes défenses sur les deux.",
 };
 

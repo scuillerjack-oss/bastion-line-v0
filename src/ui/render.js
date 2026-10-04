@@ -744,10 +744,14 @@ function drawEnemy(ctx, enemy, elapsedMs) {
   ctx.fillRect(x - w / 2, y - ENEMY_R - 8, w * ratio, 4);
 }
 
-// 4 silhouettes d'ennemis reconnaissables (cahier V1, tableau 4.1) --
-// jamais de simple rond de couleur : standard = "grognard" à 2 cercles,
-// rapide = flèche effilée, blindé = bloc anguleux riveté, essaim = grappe
-// de petits corps. Repli Canvas utilisé tant qu'aucun sprite Leonardo n'est
+// 4 silhouettes d'ennemis reconnaissables (cahier V1, tableau 4.1 ; noms
+// affichés mis à jour cahier V8, section 6 -- voir engine/enemies.js) --
+// jamais de simple rond de couleur : standard/"Fantassin" = "grognard" à 2
+// cercles, rapide/"Cavalier" = flèche effilée, blinde/"Lourd" = bloc
+// anguleux riveté (délibérément SANS roue ni tourelle : jamais un
+// tank/véhicule), essaim/"Éclaireur" = grappe de petits corps clairs et
+// nerveux (silhouette déjà cohérente avec un scout véloce, conservée telle
+// quelle). Repli Canvas utilisé tant qu'aucun sprite Leonardo n'est
 // configuré pour ce enemy.kind (voir ENEMY_SPRITE_CONFIG).
 function drawEnemyFallbackShape(ctx, enemy, elapsedMs) {
   const kindDef = ENEMY_KINDS[enemy.kind];

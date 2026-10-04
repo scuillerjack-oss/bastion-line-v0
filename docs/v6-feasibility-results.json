@@ -66,24 +66,24 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 60,
-        "ticks": 10022,
+        "coinsLeft": 15,
+        "ticks": 9770,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 120,
-        "ticks": 7025,
+        "coinsLeft": 60,
+        "ticks": 7092,
         "hitCap": false
       },
       "priorité cadence/portée": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 60,
-        "ticks": 10022,
+        "coinsLeft": 15,
+        "ticks": 9770,
         "hitCap": false
       }
     },
@@ -96,24 +96,24 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 88,
-        "ticks": 12860,
+        "coinsLeft": 18,
+        "ticks": 12643,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 23,
-        "ticks": 9263,
+        "coinsLeft": 38,
+        "ticks": 9418,
         "hitCap": false
       },
       "priorité cadence/portée": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 88,
-        "ticks": 12860,
+        "coinsLeft": 18,
+        "ticks": 12643,
         "hitCap": false
       }
     },
@@ -127,15 +127,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 39,
-        "ticks": 12999,
+        "ticks": 12889,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 34,
-        "ticks": 9008,
+        "coinsLeft": 44,
+        "ticks": 9153,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -143,7 +143,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 39,
-        "ticks": 12999,
+        "ticks": 12889,
         "hitCap": false
       }
     },
@@ -157,15 +157,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 44,
-        "ticks": 11959,
+        "ticks": 11948,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 84,
-        "ticks": 8012,
+        "coinsLeft": 79,
+        "ticks": 8048,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -173,7 +173,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 44,
-        "ticks": 11959,
+        "ticks": 11948,
         "hitCap": false
       }
     },
@@ -187,15 +187,15 @@
         "finalHpRatio": 0.875,
         "minHpRatio": 0.875,
         "coinsLeft": 674,
-        "ticks": 14278,
+        "ticks": 14205,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 158,
-        "ticks": 7679,
+        "coinsLeft": 88,
+        "ticks": 7960,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -203,7 +203,7 @@
         "finalHpRatio": 0.875,
         "minHpRatio": 0.875,
         "coinsLeft": 674,
-        "ticks": 14278,
+        "ticks": 14205,
         "hitCap": false
       }
     },
@@ -217,15 +217,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 46,
-        "ticks": 12205,
+        "ticks": 12187,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 166,
-        "ticks": 7771,
+        "coinsLeft": 86,
+        "ticks": 8166,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -233,7 +233,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 46,
-        "ticks": 12205,
+        "ticks": 12187,
         "hitCap": false
       }
     },
@@ -246,24 +246,24 @@
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 122,
-        "ticks": 12282,
+        "coinsLeft": 52,
+        "ticks": 12209,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 67,
-        "ticks": 8290,
+        "coinsLeft": 112,
+        "ticks": 8166,
         "hitCap": false
       },
       "priorité cadence/portée": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 122,
-        "ticks": 12282,
+        "coinsLeft": 52,
+        "ticks": 12209,
         "hitCap": false
       }
     },
@@ -277,15 +277,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 93,
-        "ticks": 12136,
+        "ticks": 12139,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 153,
-        "ticks": 8400,
+        "coinsLeft": 158,
+        "ticks": 8091,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -293,7 +293,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 93,
-        "ticks": 12136,
+        "ticks": 12139,
         "hitCap": false
       }
     },
@@ -307,15 +307,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 92,
-        "ticks": 14456,
+        "ticks": 14372,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 92,
-        "ticks": 10386,
+        "coinsLeft": 12,
+        "ticks": 10065,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -323,7 +323,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 92,
-        "ticks": 14456,
+        "ticks": 14372,
         "hitCap": false
       }
     },
@@ -337,15 +337,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 64,
-        "ticks": 14604,
+        "ticks": 14438,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 114,
-        "ticks": 11013,
+        "coinsLeft": 49,
+        "ticks": 10066,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -353,7 +353,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 64,
-        "ticks": 14604,
+        "ticks": 14438,
         "hitCap": false
       }
     },
@@ -367,15 +367,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 101,
-        "ticks": 14626,
+        "ticks": 14389,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 46,
-        "ticks": 10403,
+        "coinsLeft": 111,
+        "ticks": 10330,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -383,7 +383,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 101,
-        "ticks": 14626,
+        "ticks": 14389,
         "hitCap": false
       }
     },
@@ -397,15 +397,15 @@
         "finalHpRatio": 0.6538461538461539,
         "minHpRatio": 0.6538461538461539,
         "coinsLeft": 1585,
-        "ticks": 18399,
+        "ticks": 18313,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 962,
-        "ticks": 9952,
+        "coinsLeft": 1062,
+        "ticks": 10202,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -413,7 +413,7 @@
         "finalHpRatio": 0.6538461538461539,
         "minHpRatio": 0.6538461538461539,
         "coinsLeft": 1585,
-        "ticks": 18399,
+        "ticks": 18313,
         "hitCap": false
       }
     },
@@ -427,15 +427,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 240,
-        "ticks": 15065,
+        "ticks": 14949,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 90,
-        "ticks": 9691,
+        "coinsLeft": 190,
+        "ticks": 10200,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -443,7 +443,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 240,
-        "ticks": 15065,
+        "ticks": 14949,
         "hitCap": false
       }
     },
@@ -457,15 +457,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 276,
-        "ticks": 15222,
+        "ticks": 15009,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 136,
-        "ticks": 9865,
+        "coinsLeft": 71,
+        "ticks": 10046,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -473,7 +473,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 276,
-        "ticks": 15222,
+        "ticks": 15009,
         "hitCap": false
       }
     },
@@ -487,15 +487,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 319,
-        "ticks": 15345,
+        "ticks": 15111,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 79,
-        "ticks": 9935,
+        "coinsLeft": 99,
+        "ticks": 10006,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -503,7 +503,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 319,
-        "ticks": 15345,
+        "ticks": 15111,
         "hitCap": false
       }
     },
@@ -517,15 +517,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 361,
-        "ticks": 15435,
+        "ticks": 15289,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 101,
-        "ticks": 10160,
+        "coinsLeft": 131,
+        "ticks": 10492,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -533,7 +533,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 361,
-        "ticks": 15435,
+        "ticks": 15289,
         "hitCap": false
       }
     },
@@ -547,15 +547,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 403,
-        "ticks": 15199,
+        "ticks": 15046,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 128,
-        "ticks": 9651,
+        "coinsLeft": 78,
+        "ticks": 10241,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -563,7 +563,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 403,
-        "ticks": 15199,
+        "ticks": 15046,
         "hitCap": false
       }
     },
@@ -577,7 +577,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 489,
-        "ticks": 15362,
+        "ticks": 15228,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -593,7 +593,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 489,
-        "ticks": 15362,
+        "ticks": 15228,
         "hitCap": false
       }
     },
@@ -607,7 +607,7 @@
         "finalHpRatio": 0.35714285714285715,
         "minHpRatio": 0.35714285714285715,
         "coinsLeft": 2305,
-        "ticks": 19479,
+        "ticks": 19269,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -615,7 +615,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1424,
-        "ticks": 10077,
+        "ticks": 10289,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -623,7 +623,7 @@
         "finalHpRatio": 0.35714285714285715,
         "minHpRatio": 0.35714285714285715,
         "coinsLeft": 2305,
-        "ticks": 19479,
+        "ticks": 19269,
         "hitCap": false
       }
     },
@@ -637,15 +637,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 573,
-        "ticks": 15466,
+        "ticks": 15361,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 73,
-        "ticks": 10251,
+        "coinsLeft": 213,
+        "ticks": 10312,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -653,7 +653,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 573,
-        "ticks": 15466,
+        "ticks": 15361,
         "hitCap": false
       }
     },
@@ -667,7 +667,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 621,
-        "ticks": 15589,
+        "ticks": 15494,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -675,7 +675,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 21,
-        "ticks": 10236,
+        "ticks": 10146,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -683,7 +683,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 621,
-        "ticks": 15589,
+        "ticks": 15494,
         "hitCap": false
       }
     },
@@ -697,15 +697,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 657,
-        "ticks": 15627,
+        "ticks": 15512,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 132,
-        "ticks": 10033,
+        "coinsLeft": 157,
+        "ticks": 10194,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -713,7 +713,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 657,
-        "ticks": 15627,
+        "ticks": 15512,
         "hitCap": false
       }
     },
@@ -727,15 +727,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 710,
-        "ticks": 15781,
+        "ticks": 15650,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 75,
-        "ticks": 10102,
+        "coinsLeft": 115,
+        "ticks": 10337,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -743,7 +743,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 710,
-        "ticks": 15781,
+        "ticks": 15650,
         "hitCap": false
       }
     },
@@ -757,7 +757,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1118,
-        "ticks": 18658,
+        "ticks": 18392,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -765,7 +765,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 353,
-        "ticks": 12314,
+        "ticks": 12497,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -773,7 +773,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1118,
-        "ticks": 18658,
+        "ticks": 18392,
         "hitCap": false
       }
     },
@@ -787,7 +787,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1140,
-        "ticks": 18773,
+        "ticks": 18507,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -795,7 +795,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 440,
-        "ticks": 12271,
+        "ticks": 12386,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -803,7 +803,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1140,
-        "ticks": 18773,
+        "ticks": 18507,
         "hitCap": false
       }
     },
@@ -817,7 +817,7 @@
         "finalHpRatio": 0.6,
         "minHpRatio": 0.6,
         "coinsLeft": 3642,
-        "ticks": 23721,
+        "ticks": 23292,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -825,7 +825,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2798,
-        "ticks": 12319,
+        "ticks": 12617,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -833,7 +833,7 @@
         "finalHpRatio": 0.6,
         "minHpRatio": 0.6,
         "coinsLeft": 3642,
-        "ticks": 23721,
+        "ticks": 23292,
         "hitCap": false
       }
     },
@@ -847,15 +847,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1260,
-        "ticks": 18809,
+        "ticks": 18609,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 560,
-        "ticks": 12493,
+        "coinsLeft": 660,
+        "ticks": 12590,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -863,7 +863,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1260,
-        "ticks": 18809,
+        "ticks": 18609,
         "hitCap": false
       }
     },
@@ -877,15 +877,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1284,
-        "ticks": 18870,
+        "ticks": 18607,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 584,
-        "ticks": 12079,
+        "coinsLeft": 684,
+        "ticks": 12408,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -893,7 +893,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1284,
-        "ticks": 18870,
+        "ticks": 18607,
         "hitCap": false
       }
     },
@@ -907,7 +907,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1386,
-        "ticks": 19255,
+        "ticks": 18989,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -915,7 +915,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 686,
-        "ticks": 12640,
+        "ticks": 12727,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -923,7 +923,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1386,
-        "ticks": 19255,
+        "ticks": 18989,
         "hitCap": false
       }
     },
@@ -937,7 +937,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1444,
-        "ticks": 19384,
+        "ticks": 19169,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -945,7 +945,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 714,
-        "ticks": 12590,
+        "ticks": 12827,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -953,7 +953,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1444,
-        "ticks": 19384,
+        "ticks": 19169,
         "hitCap": false
       }
     },
@@ -967,15 +967,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1500,
-        "ticks": 19341,
+        "ticks": 18961,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 735,
-        "ticks": 12345,
+        "coinsLeft": 770,
+        "ticks": 12846,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -983,7 +983,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1500,
-        "ticks": 19341,
+        "ticks": 18961,
         "hitCap": false
       }
     },
@@ -997,7 +997,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1530,
-        "ticks": 19339,
+        "ticks": 19115,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1005,7 +1005,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 730,
-        "ticks": 12383,
+        "ticks": 12584,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1013,7 +1013,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1530,
-        "ticks": 19339,
+        "ticks": 19115,
         "hitCap": false
       }
     },
@@ -1027,7 +1027,7 @@
         "finalHpRatio": 0.53125,
         "minHpRatio": 0.53125,
         "coinsLeft": 4393,
-        "ticks": 25152,
+        "ticks": 24440,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1035,7 +1035,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 3463,
-        "ticks": 12591,
+        "ticks": 12877,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1043,7 +1043,7 @@
         "finalHpRatio": 0.53125,
         "minHpRatio": 0.53125,
         "coinsLeft": 4393,
-        "ticks": 25152,
+        "ticks": 24440,
         "hitCap": false
       }
     },
@@ -1057,15 +1057,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1635,
-        "ticks": 19758,
+        "ticks": 19494,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 970,
-        "ticks": 12353,
+        "coinsLeft": 905,
+        "ticks": 12834,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1073,7 +1073,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1635,
-        "ticks": 19758,
+        "ticks": 19494,
         "hitCap": false
       }
     },
@@ -1087,15 +1087,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1740,
-        "ticks": 19895,
+        "ticks": 19750,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 940,
-        "ticks": 12403,
+        "coinsLeft": 1040,
+        "ticks": 13006,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1103,7 +1103,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1740,
-        "ticks": 19895,
+        "ticks": 19750,
         "hitCap": false
       }
     },
@@ -1117,7 +1117,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1773,
-        "ticks": 20065,
+        "ticks": 19606,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1125,7 +1125,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 973,
-        "ticks": 12140,
+        "ticks": 12290,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1133,7 +1133,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1773,
-        "ticks": 20065,
+        "ticks": 19606,
         "hitCap": false
       }
     },
@@ -1147,7 +1147,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1845,
-        "ticks": 20330,
+        "ticks": 19849,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1155,7 +1155,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1045,
-        "ticks": 12570,
+        "ticks": 12731,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1163,7 +1163,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1845,
-        "ticks": 20330,
+        "ticks": 19849,
         "hitCap": false
       }
     },
@@ -1177,7 +1177,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1870,
-        "ticks": 20244,
+        "ticks": 19931,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1185,7 +1185,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 970,
-        "ticks": 12199,
+        "ticks": 12181,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1193,7 +1193,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1870,
-        "ticks": 20244,
+        "ticks": 19931,
         "hitCap": false
       }
     },
@@ -1207,7 +1207,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2380,
-        "ticks": 23603,
+        "ticks": 23203,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1215,7 +1215,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1580,
-        "ticks": 14657,
+        "ticks": 14684,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1223,7 +1223,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2380,
-        "ticks": 23603,
+        "ticks": 23203,
         "hitCap": false
       }
     },
@@ -1234,10 +1234,10 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.47058823529411764,
-        "minHpRatio": 0.47058823529411764,
-        "coinsLeft": 6089,
-        "ticks": 30721,
+        "finalHpRatio": 0.5588235294117647,
+        "minHpRatio": 0.5588235294117647,
+        "coinsLeft": 6103,
+        "ticks": 29883,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1245,15 +1245,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 5173,
-        "ticks": 14917,
+        "ticks": 15308,
         "hitCap": false
       },
       "priorité cadence/portée": {
         "status": "won",
-        "finalHpRatio": 0.47058823529411764,
-        "minHpRatio": 0.47058823529411764,
-        "coinsLeft": 6089,
-        "ticks": 30721,
+        "finalHpRatio": 0.5588235294117647,
+        "minHpRatio": 0.5588235294117647,
+        "coinsLeft": 6103,
+        "ticks": 29883,
         "hitCap": false
       }
     },
@@ -1267,7 +1267,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2517,
-        "ticks": 23827,
+        "ticks": 23351,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1275,7 +1275,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 1717,
-        "ticks": 14722,
+        "ticks": 14851,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1283,7 +1283,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2517,
-        "ticks": 23827,
+        "ticks": 23351,
         "hitCap": false
       }
     },
@@ -1294,26 +1294,26 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.7352941176470589,
-        "minHpRatio": 0.7352941176470589,
-        "coinsLeft": 2549,
-        "ticks": 24476,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2591,
+        "ticks": 23781,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 1791,
-        "ticks": 14752,
+        "coinsLeft": 1691,
+        "ticks": 14635,
         "hitCap": false
       },
       "priorité cadence/portée": {
         "status": "won",
-        "finalHpRatio": 0.7352941176470589,
-        "minHpRatio": 0.7352941176470589,
-        "coinsLeft": 2549,
-        "ticks": 24476,
+        "finalHpRatio": 1,
+        "minHpRatio": 1,
+        "coinsLeft": 2591,
+        "ticks": 23781,
         "hitCap": false
       }
     },
@@ -1324,26 +1324,26 @@
     "strategies": {
       "équilibrée": {
         "status": "won",
-        "finalHpRatio": 0.7428571428571429,
-        "minHpRatio": 0.7428571428571429,
-        "coinsLeft": 2610,
-        "ticks": 24676,
+        "finalHpRatio": 0.9142857142857143,
+        "minHpRatio": 0.9142857142857143,
+        "coinsLeft": 2638,
+        "ticks": 24173,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2052,
-        "ticks": 14518,
+        "coinsLeft": 1952,
+        "ticks": 14724,
         "hitCap": false
       },
       "priorité cadence/portée": {
         "status": "won",
-        "finalHpRatio": 0.7428571428571429,
-        "minHpRatio": 0.7428571428571429,
-        "coinsLeft": 2610,
-        "ticks": 24676,
+        "finalHpRatio": 0.9142857142857143,
+        "minHpRatio": 0.9142857142857143,
+        "coinsLeft": 2638,
+        "ticks": 24173,
         "hitCap": false
       }
     },
@@ -1357,15 +1357,15 @@
         "finalHpRatio": 0.9142857142857143,
         "minHpRatio": 0.9142857142857143,
         "coinsLeft": 2676,
-        "ticks": 24689,
+        "ticks": 24259,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2090,
-        "ticks": 14431,
+        "coinsLeft": 1990,
+        "ticks": 14847,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1373,7 +1373,7 @@
         "finalHpRatio": 0.9142857142857143,
         "minHpRatio": 0.9142857142857143,
         "coinsLeft": 2676,
-        "ticks": 24689,
+        "ticks": 24259,
         "hitCap": false
       }
     },
@@ -1387,15 +1387,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2751,
-        "ticks": 24529,
+        "ticks": 24278,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2151,
-        "ticks": 14606,
+        "coinsLeft": 2251,
+        "ticks": 15029,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1403,7 +1403,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2751,
-        "ticks": 24529,
+        "ticks": 24278,
         "hitCap": false
       }
     },
@@ -1417,15 +1417,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2852,
-        "ticks": 24637,
+        "ticks": 24351,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2152,
-        "ticks": 14501,
+        "coinsLeft": 2252,
+        "ticks": 14853,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1433,7 +1433,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2852,
-        "ticks": 24637,
+        "ticks": 24351,
         "hitCap": false
       }
     },
@@ -1446,8 +1446,8 @@
         "status": "lost",
         "finalHpRatio": 0,
         "minHpRatio": 0,
-        "coinsLeft": 4,
-        "ticks": 4547,
+        "coinsLeft": 65,
+        "ticks": 4500,
         "hitCap": false
       },
       "priorité dégâts": {
@@ -1455,15 +1455,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 6156,
-        "ticks": 14432,
+        "ticks": 14805,
         "hitCap": false
       },
       "priorité cadence/portée": {
         "status": "lost",
         "finalHpRatio": 0,
         "minHpRatio": 0,
-        "coinsLeft": 4,
-        "ticks": 4547,
+        "coinsLeft": 65,
+        "ticks": 4500,
         "hitCap": false
       }
     },
@@ -1477,15 +1477,15 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2971,
-        "ticks": 24935,
+        "ticks": 24850,
         "hitCap": false
       },
       "priorité dégâts": {
         "status": "won",
         "finalHpRatio": 1,
         "minHpRatio": 1,
-        "coinsLeft": 2306,
-        "ticks": 14352,
+        "coinsLeft": 2406,
+        "ticks": 14444,
         "hitCap": false
       },
       "priorité cadence/portée": {
@@ -1493,7 +1493,7 @@
         "finalHpRatio": 1,
         "minHpRatio": 1,
         "coinsLeft": 2971,
-        "ticks": 24935,
+        "ticks": 24850,
         "hitCap": false
       }
     },
