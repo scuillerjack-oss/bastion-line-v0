@@ -364,6 +364,25 @@ test("après la vente, l'emplacement est réellement libéré et peut accueillir
   assert.equal(ok, true, "une nouvelle tour doit pouvoir être construite sur l'emplacement libéré");
 });
 
+// --- Pas de duplication de monnaie (cahier V8, sections 3 et 11) ----------
+
+test("une boucle répétée construire -> améliorer -> vendre ne crée jamais de pièces", () => {
+  const state = createLevelState(makeTestLevel());
+  const start = state.coins;
+  for (let i = 0; i < 5; i++) {
+    const built = buildTower(state, "a", "canon");
+    assert.equal(built, true, `cycle ${i} : la construction doit réussir`);
+    const tower = state.towers[0];
+    upgradeTower(state, tower.id);
+    upgradeTower(state, tower.id);
+    sellTower(state, tower.id);
+  }
+  assert.ok(state.coins < start, "chaque cycle complet doit coûter net de l'argent (remboursement < investissement), jamais en créer");
+  assert.equal(state.towers.length, 0, "aucune tour ne doit rester après la boucle");
+  const slot = state.buildSlots.find((s) => s.id === "a");
+  assert.equal(slot.towerId, null, "l'emplacement doit rester libre après le dernier cycle");
+});
+
 test("la tour vendue disparaît réellement de la liste des tours (jamais un fantôme qui continue de tirer)", () => {
   const state = createLevelState(makeTestLevel());
   buildTower(state, "a", "rapide");
