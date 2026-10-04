@@ -273,6 +273,40 @@ test("la Catapulte inflige des dégâts à TOUS les ennemis dans sa zone d'effet
   assert.equal(outOfRadius.alive, true, "un ennemi hors de la zone d'effet ne doit jamais être touché par CE tir");
 });
 
+// --- Identité des 4 archétypes d'ennemis (cahier V8, section 6) -----------
+
+test("les 4 archétypes d'ennemis s'affichent sous leurs nouveaux noms (Fantassin/Cavalier/Lourd/Éclaireur)", () => {
+  assert.equal(ENEMY_KINDS.standard.name, "Fantassin");
+  assert.equal(ENEMY_KINDS.rapide.name, "Cavalier");
+  assert.equal(ENEMY_KINDS.blinde.name, "Lourd");
+  assert.equal(ENEMY_KINDS.essaim.name, "Éclaireur");
+  // Le cahier V8 est explicite : "Lourd" ne doit jamais se lire comme un
+  // tank/véhicule moderne -- au minimum, le nom affiché ne doit plus
+  // contenir "blindé" (l'identifiant interne "blinde" reste inchangé).
+  assert.ok(!/blind/i.test(ENEMY_KINDS.blinde.name));
+});
+
+test("le renommage des ennemis ne change aucun identifiant interne (continuité des sauvegardes/tests/bonus anti-blindé)", () => {
+  assert.equal(ENEMY_KINDS.standard.id, "standard");
+  assert.equal(ENEMY_KINDS.rapide.id, "rapide");
+  assert.equal(ENEMY_KINDS.blinde.id, "blinde");
+  assert.equal(ENEMY_KINDS.essaim.id, "essaim");
+  assert.equal(ENEMY_KINDS.blinde.armored, true, "le flag anti-blindé exploité par la Catapulte doit survivre au renommage");
+});
+
+test("l'Éclaireur (essaim) est réellement le PLUS RAPIDE des 4 archétypes -- pas seulement nommé ainsi", () => {
+  // Audit de reprise V8 : avant ce correctif, sa vitesse (60) était à peine
+  // supérieure au Fantassin (55) -- ne se lisait pas comme "très rapide".
+  const speeds = Object.values(ENEMY_KINDS).map((k) => k.speed);
+  assert.equal(ENEMY_KINDS.essaim.speed, Math.max(...speeds), "l'Éclaireur doit être le plus rapide des 4, y compris devant le Cavalier");
+  assert.ok(ENEMY_KINDS.essaim.speed > ENEMY_KINDS.rapide.speed, "l'Éclaireur doit être nettement plus rapide que le Cavalier");
+});
+
+test("l'Éclaireur (essaim) reste le PLUS FRAGILE des 4 archétypes (vitesse élevée contrebalancée par la survie)", () => {
+  const hps = Object.values(ENEMY_KINDS).map((k) => k.hp);
+  assert.equal(ENEMY_KINDS.essaim.hp, Math.min(...hps), "l'Éclaireur doit rester le moins résistant des 4");
+});
+
 // --- Feedback d'impact distinct par famille (cahier V8, section 5) --------
 
 test("l'événement impact_aoe porte la famille de la tour qui a tiré (nécessaire au feedback visuel/sonore distinct)", () => {
