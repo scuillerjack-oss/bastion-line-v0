@@ -150,6 +150,10 @@ test("une ancienne sauvegarde V0-V6 (unlockedLevelIndex seul) est migrée sans p
   assert.ok(!isLevelCompleted(save, 4));
   assert.equal(save.tutorialsSeen.first_wave, true);
   assert.equal(save.settings.music, false);
+  // reducedEffects (cahier V8, section 5) : champ ajouté APRÈS cette
+  // ancienne sauvegarde -- doit recevoir sa valeur par défaut (false) sans
+  // jamais faire échouer ni tronquer la migration des champs plus anciens.
+  assert.equal(save.settings.reducedEffects, false);
 });
 
 test("une ancienne sauvegarde migrée puis une nouvelle progression ne perdent jamais rien l'une par rapport à l'autre", async () => {
