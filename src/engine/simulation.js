@@ -16,7 +16,7 @@ import { TOWER_AIM_TURN_RATE } from "./constants.js";
 // rapides/éclaireurs ne les rattrape jamais tant qu'ils s'éloignent -- c'est
 // ce qui matérialise "mauvaise réponse aux cibles rapides" sans règle
 // spéciale de ciblage.
-const PROJECTILE_SPEED = { rapide: 520, canon: 260, longue_portee: 130 };
+export const PROJECTILE_SPEED = { rapide: 520, canon: 260, longue_portee: 130 };
 const HIT_RADIUS = 12;
 
 function startWave(state) {

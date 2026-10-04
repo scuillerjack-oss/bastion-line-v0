@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createLevelState } from "../src/engine/state.js";
-import { tick, buildTower, upgradeTower, requestEarlyWave, sellTower } from "../src/engine/simulation.js";
+import { tick, buildTower, upgradeTower, requestEarlyWave, sellTower, PROJECTILE_SPEED } from "../src/engine/simulation.js";
 import { TOWER_FAMILIES, getTowerInvestedValue, getTowerSellRefund } from "../src/engine/towers.js";
 import { TOWER_SELL_REFUND_RATE, TOWER_AIM_TURN_RATE } from "../src/engine/constants.js";
 import { ENEMY_KINDS } from "../src/engine/enemies.js";
@@ -224,6 +224,53 @@ test("la tour longue portée au palier 2+ inflige un bonus de dégâts aux ennem
   const tierStats = TOWER_FAMILIES.longue_portee.tiers[tower.tier];
   const expectedDamage = tierStats.damage * tierStats.bonusVsArmored;
   assert.ok(hpBefore - armored.hp >= expectedDamage - 0.01, "le dégât réellement infligé doit inclure le bonus anti-blindé");
+});
+
+// --- Identité des 3 tours (cahier V8, section 3) ---------------------------
+//
+// L'audit de reprise V8 a trouvé la Catapulte avec AUCUNE zone d'effet, la
+// cadence la PLUS rapide des 3 et le projectile le PLUS rapide -- l'exact
+// inverse de l'identité "artillerie lourde : zone, lente, projectile lent"
+// voulue par le cahier. Ces tests verrouillent le correctif pour qu'une
+// régression future (rééquilibrage mal fait) soit détectée immédiatement.
+
+test("la Catapulte a la cadence de tir la PLUS LENTE des 3 familles, à chaque palier équivalent", () => {
+  for (let tier = 0; tier < 3; tier++) {
+    const rapide = TOWER_FAMILIES.rapide.tiers[tier].fireIntervalMs;
+    const canon = TOWER_FAMILIES.canon.tiers[tier].fireIntervalMs;
+    const catapulte = TOWER_FAMILIES.longue_portee.tiers[tier].fireIntervalMs;
+    assert.ok(catapulte > canon, `palier ${tier} : catapulte (${catapulte}ms) doit être plus lente que le canon (${canon}ms)`);
+    assert.ok(canon > rapide, `palier ${tier} : canon (${canon}ms) doit être plus lent que l'archer (${rapide}ms)`);
+  }
+});
+
+test("la Catapulte a le projectile le PLUS LENT des 3 familles (artillerie lourde, mauvaise réponse aux cibles rapides)", () => {
+  assert.ok(PROJECTILE_SPEED.longue_portee < PROJECTILE_SPEED.canon, "la catapulte doit être plus lente que le canon");
+  assert.ok(PROJECTILE_SPEED.canon < PROJECTILE_SPEED.rapide, "le canon doit être plus lent que l'archer");
+});
+
+test("la Catapulte inflige désormais une vraie zone d'effet (tous les paliers), plus large que celle du canon", () => {
+  for (let tier = 0; tier < 3; tier++) {
+    assert.ok(TOWER_FAMILIES.longue_portee.tiers[tier].aoeRadius > TOWER_FAMILIES.canon.tiers[tier].aoeRadius,
+      `palier ${tier} : la zone d'effet de la catapulte doit être plus large que celle du canon`);
+  }
+});
+
+test("la Catapulte inflige des dégâts à TOUS les ennemis dans sa zone d'effet, pas seulement la cible", () => {
+  const state = createLevelState(makeTestLevel());
+  buildTower(state, "a", "longue_portee"); // portée 180, zone d'effet 58 au palier 1
+  enterWave(state);
+  const target = pushEnemy(state, "essaim", 250); // le plus avancé à portée -> cible réelle
+  const bystander = pushEnemy(state, "essaim", 210); // à 40 du point d'impact, dans la zone (58)
+  const outOfRadius = pushEnemy(state, "essaim", 150); // à 100 du point d'impact, hors zone (58)
+  // Fenêtre large car le projectile est volontairement TRÈS lent (identité
+  // V8) : assez de ticks pour que le premier tir atteigne son impact
+  // (distance 150, vitesse 130 -> ~1.15s), mais bien avant la fin du
+  // cooldown (1900ms) qui permettrait un second tir.
+  tickN(state, 90);
+  assert.equal(target.alive, false, "la cible directe doit mourir");
+  assert.equal(bystander.alive, false, "un ennemi proche du point d'impact doit aussi être touché (zone d'effet)");
+  assert.equal(outOfRadius.alive, true, "un ennemi hors de la zone d'effet ne doit jamais être touché par CE tir");
 });
 
 // --- Améliorations ----------------------------------------------------------
