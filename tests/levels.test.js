@@ -55,6 +55,28 @@ test("chaque vague de chaque niveau réel a une composition non vide (l'aperçu 
   }
 });
 
+// --- Variété tactique des chemins (cahier V8, section 9) -------------------
+
+test("sur un niveau généré à double chemin, le second chemin n'est jamais un simple miroir du premier", () => {
+  // Audit V8 : avant correctif, les deux chemins recevaient exactement la
+  // même formule de composition/densité -- un niveau "double chemin" était
+  // donc en réalité une seule vague dessinée deux fois. Vérifie que le
+  // second chemin a une composition RÉELLEMENT différente (plus légère,
+  // plus orientée vitesse) sur chaque vague d'au moins un niveau généré à
+  // double chemin.
+  const dualPathLevels = LEVELS.filter((l) => l.paths.length > 1 && l.id > 5);
+  assert.ok(dualPathLevels.length > 0, "aucun niveau généré à double chemin trouvé");
+  for (const level of dualPathLevels) {
+    for (let w = 0; w < level.waves.length; w++) {
+      const compA = getWaveComposition({ waves: [{ spawns: level.waves[w].spawns.filter((s) => s.pathIndex === 0) }] }, 0);
+      const compB = getWaveComposition({ waves: [{ spawns: level.waves[w].spawns.filter((s) => s.pathIndex === 1) }] }, 0);
+      const totalA = compA.reduce((sum, c) => sum + c.count, 0);
+      const totalB = compB.reduce((sum, c) => sum + c.count, 0);
+      assert.ok(totalB < totalA, `niveau ${level.id}, vague ${w + 1} : le second chemin (${totalB}) devrait être plus léger que le premier (${totalA})`);
+    }
+  }
+});
+
 // --- Clarté de progression (cahier V8, section 9) --------------------------
 
 test("getFirstUnlockLevelNumber retrouve le niveau réel de déblocage de chaque famille de tour", () => {

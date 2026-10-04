@@ -469,9 +469,34 @@ function mulberry32(seed) {
   };
 }
 
+// Variété de chemin sur les niveaux générés à double chemin (cahier V8,
+// section 9 : "variété tactique des chemins", pas seulement leur nombre).
+// Audit de reprise V8 : les deux chemins recevaient jusqu'ici EXACTEMENT la
+// même formule de composition/densité/timing (seul le bruit `jitter`
+// différait) -- un niveau "double chemin" n'était donc en réalité qu'une
+// seule vague dessinée deux fois, jamais un vrai second front. Corrigé
+// ci-dessous : le second chemin devient un front secondaire plus LÉGER
+// (moins d'ennemis) mais plus RAPIDE (davantage de Cavalier/Éclaireur,
+// cahier V8 section 6), et s'ouvre après le front principal -- un choix
+// tactique réel (où renforcer, et quand) plutôt qu'une simple symétrie.
+// Jamais appliqué aux niveaux 1-5 (hand-conçus, dont le niveau 5 à double
+// chemin garde sa propre conception).
+function shiftMixTowardFastUnits(mix) {
+  const shift = 0.12;
+  return {
+    standard: mix.standard - shift * 0.6,
+    rapide: mix.rapide + shift * 0.6,
+    blinde: mix.blinde - shift * 0.4,
+    essaim: mix.essaim + shift * 0.4,
+  };
+}
+const SECONDARY_PATH_COUNT_FACTOR = 0.6; // front secondaire plus léger, jamais nul
+const SECONDARY_PATH_START_OFFSET_MS = 1800; // s'ouvre après le front principal
+
 function generateWave(n, waveIndex, waveCount, pathIndex, rnd) {
   const tier = tierOf(n);
-  const mix = TIER_MIX[tier];
+  const isSecondaryPath = pathIndex === 1;
+  const mix = isSecondaryPath ? shiftMixTowardFastUnits(TIER_MIX[tier]) : TIER_MIX[tier];
   // Progression DANS le niveau (vague 1 plus légère que la dernière),
   // superposée à la progression ENTRE niveaux -- jamais une seule vague
   // plate répétée telle quelle. Échelle calée sur la densité RÉELLE déjà
@@ -482,16 +507,18 @@ function generateWave(n, waveIndex, waveCount, pathIndex, rnd) {
   const waveProgress = waveIndex / Math.max(1, waveCount - 1);
   const levelProgress = clamp((n - 6) / 44, 0, 1);
   const countBase = 24 + Math.round(levelProgress * 52) + Math.round(waveProgress * 10);
+  const effectiveCountBase = isSecondaryPath ? Math.round(countBase * SECONDARY_PATH_COUNT_FACTOR) : countBase;
   const intervalBase = clamp(560 - levelProgress * 270 - waveProgress * 70, 220, 560);
+  const startOffsetMs = isSecondaryPath ? SECONDARY_PATH_START_OFFSET_MS : 0;
   const spawns = [];
   let cursor = 0;
   for (const [kind, ratio] of Object.entries(mix)) {
-    const count = Math.max(0, Math.round(countBase * ratio));
+    const count = Math.max(0, Math.round(effectiveCountBase * ratio));
     if (count === 0) continue;
     const jitter = 1 + (rnd() - 0.5) * 0.15;
     const startDelay = cursor;
     for (let i = 0; i < count; i++) {
-      spawns.push({ kind, pathIndex, delayMs: Math.round(startDelay + i * intervalBase * jitter) });
+      spawns.push({ kind, pathIndex, delayMs: Math.round(startOffsetMs + startDelay + i * intervalBase * jitter) });
     }
     cursor += count * intervalBase * jitter * 0.45; // vagues d'archétypes qui se chevauchent partiellement, jamais strictement séquentielles
   }
