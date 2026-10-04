@@ -273,6 +273,36 @@ test("la Catapulte inflige des dégâts à TOUS les ennemis dans sa zone d'effet
   assert.equal(outOfRadius.alive, true, "un ennemi hors de la zone d'effet ne doit jamais être touché par CE tir");
 });
 
+// --- Feedback d'impact distinct par famille (cahier V8, section 5) --------
+
+test("l'événement impact_aoe porte la famille de la tour qui a tiré (nécessaire au feedback visuel/sonore distinct)", () => {
+  const state = createLevelState(makeTestLevel());
+  buildTower(state, "a", "canon");
+  enterWave(state);
+  pushEnemy(state, "essaim", 150);
+  const aoeEvents = [];
+  for (let i = 0; i < 90; i++) {
+    tick(state, DT);
+    aoeEvents.push(...state.events.filter((e) => e.type === "impact_aoe"));
+  }
+  assert.ok(aoeEvents.length > 0, "au moins un impact_aoe doit survenir");
+  assert.ok(aoeEvents.every((e) => e.family === "canon"), "chaque impact_aoe doit porter la famille de la tour qui a tiré");
+});
+
+test("l'événement impact_single porte la famille de la tour qui a tiré", () => {
+  const state = createLevelState(makeTestLevel());
+  buildTower(state, "a", "rapide");
+  enterWave(state);
+  pushEnemy(state, "essaim", 150);
+  const singleEvents = [];
+  for (let i = 0; i < 30; i++) {
+    tick(state, DT);
+    singleEvents.push(...state.events.filter((e) => e.type === "impact_single"));
+  }
+  assert.ok(singleEvents.length > 0, "au moins un impact_single doit survenir");
+  assert.ok(singleEvents.every((e) => e.family === "rapide"), "chaque impact_single doit porter la famille de la tour qui a tiré");
+});
+
 // --- Améliorations ----------------------------------------------------------
 
 test("améliorer une tour consomme le coût du palier suivant et change réellement ses statistiques", () => {
