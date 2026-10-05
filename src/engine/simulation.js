@@ -174,6 +174,53 @@ function stepTowerAim(tower, dtMs) {
   tower.aimAngle += Math.max(-maxStep, Math.min(maxStep, delta));
 }
 
+// 8 directions compas (cahier "Prochaine version candidate bêta", sections
+// 4-5) -- correspond exactement aux 8 sprites directionnels découpés de la
+// planche Leonardo baliste (voir ui/render.js, BALISTE_SPRITE_CONFIG,
+// mêmes noms). Index i -> angle i*45°, E=0° cohérent avec Math.atan2
+// (x+ = 0°, y+ = 90° car l'axe y de l'écran pointe vers le bas) -- un seul
+// endroit définit la correspondance index/angle, jamais une table dupliquée
+// qui pourrait diverger entre simulation et rendu.
+export const BALISTE_DIRECTIONS = ["E", "SE", "S", "SW", "W", "NW", "N", "NE"];
+function directionAngle(index) {
+  const deg = index * 45;
+  return ((deg > 180 ? deg - 360 : deg) * Math.PI) / 180;
+}
+function nearestDirectionIndex(angle) {
+  let best = 0;
+  let bestDelta = Infinity;
+  for (let i = 0; i < BALISTE_DIRECTIONS.length; i++) {
+    const delta = Math.abs(shortestAngleDelta(directionAngle(i), angle));
+    if (delta < bestDelta) {
+      bestDelta = delta;
+      best = i;
+    }
+  }
+  return best;
+}
+// Hystérésis (cahier, section 4 : "éviter les changements d'orientation
+// excessivement nerveux si la cible oscille autour d'une limite angulaire
+// ... une petite logique de stabilisation/hystérésis peut être utilisée").
+// Sans elle, une cible oscillant pile à la frontière entre deux secteurs de
+// 45° ferait reclignoter le sprite affiché à chaque tick (le plus proche
+// recalculé brut change de camp à chaque micro-mouvement). La direction
+// déjà sélectionnée n'est abandonnée que si l'angle lissé s'en est VRAIMENT
+// éloigné de plus que la moitié d'un secteur (22.5°) PLUS une marge (6°) --
+// un secteur "collant" de 28.5° de rayon, jamais un simple arrondi au plus
+// proche recalculé indépendamment à chaque tick.
+const BALISTE_SECTOR_HALF_WIDTH = Math.PI / 8; // 22.5°
+const BALISTE_HYSTERESIS_MARGIN = (6 * Math.PI) / 180;
+
+function stepTowerSpriteDirection(tower) {
+  if (tower.baliste8Dir === undefined) {
+    tower.baliste8Dir = nearestDirectionIndex(tower.aimAngle);
+    return;
+  }
+  const deltaFromCurrent = Math.abs(shortestAngleDelta(directionAngle(tower.baliste8Dir), tower.aimAngle));
+  if (deltaFromCurrent <= BALISTE_SECTOR_HALF_WIDTH + BALISTE_HYSTERESIS_MARGIN) return; // reste sur la direction actuelle
+  tower.baliste8Dir = nearestDirectionIndex(tower.aimAngle);
+}
+
 function stepTowers(state, dtMs) {
   for (const tower of state.towers) {
     tower.cooldownRemainingMs = Math.max(0, (tower.cooldownRemainingMs || 0) - dtMs);
@@ -190,6 +237,7 @@ function stepTowers(state, dtMs) {
       tower.aimTargetAngle = Math.atan2(liveTarget.y - tower.y, liveTarget.x - tower.x);
     }
     stepTowerAim(tower, dtMs);
+    stepTowerSpriteDirection(tower);
     if (tower.cooldownRemainingMs > 0) continue;
     if (!liveTarget) continue;
     fireProjectile(state, tower, tierStats, liveTarget);

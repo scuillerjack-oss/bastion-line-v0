@@ -1,6 +1,7 @@
 import { computeViewport } from "./viewport.js";
 import { ARENA_W, ARENA_H, BASE_R, ENEMY_R, TOWER_R, PATH_WIDTH } from "../engine/constants.js";
 import { TOWER_FAMILIES, getMaxTier } from "../engine/towers.js";
+import { BALISTE_DIRECTIONS } from "../engine/simulation.js";
 import { ENEMY_KINDS } from "../engine/enemies.js";
 import { loadSprite } from "./sprites.js";
 import { interpolateRenderPos } from "../engine/interpolate.js";
@@ -43,13 +44,78 @@ import { interpolateRenderPos } from "../engine/interpolate.js";
 // des w/h. La Catapulte (ex-Longue portée, placeholder Canvas triangulaire
 // encore en attente de son asset définitif) n'est PAS concernée par cet
 // agrandissement cette mission -- voir FALLBACK_SCALE_BY_FAMILY plus bas.
+// Correctif "Prochaine version candidate bêta", section 4 : faire pivoter/
+// retourner l'IMAGE COMPLÈTE de la tour d'archers (l'ancienne approche,
+// `tour_rapide_arbalete.png` ci-dessous conservé pour le repli -- voir
+// ARCHER_WHOLE_SPRITE) produisait des sauts visuels et un rendu artificiel
+// ("le socle semble se déplacer"). Nouvelle règle : le socle reste
+// TOTALEMENT FIXE (ARCHER_SOCLE_CONFIG, jamais retourné ni pivoté), seule
+// la baliste change d'orientation en choisissant parmi 8 sprites
+// directionnels réels (découpés de la planche Leonardo fournie, voir
+// scripts/process_leonardo_baliste.py) -- jamais une rotation CSS/canvas
+// brute d'une image unique. Canon et Catapulte NE SONT PAS concernés cette
+// version (cahier, section 11 : "ne pas fabriquer les nouvelles
+// orientations du canon et de la catapulte") : ils gardent intégralement
+// leur traitement existant ci-dessous.
 const TOWER_SPRITE_CONFIG = {
-  rapide: { src: "./assets/towers/tour_rapide_arbalete.png", w: 48, h: 68, bottomOffset: 20 },
   canon: { src: "./assets/towers/canon.png", w: 58, h: 66, bottomOffset: 18 },
 };
 const towerSprites = Object.fromEntries(
   Object.entries(TOWER_SPRITE_CONFIG).map(([family, cfg]) => [family, { ...cfg, sprite: loadSprite(cfg.src) }])
 );
+
+// Socle fixe de la tour d'archers (scripts/process_archer_socle.py --
+// recadrage du sprite combiné original en retirant le mécanisme d'arbalète,
+// y=195 en coordonnées natives 360x504). Taille affichée portée à 54x46
+// (cahier, section 6 : "réévaluer la taille des tours ... les agrandir
+// légèrement" -- ~12% au-dessus des 48px de largeur hérités de V7, même
+// échelle appliquée uniformément en x/y pour ne jamais déformer le socle).
+// `mountDX/mountDY` : décalage, depuis l'ancre (x,y) de la tour, du point
+// où la baliste doit s'arrimer (le centre de l'ancienne plateforme en
+// pierre du toit) -- dérivé du point de montage mesuré dans le sprite
+// source (180,10 sur 360x309) à la MÊME échelle que le socle affiché,
+// jamais une valeur indépendante qui pourrait désynchroniser socle et
+// baliste.
+const ARCHER_SOCLE_CONFIG = { src: "./assets/towers/archer_socle.png", w: 54, h: 46, bottomOffset: 22, mountDX: 0, mountDY: -22.5 };
+const archerSocleSprite = loadSprite(ARCHER_SOCLE_CONFIG.src);
+
+// 8 sprites directionnels de la baliste (scripts/process_leonardo_baliste.py).
+// `pivotX/pivotY` : point d'ancrage à l'INTÉRIEUR de CE sprite précis (le
+// centre du plateau rotatif, mesuré individuellement par orientation --
+// voir le script pour le détail et la vérification visuelle) -- c'est ce
+// point, et jamais le centre géométrique de l'image, qui doit être posé
+// exactement sur le point de montage du socle (ARCHER_SOCLE_CONFIG.mountDX/
+// mountDY) pour qu'aucune des 8 orientations ne fasse "sauter" le plateau
+// visible d'une sélection à l'autre.
+const BALISTE_SPRITE_CONFIG = {
+  E: { src: "./assets/towers/baliste/baliste_E.png", w: 50, h: 36, pivotX: 29, pivotY: 20 },
+  SE: { src: "./assets/towers/baliste/baliste_SE.png", w: 47, h: 40, pivotX: 19, pivotY: 30 },
+  S: { src: "./assets/towers/baliste/baliste_S.png", w: 44, h: 46, pivotX: 22, pivotY: 27 },
+  SW: { src: "./assets/towers/baliste/baliste_SW.png", w: 46, h: 40, pivotX: 25, pivotY: 30 },
+  W: { src: "./assets/towers/baliste/baliste_W.png", w: 50, h: 36, pivotX: 20, pivotY: 20 },
+  NW: { src: "./assets/towers/baliste/baliste_NW.png", w: 43, h: 41, pivotX: 29, pivotY: 26 },
+  N: { src: "./assets/towers/baliste/baliste_N.png", w: 45, h: 41, pivotX: 22, pivotY: 27 },
+  NE: { src: "./assets/towers/baliste/baliste_NE.png", w: 42, h: 41, pivotX: 16, pivotY: 26 },
+};
+const balisteSprites = Object.fromEntries(
+  Object.entries(BALISTE_SPRITE_CONFIG).map(([dir, cfg]) => [dir, { ...cfg, sprite: loadSprite(cfg.src) }])
+);
+
+// Repli (cahier V7-polish, section 4) tant que le socle+baliste ne sont pas
+// TOUS chargés -- jamais un écran cassé pendant le court instant du
+// chargement initial, ni en cas d'échec réseau. Garde volontairement
+// l'ancien sprite combiné (tour+arbalète intégrées) comme repli
+// intermédiaire AVANT la silhouette Canvas, pour une dégradation en 3
+// paliers (socle+baliste séparés -> ancien sprite combiné -> silhouette
+// Canvas) plutôt qu'un saut direct vers le placeholder le plus pauvre dès
+// qu'UN SEUL des 9 nouveaux fichiers tarde à charger.
+const ARCHER_WHOLE_SPRITE_CONFIG = { src: "./assets/towers/tour_rapide_arbalete.png", w: 48, h: 68, bottomOffset: 20 };
+const archerWholeSprite = { ...ARCHER_WHOLE_SPRITE_CONFIG, sprite: loadSprite(ARCHER_WHOLE_SPRITE_CONFIG.src) };
+
+function archerAssetsReady() {
+  if (archerSocleSprite.status !== "loaded") return false;
+  return Object.values(balisteSprites).every((entry) => entry.sprite.status === "loaded");
+}
 
 // Pipeline d'assets ennemis/projectiles, préparé mais VIDE (cahier V6,
 // section 6 : "préparer le pipeline d'assets pour remplacer les unités
@@ -396,37 +462,42 @@ function drawEmptySlot(ctx, slot) {
   ctx.stroke();
 }
 
-// Chaque famille a une SILHOUETTE distincte et reconnaissable au premier
-// regard (cahier V1, section 4 : "au premier regard, un bêta-testeur doit
-// comprendre qu'il voit une base, des tours et des ennemis").
-function drawTowerShape(ctx, tower, familyDef) {
+// Tour d'archers : socle fixe + baliste orientable ("Prochaine version
+// candidate bêta", sections 4-5). Dégradation en 3 paliers, jamais d'écran
+// cassé ni de rotation brute de l'image complète en attendant un
+// chargement :
+//  1. socle + les 8 sprites de baliste tous chargés -> nouveau système ;
+//  2. sinon, si l'ancien sprite combiné est chargé -> ancien repli (symétrie
+//     horizontale de l'image complète, comportement V7-polish inchangé) ;
+//  3. sinon -> silhouette Canvas (drawTowerFallbackShape, inchangée).
+function drawArcherTower(ctx, tower, familyDef) {
   const { x, y } = tower;
-  // Registre d'assets réutilisable (cahier V3, section 6) : si un sprite
-  // Leonardo est configuré ET chargé pour cette famille, il remplace
-  // entièrement la silhouette Canvas. Sinon (pas d'asset prévu, chargement
-  // en cours ou échoué), fallback immédiat et silencieux sur la silhouette
-  // Canvas -- jamais d'écran cassé ni de tour invisible en attendant.
-  const spriteEntry = towerSprites[tower.family];
-  if (spriteEntry && spriteEntry.sprite.status === "loaded") {
-    // Orientation (cahier V7-polish, section 4) : les PNG Leonardo (archer,
-    // canon) sont des rendus en perspective/isométrique d'une tour EN PIERRE
-    // posée au sol -- les faire pivoter d'un angle quelconque ferait
-    // visuellement "basculer" la base (coin qui semble se détacher du sol),
-    // exactement la "rotation aberrante" que le cahier interdit. Seule une
-    // SYMÉTRIE HORIZONTALE préserve la cohérence de la perspective (la base
-    // reste au sol, verticale inchangée) : l'arme (arbalète/canon), dessinée
-    // pointant naturellement vers le HAUT-GAUCHE sur l'asset source, est donc
-    // retournée côté droit dès que la cible réelle se trouve du côté droit
-    // de la tour (voir tower.aimAngle, mis à jour en continu par
-    // engine/simulation.js). cos(aimAngle) > 0 <=> la cible est à droite.
-    // Seuil non nul (jamais une comparaison stricte à 0) : Math.cos(-Math.PI/2)
-    // ne vaut PAS exactement 0 en arithmétique flottante (~6.12e-17, un bruit
-    // positif) -- une comparaison "> 0" faisait donc basculer À TORT une tour
-    // tout juste construite (angle neutre par défaut, cible jamais encore
-    // acquise) en orientation retournée dès la toute première image rendue,
-    // avant même tout ciblage réel. Bug trouvé par vérification visuelle
-    // directe dans un vrai navigateur (capture d'écran comparée pixel à
-    // pixel, jamais seulement en lisant le code).
+  if (archerAssetsReady()) {
+    const socle = ARCHER_SOCLE_CONFIG;
+    // Socle : JAMAIS de flip, de rotation ni de translation -- dessiné
+    // strictement à sa position/taille propres, à l'identique quelle que
+    // soit la cible visée. C'est la garantie structurelle, pas seulement
+    // visuelle, qu'aucun changement d'orientation ne peut faire "sauter"
+    // le corps de la tour : le code qui dessine le socle ne lit même pas
+    // tower.aimAngle.
+    ctx.drawImage(archerSocleSprite.image, x - socle.w / 2, y + socle.bottomOffset - socle.h, socle.w, socle.h);
+
+    // Baliste : sélectionne le sprite parmi les 8 orientations selon
+    // tower.baliste8Dir (calculé en continu par engine/simulation.js,
+    // stepTowerSpriteDirection -- hystérésis déjà appliquée là-bas, jamais
+    // recalculée ici). Ancrée par SON PROPRE pivot (le centre de son
+    // plateau, mesuré individuellement par sprite) posé exactement sur le
+    // point de montage fixe du socle (mountDX/mountDY) -- c'est cette
+    // correspondance pivot-sur-point-fixe, jamais un simple centrage par
+    // boîte englobante, qui garantit que le plateau ne "saute" pas d'une
+    // orientation à l'autre malgré les 8 images ayant des dimensions et des
+    // marges différentes.
+    const dirIndex = tower.baliste8Dir ?? 0;
+    const baliste = balisteSprites[BALISTE_DIRECTIONS[dirIndex]];
+    const mountX = x + socle.mountDX;
+    const mountY = y + socle.mountDY;
+    ctx.drawImage(baliste.sprite.image, mountX - baliste.pivotX, mountY - baliste.pivotY, baliste.w, baliste.h);
+  } else if (archerWholeSprite.sprite.status === "loaded") {
     const flip = Math.cos(tower.aimAngle ?? -Math.PI / 2) > 1e-6;
     ctx.save();
     if (flip) {
@@ -434,10 +505,68 @@ function drawTowerShape(ctx, tower, familyDef) {
       ctx.scale(-1, 1);
       ctx.translate(-x, -y);
     }
-    ctx.drawImage(spriteEntry.sprite.image, x - spriteEntry.w / 2, y + spriteEntry.bottomOffset - spriteEntry.h, spriteEntry.w, spriteEntry.h);
+    ctx.drawImage(
+      archerWholeSprite.sprite.image,
+      x - archerWholeSprite.w / 2,
+      y + archerWholeSprite.bottomOffset - archerWholeSprite.h,
+      archerWholeSprite.w,
+      archerWholeSprite.h
+    );
     ctx.restore();
   } else {
     drawTowerFallbackShape(ctx, tower, familyDef);
+  }
+}
+
+// Chaque famille a une SILHOUETTE distincte et reconnaissable au premier
+// regard (cahier V1, section 4 : "au premier regard, un bêta-testeur doit
+// comprendre qu'il voit une base, des tours et des ennemis").
+function drawTowerShape(ctx, tower, familyDef) {
+  const { x, y } = tower;
+  if (tower.family === "rapide") {
+    drawArcherTower(ctx, tower, familyDef);
+  } else {
+    // Registre d'assets réutilisable (cahier V3, section 6) : si un sprite
+    // Leonardo est configuré ET chargé pour cette famille, il remplace
+    // entièrement la silhouette Canvas. Sinon (pas d'asset prévu, chargement
+    // en cours ou échoué), fallback immédiat et silencieux sur la silhouette
+    // Canvas -- jamais d'écran cassé ni de tour invisible en attendant.
+    const spriteEntry = towerSprites[tower.family];
+    if (spriteEntry && spriteEntry.sprite.status === "loaded") {
+      // Orientation (cahier V7-polish, section 4) : le PNG Leonardo (canon)
+      // est un rendu en perspective/isométrique d'une tour EN PIERRE posée
+      // au sol -- le faire pivoter d'un angle quelconque ferait visuellement
+      // "basculer" la base (coin qui semble se détacher du sol), exactement
+      // la "rotation aberrante" que le cahier interdit. Seule une SYMÉTRIE
+      // HORIZONTALE préserve la cohérence de la perspective (la base reste
+      // au sol, verticale inchangée) : l'arme (canon), dessinée pointant
+      // naturellement vers le HAUT-GAUCHE sur l'asset source, est donc
+      // retournée côté droit dès que la cible réelle se trouve du côté droit
+      // de la tour (voir tower.aimAngle, mis à jour en continu par
+      // engine/simulation.js). cos(aimAngle) > 0 <=> la cible est à droite.
+      // Seuil non nul (jamais une comparaison stricte à 0) : Math.cos(-Math.PI/2)
+      // ne vaut PAS exactement 0 en arithmétique flottante (~6.12e-17, un bruit
+      // positif) -- une comparaison "> 0" faisait donc basculer À TORT une tour
+      // tout juste construite (angle neutre par défaut, cible jamais encore
+      // acquise) en orientation retournée dès la toute première image rendue,
+      // avant même tout ciblage réel. Bug trouvé par vérification visuelle
+      // directe dans un vrai navigateur (capture d'écran comparée pixel à
+      // pixel, jamais seulement en lisant le code). Cette tour d'archers
+      // n'utilise PLUS ce traitement -- voir drawArcherTower() pour son
+      // système de socle fixe + baliste orientable ("Prochaine version
+      // candidate bêta", section 4).
+      const flip = Math.cos(tower.aimAngle ?? -Math.PI / 2) > 1e-6;
+      ctx.save();
+      if (flip) {
+        ctx.translate(x, y);
+        ctx.scale(-1, 1);
+        ctx.translate(-x, -y);
+      }
+      ctx.drawImage(spriteEntry.sprite.image, x - spriteEntry.w / 2, y + spriteEntry.bottomOffset - spriteEntry.h, spriteEntry.w, spriteEntry.h);
+      ctx.restore();
+    } else {
+      drawTowerFallbackShape(ctx, tower, familyDef);
+    }
   }
   // Indicateur de palier (cahier V4, section 4) : l'ancienne représentation
   // empilait un petit anneau PAR palier possédé -- au palier maximum (2
@@ -502,6 +631,22 @@ const FALLBACK_SCALE_BY_FAMILY = { rapide: 1.4, canon: 1.52, longue_portee: 1.28
 // positionner l'indicateur de palier toujours au-dessus de la silhouette
 // affichée, quelle que soit la famille ou l'état de chargement de l'asset.
 function getTowerVisualTop(tower) {
+  if (tower.family === "rapide") {
+    if (archerAssetsReady()) {
+      // Sommet réel = point de montage + extension haute du sprite de
+      // baliste ACTUELLEMENT affiché (son pivotY, voir BALISTE_SPRITE_CONFIG)
+      // -- varie légèrement d'une orientation à l'autre (la baliste ne
+      // s'étend pas symétriquement dans les 8 sprites), l'indicateur de
+      // palier suit donc la silhouette réelle plutôt qu'une approximation
+      // figée sur une seule orientation.
+      const baliste = balisteSprites[BALISTE_DIRECTIONS[tower.baliste8Dir ?? 0]];
+      return -ARCHER_SOCLE_CONFIG.mountDY + baliste.pivotY;
+    }
+    if (archerWholeSprite.sprite.status === "loaded") {
+      return archerWholeSprite.h - archerWholeSprite.bottomOffset;
+    }
+    return (FALLBACK_VISUAL_TOP.rapide ?? 24) * (FALLBACK_SCALE_BY_FAMILY.rapide ?? 1.28);
+  }
   const spriteEntry = towerSprites[tower.family];
   if (spriteEntry && spriteEntry.sprite.status === "loaded") {
     return spriteEntry.h - spriteEntry.bottomOffset;

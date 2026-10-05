@@ -1,0 +1,58 @@
+{
+  "SE": {
+    "file": "baliste_SE.png",
+    "w": 140,
+    "h": 121,
+    "pivotX": 58,
+    "pivotY": 90
+  },
+  "S": {
+    "file": "baliste_S.png",
+    "w": 133,
+    "h": 140,
+    "pivotX": 66,
+    "pivotY": 80
+  },
+  "SW": {
+    "file": "baliste_SW.png",
+    "w": 140,
+    "h": 123,
+    "pivotX": 77,
+    "pivotY": 91
+  },
+  "W": {
+    "file": "baliste_W.png",
+    "w": 140,
+    "h": 100,
+    "pivotX": 56,
+    "pivotY": 56
+  },
+  "E": {
+    "file": "baliste_E.png",
+    "w": 140,
+    "h": 102,
+    "pivotX": 83,
+    "pivotY": 57
+  },
+  "NE": {
+    "file": "baliste_NE.png",
+    "w": 140,
+    "h": 136,
+    "pivotX": 55,
+    "pivotY": 88
+  },
+  "N": {
+    "file": "baliste_N.png",
+    "w": 140,
+    "h": 129,
+    "pivotX": 69,
+    "pivotY": 85
+  },
+  "NW": {
+    "file": "baliste_NW.png",
+    "w": 140,
+    "h": 134,
+    "pivotX": 93,
+    "pivotY": 86
+  }
+}

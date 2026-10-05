@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createLevelState } from "../src/engine/state.js";
-import { tick, buildTower, upgradeTower, requestEarlyWave, sellTower, PROJECTILE_SPEED } from "../src/engine/simulation.js";
+import { tick, buildTower, upgradeTower, requestEarlyWave, sellTower, PROJECTILE_SPEED, BALISTE_DIRECTIONS } from "../src/engine/simulation.js";
 import { TOWER_FAMILIES, getTowerInvestedValue, getTowerSellRefund } from "../src/engine/towers.js";
 import { TOWER_SELL_REFUND_RATE, TOWER_AIM_TURN_RATE } from "../src/engine/constants.js";
 import { ENEMY_KINDS } from "../src/engine/enemies.js";
@@ -691,4 +691,88 @@ test("la rotation visuelle d'une tour n'influence jamais la direction réelle de
   const actualAngle = Math.atan2(proj.vy, proj.vx);
   const diff = Math.min(Math.abs(expectedAngle - actualAngle), Math.PI * 2 - Math.abs(expectedAngle - actualAngle));
   assert.ok(diff < 1e-6, `direction réelle du projectile (${actualAngle.toFixed(4)}) diverge de la direction exacte vers la cible (${expectedAngle.toFixed(4)})`);
+});
+
+// --- Socle fixe + baliste orientable (cahier "Prochaine version candidate
+// bêta", sections 4-5) -------------------------------------------------
+
+function settleTowerAim(state, ticks = 150) {
+  for (let i = 0; i < ticks; i++) tick(state, DT);
+}
+
+test("tower.baliste8Dir converge vers l'index exact des 8 directions compas une fois l'angle lissé stabilisé", () => {
+  // aimTargetAngle forcé directement (même principe que les tests de
+  // convergence d'aimAngle ci-dessus) : stepTowers() ne l'écrase que si un
+  // ennemi RÉEL est en portée (findTarget), absent ici -- le champ forcé
+  // persiste donc tick après tick, exactement comme s'il provenait d'un
+  // ciblage réel à cet angle précis. Couvre les 8 octants directement par
+  // l'angle, sans dépendre de la géométrie (forcément limitée) du chemin de
+  // test rectiligne.
+  const state = createLevelState(makeTestLevel());
+  enterWave(state);
+  buildTower(state, "a", "rapide");
+  // Un ennemi immobile HORS DE PORTÉE (distance 100 > portée 95 du palier 0)
+  // -- jamais ciblé par findTarget (aimTargetAngle forcé ci-dessous reste
+  // donc intact), mais garde state.enemies.length > 0 pour que
+  // checkWaveClear() ne termine jamais ce niveau de test sans vagues ni
+  // spawns, ce qui arrêterait tick() avant même d'atteindre stepTowers().
+  pushEnemy(state, "standard", 0, 0, 0);
+  const tower = state.towers[0];
+  for (let expectedIndex = 0; expectedIndex < BALISTE_DIRECTIONS.length; expectedIndex++) {
+    const angleDeg = expectedIndex * 45;
+    const angleRad = (angleDeg > 180 ? angleDeg - 360 : angleDeg) * (Math.PI / 180);
+    // Cible directement forcée via aimTargetAngle (même principe que les
+    // tests de convergence d'aimAngle ci-dessus) : stepTowers() ne
+    // l'écrase que si un ennemi RÉEL est en portée (findTarget), absent
+    // ici -- le champ forcé persiste donc tick après tick, exactement
+    // comme s'il provenait d'un ciblage réel à cet angle précis.
+    tower.aimTargetAngle = angleRad;
+    settleTowerAim(state);
+    assert.equal(
+      tower.baliste8Dir,
+      expectedIndex,
+      `direction attendue ${BALISTE_DIRECTIONS[expectedIndex]} (index ${expectedIndex}) à ${angleDeg}°, obtenu index ${tower.baliste8Dir}`
+    );
+  }
+});
+
+test("l'hystérésis empêche la baliste de clignoter entre deux directions quand la cible oscille près d'une frontière de secteur", () => {
+  // Cahier, section 4 : "éviter les changements d'orientation
+  // excessivement nerveux si la cible oscille autour d'une limite
+  // angulaire". Frontière réelle entre E (0°) et SE (45°) : 22.5°.
+  const state = createLevelState(makeTestLevel());
+  enterWave(state);
+  buildTower(state, "a", "rapide");
+  pushEnemy(state, "standard", 0, 0, 0); // hors de portée -- garde la vague "active", voir le test précédent
+  const tower = state.towers[0];
+
+  tower.aimTargetAngle = 0; // plein E, loin de toute frontière
+  settleTowerAim(state);
+  assert.equal(BALISTE_DIRECTIONS[tower.baliste8Dir], "E");
+
+  // Oscillation RÉPÉTÉE juste de part et d'autre de la frontière naïve
+  // (22.5°) mais À L'INTÉRIEUR de la zone "collante" autour de E (jusqu'à
+  // 22.5+6=28.5°, voir BALISTE_HYSTERESIS_MARGIN) : sans hystérésis, un
+  // arrondi au plus proche recalculé à chaque tick changerait de camp à
+  // chaque fois que l'angle dépasse 22.5°. Avec hystérésis, la direction
+  // déjà choisie (E) doit rester E tant que l'angle reste sous 28.5°.
+  for (let i = 0; i < 20; i++) {
+    tower.aimTargetAngle = (20 * Math.PI) / 180;
+    tick(state, DT);
+    tower.aimTargetAngle = (26 * Math.PI) / 180;
+    tick(state, DT);
+    assert.equal(
+      BALISTE_DIRECTIONS[tower.baliste8Dir],
+      "E",
+      `itération ${i} : la direction n'aurait jamais dû quitter E dans la zone d'hystérésis`
+    );
+  }
+
+  // Au-delà de la marge d'hystérésis (>28.5°), la direction doit
+  // réellement basculer vers SE -- l'hystérésis ne doit jamais devenir un
+  // blocage permanent, seulement une résistance au bruit proche de la
+  // frontière.
+  tower.aimTargetAngle = (32 * Math.PI) / 180;
+  settleTowerAim(state);
+  assert.equal(BALISTE_DIRECTIONS[tower.baliste8Dir], "SE", "au-delà de la marge d'hystérésis, la direction doit basculer vers SE");
 });
