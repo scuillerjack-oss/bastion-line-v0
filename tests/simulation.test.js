@@ -776,3 +776,84 @@ test("l'hystérésis empêche la baliste de clignoter entre deux directions quan
   settleTowerAim(state);
   assert.equal(BALISTE_DIRECTIONS[tower.baliste8Dir], "SE", "au-delà de la marge d'hystérésis, la direction doit basculer vers SE");
 });
+
+// Test OBLIGATOIRE du cahier "Prochaine version candidate bêta" (section
+// "tests obligatoires") : "plusieurs ennemis traversant rapidement la
+// portée de la baliste... aucun saut, aucune vibration permanente, aucun
+// déplacement du socle, aucun changement d'orientation incohérent." Les
+// deux tests ci-dessus verrouillent déjà la mécanique d'hystérésis sur un
+// angle forcé synthétique ; celui-ci la vérifie sous une charge RÉELLE --
+// le vrai moteur de ciblage (findTarget suit l'ennemi le plus avancé en
+// portée) avec plusieurs ennemis réels qui entrent/sortent de portée et se
+// remplacent continuellement comme cible.
+test("plusieurs ennemis traversant rapidement la portée de la baliste : socle jamais déplacé, pas de vibration permanente, direction toujours cohérente", () => {
+  const level = makeTestLevel({
+    paths: [
+      [
+        { x: 0, y: 250 },
+        { x: 400, y: 250 },
+      ],
+    ],
+    // Tour décalée du chemin (jamais dessus) : les ennemis qui la
+    // croisent balaient un véritable arc d'angles en entrant/sortant de
+    // portée (95), pas seulement gauche/droite sur un même axe.
+    buildSlots: [{ id: "a", x: 200, y: 300 }],
+  });
+  const state = createLevelState(level);
+  enterWave(state);
+  buildTower(state, "a", "rapide");
+  const tower = state.towers[0];
+  const initialX = tower.x;
+  const initialY = tower.y;
+
+  // "Essaim" (Éclaireur) : vitesse 125, la plus rapide des 4 archétypes --
+  // 8 ennemis en train serré et échelonné sur toute la longueur du chemin,
+  // pour qu'il y en ait plusieurs à portée simultanément en permanence
+  // pendant une bonne partie du test, avec des changements de cible
+  // fréquents (findTarget réévalue l'ennemi le plus avancé à chaque tick).
+  for (let i = 0; i < 8; i++) {
+    pushEnemy(state, "essaim", i * 40, 0, 125);
+  }
+
+  const socleViolations = [];
+  const dirHistory = [];
+  const TICKS = 260; // ~4,3s à 60Hz : largement assez pour que tout le train (parti de traveled<=280) franchisse x=400
+  for (let i = 0; i < TICKS; i++) {
+    tick(state, DT);
+    if (tower.x !== initialX || tower.y !== initialY) {
+      socleViolations.push({ tick: i, x: tower.x, y: tower.y });
+    }
+    if (tower.baliste8Dir !== undefined) {
+      const last = dirHistory[dirHistory.length - 1];
+      if (!last || last.dir !== tower.baliste8Dir) {
+        dirHistory.push({ tick: i, dir: tower.baliste8Dir });
+      }
+    }
+  }
+
+  // "Aucun déplacement du socle" : vérifié à CHAQUE tick, pas seulement en
+  // fin de test -- un aller-retour transitoire serait aussi une violation.
+  assert.equal(socleViolations.length, 0, `le socle a bougé : ${JSON.stringify(socleViolations.slice(0, 3))}`);
+  assert.ok(dirHistory.length > 0, "la baliste doit avoir choisi au moins une direction pendant le passage du train d'ennemis");
+  // Chaque direction choisie doit rester une des 8 valeurs réelles (jamais
+  // NaN/undefined/hors-table) : "changement d'orientation incohérent".
+  for (const { dir } of dirHistory) {
+    assert.ok(Number.isInteger(dir) && dir >= 0 && dir < BALISTE_DIRECTIONS.length, `index de direction invalide : ${dir}`);
+  }
+
+  // "Pas de vibration permanente" : si la direction revient à une valeur
+  // qu'elle venait tout juste de quitter (A -> B -> A), ce retour ne doit
+  // jamais survenir en quelques ticks seulement -- ce serait exactement le
+  // clignotement que l'hystérésis doit empêcher, ici sous charge réelle à
+  // plusieurs ennemis plutôt que sur un angle unique forcé.
+  const MIN_TICKS_BEFORE_RETURN = 5;
+  for (let i = 2; i < dirHistory.length; i++) {
+    if (dirHistory[i].dir === dirHistory[i - 2].dir) {
+      const gap = dirHistory[i].tick - dirHistory[i - 2].tick;
+      assert.ok(
+        gap >= MIN_TICKS_BEFORE_RETURN,
+        `vibration détectée : retour à la direction ${dirHistory[i].dir} seulement ${gap} ticks après l'avoir quittée (ticks ${dirHistory[i - 2].tick} -> ${dirHistory[i].tick})`
+      );
+    }
+  }
+});
