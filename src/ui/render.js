@@ -617,14 +617,27 @@ const FALLBACK_VISUAL_TOP = { rapide: 10, canon: 21, longue_portee: 24 };
 // Facteur d'agrandissement des silhouettes de repli Canvas, PAR FAMILLE
 // (cahier V7, section 4 -- avant V7, un seul facteur partagé FALLBACK_SCALE
 // =1.28 s'appliquait identiquement aux trois familles). Rendu PAR FAMILLE
-// en V7 car le cahier demande d'agrandir archer/canon tout en laissant le
+// en V7 car le cahier demandait d'agrandir archer/canon tout en laissant le
 // placeholder Catapulte (ex-longue_portee) strictement inchangé tant que
-// son asset définitif n'est pas fourni ("conserver temporairement le
-// placeholder graphique actuel... ne pas modifier le placeholder par un
-// autre visuel"). rapide/canon suivent la même hausse "légère" que leurs
-// sprites Leonardo ci-dessus ; longue_portee garde EXACTEMENT la valeur V6
-// (1.28) -- aucun changement visuel pour la Catapulte cette mission.
-const FALLBACK_SCALE_BY_FAMILY = { rapide: 1.4, canon: 1.52, longue_portee: 1.28 };
+// son asset définitif n'était pas fourni -- mais "ne pas modifier le
+// placeholder par un autre visuel" (V7) n'a jamais voulu dire "ne jamais
+// le mettre à l'échelle" : c'est exactement la même forme vectorielle,
+// simplement plus grande, comme pour les deux autres familles.
+//
+// Correction "Prochaine version candidate bêta" (cahier, section "taille
+// des tours" : "réévalue LEUR taille sur téléphone... si les tours restent
+// trop petites, augmente légèrement" -- demande générale aux trois tours,
+// jamais réservée à l'archer). Capture d'écran mobile directe (niveau 3,
+// 390x844) : la silhouette Catapulte, une fine flèche de 14 unités de
+// large avant mise à l'échelle, restait visuellement beaucoup plus frêle
+// que les sprites Leonardo archer/canon à côté d'elle -- nettement en
+// retrait de présence visuelle, bien plus qu'un simple effet de forme
+// différente. Remède : même hausse "légère" que rapide (V7), qui suit
+// exactement le même principe (silhouette de repli, jamais un virage
+// complet d'identité visuelle) -- 1.28 -> 1.4. Toujours hors périmètre
+// cette mission : une nouvelle forme ou de nouvelles orientations pour la
+// Catapulte (cahier, "hors périmètre").
+const FALLBACK_SCALE_BY_FAMILY = { rapide: 1.4, canon: 1.52, longue_portee: 1.4 };
 
 // Extension visuelle haute RÉELLE de ce rendu précis (sprite chargé à sa
 // taille configurée, ou repli Canvas à son échelle) -- utilisée pour
