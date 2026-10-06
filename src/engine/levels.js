@@ -129,25 +129,91 @@ function spawnBurst(kind, count, pathIndex, startDelayMs, intervalMs) {
 // réapparition du défaut de recul), confirmé visuellement par superposition
 // sur l'image source : l'ancien tracé coupe nettement l'intérieur de
 // plusieurs virages, le nouveau reste centré sur toute la route.
+// Correction "Prochaine version candidate bêta" (cahier, priorité 1 :
+// "les ennemis suivent mieux les routes mais ce n'est pas encore assez
+// propre dans les virages -- continue dans cette direction, ne remplace
+// PAS la logique de déplacement"). engine/path.js reste une interpolation
+// linéaire pure entre waypoints (inchangé, comme demandé) : le défaut
+// restant était donc dans les DONNÉES du PATH_MAP V7-polish ci-dessus, pas
+// dans l'algorithme de parcours. Mesure directe sur ce PATH_MAP : la
+// simplification Douglas-Peucker (epsilon=1,5, scripts/center_path_v7.py)
+// ne borne que l'écart perpendiculaire au tracé simplifié, jamais l'angle
+// de virage résultant -- plusieurs sommets concentraient un virage réel de
+// la route en un seul changement de direction instantané (pire cas mesuré
+// : 67,3°, moyenne 27,7° sur les 69 sommets, 41 sommets au-delà de 20°),
+// perçu comme un pivot sur place par un ennemi qui ne fait QUE de
+// l'interpolation linéaire entre ces sommets.
+//
+// Remède (scripts/smooth_path_turns.py), jamais une correction virage par
+// virage à la main, jamais un nouveau passage sur l'image source : une
+// coupe de coin (corner cutting, même principe que Chaikin) appliquée
+// UNIQUEMENT aux sommets dont l'angle dépasse 12°, remplaçant chaque
+// sommet vif par deux sommets plus doux reliés par une courte corde
+// (30% de chaque segment adjacent), répétée par passes jusqu'à
+// stabilisation. Résultat vérifié par le script : angle de virage maximal
+// 67,3° -> 19,7° (moyenne 27,7° -> 7,5°, 0 sommet au-delà de 20°), et
+// écart maximal à la référence centrée dense (tests/fixtures/
+// road_centerline_reference.json, celle-là même utilisée par
+// tests/pathing.test.js) de seulement 2,91 unités -- très en-deçà de la
+// tolérance du test (6) et de la demi-largeur réelle de route (17) :
+// aucun virage n'est coupé hors du corridor réel, seul l'angle instantané
+// est lissé. Les deux ancrages manuels (entrée en haut, porte de la
+// forteresse en bas) ne font pas partie du tracé automatique -- conservés
+// tels quels, comme avant.
 const PATH_MAP = [
-  { x: 185, y: 60 }, { x: 178, y: 63 }, { x: 178, y: 93 }, { x: 182, y: 98 },
-  { x: 207, y: 102 }, { x: 239, y: 113 }, { x: 255, y: 115 }, { x: 269, y: 125 },
-  { x: 320, y: 129 }, { x: 336, y: 134 }, { x: 348, y: 144 }, { x: 355, y: 154 },
-  { x: 359, y: 180 }, { x: 350, y: 204 }, { x: 332, y: 214 }, { x: 276, y: 222 },
-  { x: 254, y: 231 }, { x: 222, y: 233 }, { x: 199, y: 241 }, { x: 169, y: 244 },
-  { x: 166, y: 249 }, { x: 75, y: 253 }, { x: 65, y: 256 }, { x: 60, y: 261 },
-  { x: 57, y: 269 }, { x: 57, y: 301 }, { x: 62, y: 309 }, { x: 62, y: 318 },
-  { x: 71, y: 323 }, { x: 131, y: 330 }, { x: 145, y: 334 }, { x: 155, y: 340 },
-  { x: 176, y: 340 }, { x: 210, y: 348 }, { x: 250, y: 351 }, { x: 252, y: 357 },
-  { x: 264, y: 361 }, { x: 314, y: 363 }, { x: 343, y: 368 }, { x: 350, y: 371 },
-  { x: 354, y: 380 }, { x: 358, y: 391 }, { x: 358, y: 408 }, { x: 351, y: 426 },
-  { x: 337, y: 436 }, { x: 276, y: 442 }, { x: 258, y: 451 }, { x: 232, y: 453 },
-  { x: 222, y: 458 }, { x: 195, y: 461 }, { x: 192, y: 465 }, { x: 77, y: 471 },
-  { x: 64, y: 480 }, { x: 60, y: 493 }, { x: 56, y: 498 }, { x: 56, y: 512 },
-  { x: 58, y: 525 }, { x: 61, y: 526 }, { x: 66, y: 541 }, { x: 78, y: 546 },
-  { x: 125, y: 550 }, { x: 137, y: 555 }, { x: 139, y: 559 }, { x: 148, y: 560 },
-  { x: 166, y: 568 }, { x: 189, y: 569 }, { x: 209, y: 575 }, { x: 211, y: 578 },
-  { x: 209, y: 585 }, { x: 202, y: 592 }, { x: 200, y: 615 }, // porte de la forteresse dessinée sur la carte
+  { x: 185, y: 60 }, { x: 178.4, y: 62.9 }, { x: 177.7, y: 84.1 }, { x: 178.4, y: 91.5 },
+  { x: 178.8, y: 93.3 }, { x: 179.5, y: 94.8 }, { x: 180.2, y: 95.8 }, { x: 181.4, y: 96.8 },
+  { x: 183.0, y: 97.5 }, { x: 189.1, y: 99.3 }, { x: 207.0, y: 102.0 }, { x: 229.7, y: 110.0 },
+  { x: 244.0, y: 113.9 }, { x: 248.2, y: 114.4 }, { x: 252.7, y: 115.7 }, { x: 256.2, y: 117.1 },
+  { x: 260.5, y: 119.3 }, { x: 263.0, y: 120.7 }, { x: 265.1, y: 121.5 }, { x: 270.4, y: 123.2 },
+  { x: 284.0, y: 126.0 }, { x: 304.3, y: 127.5 }, { x: 324.4, y: 130.1 }, { x: 331.0, y: 132.1 },
+  { x: 337.0, y: 135.4 }, { x: 341.1, y: 138.0 }, { x: 344.6, y: 141.0 }, { x: 350.2, y: 147.1 },
+  { x: 352.0, y: 149.9 }, { x: 353.8, y: 154.4 }, { x: 356.0, y: 162.0 }, { x: 357.2, y: 169.3 },
+  { x: 357.3, y: 176.9 }, { x: 356.8, y: 182.9 }, { x: 355.4, y: 190.1 }, { x: 354.0, y: 193.8 },
+  { x: 350.6, y: 199.7 }, { x: 347.4, y: 203.8 }, { x: 344.2, y: 206.8 }, { x: 342.0, y: 208.7 },
+  { x: 340.9, y: 209.4 }, { x: 337.4, y: 210.8 }, { x: 331.2, y: 212.9 }, { x: 315.7, y: 216.8 },
+  { x: 293.3, y: 220.0 }, { x: 269.7, y: 225.0 }, { x: 260.7, y: 228.6 }, { x: 244.4, y: 231.8 },
+  { x: 231.7, y: 232.6 }, { x: 215.2, y: 235.6 }, { x: 206.0, y: 238.7 }, { x: 190.1, y: 241.9 },
+  { x: 178.2, y: 243.1 }, { x: 171.2, y: 244.8 }, { x: 168.8, y: 245.8 }, { x: 165.8, y: 247.0 },
+  { x: 162.7, y: 247.8 }, { x: 158.3, y: 248.5 }, { x: 138.4, y: 250.4 }, { x: 102.0, y: 251.8 },
+  { x: 80.9, y: 253.0 }, { x: 70.7, y: 253.9 }, { x: 69.1, y: 254.4 }, { x: 66.6, y: 255.5 },
+  { x: 64.7, y: 256.5 }, { x: 62.7, y: 258.0 }, { x: 61.8, y: 259.0 }, { x: 60.5, y: 260.8 },
+  { x: 59.5, y: 262.4 }, { x: 58.6, y: 264.5 }, { x: 58.2, y: 265.6 }, { x: 57.8, y: 270.0 },
+  { x: 57.2, y: 278.3 }, { x: 57.1, y: 291.1 }, { x: 58.1, y: 299.6 }, { x: 58.7, y: 302.8 },
+  { x: 59.8, y: 305.6 }, { x: 60.7, y: 308.1 }, { x: 61.3, y: 310.2 }, { x: 61.8, y: 312.7 },
+  { x: 62.0, y: 314.2 }, { x: 62.4, y: 315.7 }, { x: 63.0, y: 316.9 }, { x: 63.9, y: 318.0 },
+  { x: 64.9, y: 319.1 }, { x: 66.3, y: 320.0 }, { x: 69.3, y: 321.3 }, { x: 74.5, y: 322.5 },
+  { x: 89.0, y: 325.0 }, { x: 131.3, y: 329.6 }, { x: 140.8, y: 332.3 }, { x: 147.9, y: 335.4 },
+  { x: 149.8, y: 336.6 }, { x: 151.9, y: 337.6 }, { x: 154.7, y: 338.5 }, { x: 161.3, y: 340.0 },
+  { x: 176.4, y: 340.4 }, { x: 210.4, y: 348.0 }, { x: 237.8, y: 350.2 }, { x: 246.5, y: 352.1 },
+  { x: 248.5, y: 352.8 }, { x: 250.0, y: 353.7 }, { x: 251.4, y: 355.1 }, { x: 252.6, y: 356.2 },
+  { x: 254.4, y: 357.4 }, { x: 257.1, y: 358.7 }, { x: 260.5, y: 359.7 }, { x: 279.1, y: 361.4 },
+  { x: 313.9, y: 362.7 }, { x: 334.6, y: 366.4 }, { x: 342.1, y: 368.1 }, { x: 344.9, y: 368.9 },
+  { x: 346.8, y: 369.9 }, { x: 348.2, y: 370.9 }, { x: 349.3, y: 371.8 }, { x: 350.2, y: 372.8 },
+  { x: 352.2, y: 375.9 }, { x: 354.5, y: 380.4 }, { x: 356.6, y: 388.0 }, { x: 357.6, y: 396.4 },
+  { x: 357.7, y: 403.2 }, { x: 355.7, y: 413.7 }, { x: 353.8, y: 418.8 }, { x: 351.2, y: 423.5 },
+  { x: 348.7, y: 426.9 }, { x: 346.2, y: 429.5 }, { x: 344.4, y: 431.0 }, { x: 342.7, y: 432.0 },
+  { x: 340.5, y: 432.9 }, { x: 334.6, y: 434.7 }, { x: 318.9, y: 437.9 }, { x: 294.6, y: 440.2 },
+  { x: 278.1, y: 443.3 }, { x: 271.6, y: 445.0 }, { x: 268.0, y: 446.1 }, { x: 266.0, y: 447.1 },
+  { x: 259.9, y: 449.2 }, { x: 250.5, y: 451.5 }, { x: 239.8, y: 452.4 }, { x: 232.1, y: 453.8 },
+  { x: 227.6, y: 454.9 }, { x: 224.7, y: 456.2 }, { x: 213.7, y: 458.5 }, { x: 203.0, y: 459.8 },
+  { x: 196.7, y: 461.4 }, { x: 182.2, y: 464.5 }, { x: 157.5, y: 466.5 }, { x: 111.7, y: 468.9 },
+  { x: 84.8, y: 472.2 }, { x: 75.6, y: 474.0 }, { x: 72.4, y: 474.9 }, { x: 70.4, y: 475.9 },
+  { x: 68.6, y: 477.3 }, { x: 66.5, y: 479.5 }, { x: 64.4, y: 482.1 }, { x: 63.1, y: 484.5 },
+  { x: 62.2, y: 486.6 }, { x: 61.5, y: 489.0 }, { x: 60.0, y: 492.6 }, { x: 58.8, y: 494.9 },
+  { x: 57.9, y: 496.5 }, { x: 57.2, y: 498.2 }, { x: 56.2, y: 502.2 }, { x: 55.9, y: 507.9 },
+  { x: 56.4, y: 515.8 }, { x: 57.3, y: 520.8 }, { x: 58.1, y: 522.8 }, { x: 59.0, y: 524.6 },
+  { x: 60.6, y: 526.8 }, { x: 62.3, y: 530.2 }, { x: 63.8, y: 534.4 }, { x: 66.0, y: 538.0 },
+  { x: 68.1, y: 540.5 }, { x: 70.1, y: 542.2 }, { x: 71.5, y: 543.2 }, { x: 72.3, y: 543.6 },
+  { x: 74.8, y: 544.3 }, { x: 79.5, y: 545.3 }, { x: 91.8, y: 547.3 }, { x: 110.7, y: 549.0 },
+  { x: 123.1, y: 550.8 }, { x: 129.8, y: 552.1 }, { x: 133.1, y: 553.3 }, { x: 136.2, y: 555.2 },
+  { x: 137.3, y: 556.2 }, { x: 138.2, y: 557.3 }, { x: 139.6, y: 558.3 }, { x: 140.9, y: 559.0 },
+  { x: 143.0, y: 559.6 }, { x: 145.3, y: 559.9 }, { x: 153.2, y: 562.5 }, { x: 160.2, y: 565.7 },
+  { x: 172.5, y: 568.4 }, { x: 181.9, y: 568.9 }, { x: 195.0, y: 571.1 }, { x: 203.0, y: 573.5 },
+  { x: 205.3, y: 574.3 }, { x: 206.9, y: 575.1 }, { x: 208.5, y: 576.2 }, { x: 209.6, y: 577.6 },
+  { x: 210.0, y: 578.5 }, { x: 210.3, y: 580.1 }, { x: 210.1, y: 581.5 }, { x: 209.7, y: 582.8 },
+  { x: 208.9, y: 584.4 }, { x: 207.9, y: 586.1 }, { x: 205.7, y: 588.9 }, { x: 202.5, y: 592.2 },
+  { x: 200, y: 615 }, // porte de la forteresse dessinée sur la carte
 ];
 
 // --- Niveau 1 : chemin calé sur la carte Leonardo -------------------------
